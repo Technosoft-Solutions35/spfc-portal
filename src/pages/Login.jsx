@@ -85,7 +85,7 @@ export default function Login() {
             required
             autoComplete="username"
             className="input"
-            placeholder="ProfesorRaymonGX"
+            placeholder="Tu nombre de usuario en el clan"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
           />

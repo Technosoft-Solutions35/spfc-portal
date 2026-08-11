@@ -213,7 +213,7 @@ export default function MembersManager() {
               type="text"
               required
               className="input"
-              placeholder="ProfesorRaymonGX"
+              placeholder="Nombre de usuario en el clan"
               value={addForm.username}
               onChange={(e) => setAddForm({ ...addForm, username: e.target.value })}
             />

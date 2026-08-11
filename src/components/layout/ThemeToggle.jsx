@@ -16,7 +16,7 @@ export default function ThemeToggle() {
       whileTap={{ scale: 0.92 }}
       onClick={toggle}
       aria-label={isDark ? 'Activar modo claro' : 'Activar modo oscuro'}
-      className="fixed right-5 top-5 z-[70] flex h-11 w-11 items-center justify-center rounded-full border border-edge bg-surface text-text shadow-card"
+      className="fixed right-4 top-[74px] z-[70] flex h-11 w-11 items-center justify-center rounded-full border border-edge bg-surface text-text shadow-card lg:right-5 lg:top-5"
     >
       <motion.span
         key={theme}
