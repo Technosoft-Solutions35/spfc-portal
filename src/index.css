@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────────────────────
+   SISTEMA DE DISEÑO SpFc/Gd
+   Variables CSS por tema. El modo se alterna añadiendo la clase
+   `.dark` al elemento <html> (gestionado por ThemeContext).
+   Formato: tripletes RGB sin paréntesis para poder usar
+   opacidades en Tailwind (rgb(var(--x) / <alpha-value>)).
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --background: 244 245 247; /* #F4F5F7 */
+  --surface: 255 255 255;    /* #FFFFFF */
+  --elevated: 255 255 255;   /* #FFFFFF */
+  --primary: 217 4 41;       /* #D90429 */
+  --secondary: 251 133 0;    /* #FB8500 */
+  --text: 33 37 41;          /* #212529 */
+  --soft: 108 117 125;       /* #6C757D */
+  --edge: 222 226 230;       /* #DEE2E6 */
+  --success: 34 164 93;
+}
+
+.dark {
+  --background: 15 17 21;    /* #0F1115 */
+  --surface: 26 29 36;       /* #1A1D24 */
+  --elevated: 31 35 44;      /* un pelín más claro que surface */
+  --primary: 255 62 62;      /* #FF3E3E */
+  --secondary: 255 183 3;    /* #FFB703 */
+  --text: 248 249 250;       /* #F8F9FA */
+  --soft: 156 163 175;       /* #9CA3AF */
+  --edge: 55 60 72;
+  --success: 34 197 94;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   BASE
+   ───────────────────────────────────────────────────────────── */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-background text-text font-sans antialiased;
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+::selection {
+  @apply bg-primary text-white;
+}
+
+/* Scrollbar discreto y con la personalidad del clan */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--edge));
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--primary) / 0.6);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   COMPONENTES REUTILIZABLES
+   ───────────────────────────────────────────────────────────── */
+
+@layer components {
+  /* Tarjeta flotante del contenido central */
+  .app-card {
+    @apply bg-surface border border-edge rounded-2xl shadow-card;
+  }
+
+  /* Glassmorphism para pantallas de login/registro */
+  .glass {
+    background: rgb(var(--surface) / 0.72);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    border: 1px solid rgb(255 255 255 / 0.18);
+    box-shadow: 0 20px 60px -20px rgb(0 0 0 / 0.55);
+  }
+
+  .dark .glass {
+    background: rgb(var(--surface) / 0.66);
+    border-color: rgb(255 255 255 / 0.08);
+  }
+
+  /* Botones primarios y secundarios */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5
+      font-semibold text-white transition-all duration-200
+      hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
+    box-shadow: 0 8px 24px -10px rgb(var(--primary) / 0.55);
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-2.5
+      font-semibold text-white transition-all duration-200
+      hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
+    box-shadow: 0 8px 24px -10px rgb(var(--secondary) / 0.55);
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-edge
+      px-5 py-2.5 font-semibold text-text transition-all duration-200
+      hover:bg-primary/10 hover:border-primary/40 active:scale-[0.98]
+      disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  /* Inputs limpios */
+  .input {
+    @apply w-full rounded-xl border border-edge bg-elevated px-4 py-2.5 text-text
+      placeholder-soft outline-none transition-all duration-200
+      focus:border-primary focus:ring-2 focus:ring-primary/25;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-soft;
+  }
+
+  /* Badge de rol */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+  .badge-admin {
+    @apply badge bg-primary/15 text-primary;
+  }
+  .badge-gestor {
+    @apply badge bg-secondary/15 text-secondary;
+  }
+  .badge-member {
+    @apply badge bg-edge text-soft;
+  }
+}
