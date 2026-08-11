@@ -4,6 +4,7 @@ import { MailCheck, ShieldAlert, UserPlus } from 'lucide-react'
 import AuthLayout from '../components/layout/AuthLayout'
 import { useToast } from '../components/ui/Toast'
 import { supabase } from '../lib/supabase'
+import { generateMemberEmail } from '../lib/utils'
 
 /**
  * Registro de nuevos miembros del clan.
@@ -13,7 +14,6 @@ import { supabase } from '../lib/supabase'
  */
 export default function Register() {
   const [username, setUsername] = useState('')
-  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
@@ -30,10 +30,14 @@ export default function Register() {
     if (password.length < 6) return setError('La contraseña debe tener al menos 6 caracteres.')
     if (password !== confirm) return setError('Las contraseñas no coinciden.')
 
+    // Supabase Auth necesita un email como identificador; como el clan no
+    // valida correos, se genera uno automáticamente a partir del usuario.
+    const email = generateMemberEmail(name)
+
     setLoading(true)
 
     const { error: err } = await supabase.rpc('public_register_member', {
-      p_email: email.trim(),
+      p_email: email,
       p_username: name,
       p_password: password,
     })
@@ -46,7 +50,7 @@ export default function Register() {
 
     // Inicia sesión automáticamente con las credenciales recién creadas
     const { error: signErr } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+      email,
       password,
     })
     setLoading(false)
@@ -74,20 +78,6 @@ export default function Register() {
             placeholder="Ramón, KarpadorPro, ..."
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label className="label" htmlFor="email">Correo electrónico</label>
-          <input
-            id="email"
-            type="email"
-            required
-            autoComplete="email"
-            className="input"
-            placeholder="tucorreo@gmail.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
 

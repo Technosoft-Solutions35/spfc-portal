@@ -7,7 +7,7 @@ import Spinner from '../ui/Spinner'
 import EmptyState from '../ui/EmptyState'
 import Modal from '../ui/Modal'
 import Avatar, { RoleBadge } from '../ui/Avatar'
-import { canAssignRoles, ROLES } from '../../lib/utils'
+import { canAssignRoles, generateMemberEmail, ROLES } from '../../lib/utils'
 import { useAuth } from '../../context/AuthContext'
 
 const ROLE_OPTIONS = [
@@ -17,7 +17,7 @@ const ROLE_OPTIONS = [
   { value: ROLES.MEMBER, label: 'Miembro' },
 ]
 
-const EMPTY_ADD = { username: '', email: '', password: '' }
+const EMPTY_ADD = { username: '', password: '' }
 
 /**
  * Gestión de miembros y roles (CRUD completo).
@@ -69,8 +69,10 @@ export default function MembersManager() {
   const addMember = async (e) => {
     e.preventDefault()
     setBusy(true)
+    // Supabase Auth necesita un email como identificador; como el clan no
+    // valida correos, se genera uno automáticamente a partir del usuario.
     const { error } = await supabase.rpc('admin_invite_member', {
-      p_email: addForm.email.trim(),
+      p_email: generateMemberEmail(addForm.username),
       p_username: addForm.username.trim(),
       p_password: addForm.password,
     })
@@ -216,18 +218,6 @@ export default function MembersManager() {
               placeholder="Nombre de usuario en el clan"
               value={addForm.username}
               onChange={(e) => setAddForm({ ...addForm, username: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="label" htmlFor="add-email">Correo electrónico</label>
-            <input
-              id="add-email"
-              type="email"
-              required
-              className="input"
-              placeholder="miembro@gmail.com"
-              value={addForm.email}
-              onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
             />
           </div>
           <div>

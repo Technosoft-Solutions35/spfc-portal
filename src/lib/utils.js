@@ -57,6 +57,21 @@ export function formatShortDate(value) {
   })
 }
 
+// Email interno derivado del username: Supabase Auth exige un correo como
+// identificador, pero el clan no valida emails reales. Se genera uno
+// automáticamente a partir del usuario (que sí es único) para no pedirlo.
+export function generateMemberEmail(username = '') {
+  const slug =
+    username
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // quita acentos
+      .replace(/[^a-z0-9._-]+/g, '') // solo caracteres válidos
+      .replace(/^[^a-z0-9]+/, '')
+      .slice(0, 32) || 'member'
+  return `${slug}@spfc.gd`
+}
+
 // Iniciales del username para el avatar generado
 export function initials(name = '') {
   return name
