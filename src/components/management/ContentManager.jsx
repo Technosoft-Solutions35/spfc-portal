@@ -8,6 +8,8 @@ import EmptyState from '../ui/EmptyState'
 import ImageInput from '../ui/ImageInput'
 import DocumentsInput from '../ui/DocumentsInput'
 import { publishContentCreated } from '../../lib/notifications'
+import { sendPushNotification } from '../../lib/push'
+import { useAuth } from '../../context/AuthContext'
 
 const FIELD = {
   text: (f, v, set) => (
@@ -77,6 +79,7 @@ export default function ContentManager({
 }) {
   const { items, loading, create, update, remove } = useCrudResult
   const { toast } = useToast()
+  const { profile: currentUser } = useAuth()
   const [modal, setModal] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({})
@@ -123,6 +126,12 @@ export default function ContentManager({
     // Avisa en tiempo real a todos los conectados (broadcast por Realtime)
     if (!editing && type) {
       publishContentCreated({ type, title: payload[columns[0]] || title })
+      // Además envía notificación push a todos los suscritos (web cerrada incluida)
+      sendPushNotification({
+        type,
+        title: payload[columns[0]] || title,
+        username: currentUser?.username,
+      })
     }
   }
 

@@ -9,10 +9,22 @@ import Modal from '../components/ui/Modal'
 import { formatShortDate } from '../lib/utils'
 
 // Convierte cualquier formato de enlace de YouTube a la URL embebible.
-export function youtubeEmbedUrl(url = '') {
+export function youtubeVideoId(url = '') {
   if (!url) return null
   const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{6,})/)
-  return m ? `https://www.youtube.com/embed/${m[1]}` : null
+  return m ? m[1] : null
+}
+
+export function youtubeEmbedUrl(url = '') {
+  const id = youtubeVideoId(url)
+  return id ? `https://www.youtube.com/embed/${id}` : null
+}
+
+// Miniatura oficial de YouTube (hqdefault) para usarla como portada de la guía
+// cuando no se sube imagen propia.
+export function youtubeThumbUrl(url = '') {
+  const id = youtubeVideoId(url)
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null
 }
 
 /**
@@ -75,7 +87,13 @@ export default function Guides() {
         />
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {guides.map((g, i) => (
+          {guides.map((g, i) => {
+            const cover =
+              g.image_url ||
+              youtubeThumbUrl(g.video_url) ||
+              'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200"><rect width="400" height="200" fill="%231A1D24"/><rect width="400" height="200" fill="url(%23g)"/><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%23FF3E3E" stop-opacity="0.4"/><stop offset="1" stop-color="%23FFB703" stop-opacity="0.25"/></linearGradient></defs></svg>'
+            const isVideoCover = !g.image_url && youtubeThumbUrl(g.video_url)
+            return (
             <motion.button
               key={g.id}
               initial={{ opacity: 0, y: 14 }}
@@ -85,14 +103,17 @@ export default function Guides() {
               className="group flex flex-col overflow-hidden rounded-2xl border border-edge bg-elevated text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-card"
             >
               <div
-                className="h-36 w-full bg-cover bg-center transition group-hover:scale-[1.03]"
-                style={{
-                  backgroundImage: `url(${
-                    g.image_url ||
-                    'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200"><rect width="400" height="200" fill="%231A1D24"/><rect width="400" height="200" fill="url(%23g)"/><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%23FF3E3E" stop-opacity="0.4"/><stop offset="1" stop-color="%23FFB703" stop-opacity="0.25"/></linearGradient></defs></svg>'
-                  })`,
-                }}
-              />
+                className="relative h-36 w-full bg-cover bg-center transition group-hover:scale-[1.03]"
+                style={{ backgroundImage: `url(${cover})` }}
+              >
+                {isVideoCover && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/25">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/90 text-white shadow-lg transition group-hover:scale-110">
+                      <Youtube size={20} />
+                    </span>
+                  </span>
+                )}
+              </div>
               <div className="flex-1 p-4">
                 <h3 className="font-display font-bold text-text transition group-hover:text-primary">
                   {g.title}
@@ -120,7 +141,8 @@ export default function Guides() {
                 )}
               </div>
             </motion.button>
-          ))}
+            )
+          })}
         </div>
       )}
 

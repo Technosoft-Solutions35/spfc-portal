@@ -3,6 +3,7 @@ import { LayoutDashboard } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import NewsBanner from '../components/NewsBanner'
 import DashboardWidgets from '../components/DashboardWidgets'
+import PushNotificationsCard from '../components/ui/PushNotificationsCard'
 import { RoleBadge } from '../components/ui/Avatar'
 
 /**
@@ -35,6 +36,10 @@ export default function Dashboard() {
       </motion.div>
 
       <NewsBanner />
+
+      <div className="mt-6">
+        <PushNotificationsCard />
+      </div>
 
       <div className="mt-6">
         <DashboardWidgets />
