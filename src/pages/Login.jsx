@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { LogIn, ShieldAlert } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/ui/Toast'
@@ -10,6 +10,7 @@ import { supabase } from '../lib/supabase'
  * Pantalla de inicio de sesión (usuario + contraseña).
  * Acepta nombre de usuario del clan o, si se introduce un correo
  * (contiene "@"), se autentica directamente con él.
+ * Tras el login se va siempre a la pestaña Inicio.
  */
 export default function Login() {
   const [identifier, setIdentifier] = useState('')
@@ -19,9 +20,6 @@ export default function Login() {
   const { toast } = useToast()
   const { profile } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
-
-  const from = location.state?.from || '/'
 
   // Resuelve el email a partir del nombre de usuario del clan
   const resolveEmail = async (identifierValue) => {
@@ -67,7 +65,7 @@ export default function Login() {
       }
 
       toast(`¡Bienvenido de nuevo, ${profile?.username || ''}!`, 'success')
-      navigate(from, { replace: true })
+      navigate('/', { replace: true })
     } catch (err) {
       setError(err.message || 'Error inesperado. Inténtalo de nuevo.')
       setLoading(false)
