@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { BookOpen, Download, FileText, Paperclip, Tag } from 'lucide-react'
+import { BookOpen, Download, FileText, Paperclip, Tag, Youtube } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 import Modal from '../components/ui/Modal'
 import { formatShortDate } from '../lib/utils'
+
+// Convierte cualquier formato de enlace de YouTube a la URL embebible.
+export function youtubeEmbedUrl(url = '') {
+  if (!url) return null
+  const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{6,})/)
+  return m ? `https://www.youtube.com/embed/${m[1]}` : null
+}
 
 /**
  * Guías y buildeos del clan. Las guías se abren en un modal con su contenido.
@@ -139,6 +146,41 @@ export default function Guides() {
                 </span>
               ))}
             </div>
+
+            {(() => {
+              const embed = youtubeEmbedUrl(active.video_url)
+              return embed ? (
+                <div className="mb-5">
+                  <div className="aspect-video w-full overflow-hidden rounded-xl border border-edge bg-black">
+                    <iframe
+                      src={embed}
+                      title="Video de referencia"
+                      className="h-full w-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      loading="lazy"
+                    />
+                  </div>
+                  <p className="mt-1.5 flex items-center gap-1.5 text-xs text-soft">
+                    <Youtube size={14} className="text-primary" />
+                    Video de referencia de la guía
+                  </p>
+                </div>
+              ) : (
+                active.video_url && (
+                  <a
+                    href={active.video_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mb-5 flex items-center gap-2 rounded-xl bg-secondary/10 px-4 py-2.5 text-sm font-semibold text-secondary transition hover:bg-secondary hover:text-white"
+                  >
+                    <Youtube size={16} />
+                    Ver video de referencia en YouTube
+                  </a>
+                )
+              )
+            })()}
+
             <div className="text-text">
               {active.content.split('\n').map((line, i) => (
                 <p key={i} className={line.trim() === '' ? 'mb-2' : 'mb-3 leading-relaxed'}>

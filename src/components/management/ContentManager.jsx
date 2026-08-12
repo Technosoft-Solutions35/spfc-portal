@@ -7,6 +7,7 @@ import Spinner from '../ui/Spinner'
 import EmptyState from '../ui/EmptyState'
 import ImageInput from '../ui/ImageInput'
 import DocumentsInput from '../ui/DocumentsInput'
+import { publishContentCreated } from '../../lib/notifications'
 
 const FIELD = {
   text: (f, v, set) => (
@@ -17,6 +18,15 @@ const FIELD = {
   ),
   date: (f, v, set) => (
     <input type="datetime-local" className="input" value={v || ''} onChange={(e) => set({ [f.key]: e.target.value })} />
+  ),
+  url: (f, v, set) => (
+    <input
+      type="url"
+      className="input"
+      placeholder={f.placeholder || 'https://...'}
+      value={v || ''}
+      onChange={(e) => set({ [f.key]: e.target.value })}
+    />
   ),
   select: (f, v, set) => (
     <select className="input" value={v || f.default || ''} onChange={(e) => set({ [f.key]: e.target.value })}>
@@ -35,7 +45,7 @@ const FIELD = {
     />
   ),
   image: (f, v, set) => (
-    <ImageInput value={v || ''} onChange={(url) => set({ [f.key]: url })} />
+    <ImageInput value={v || ''} onChange={(url) => set({ [f.key]: url })} allowUrl={f.allowUrl !== false} />
   ),
   documents: (f, v, set) => (
     <DocumentsInput value={v || []} onChange={(docs) => set({ [f.key]: docs })} />
@@ -59,6 +69,7 @@ function Field({ f, value, onChange }) {
 export default function ContentManager({
   title,
   subtitle,
+  type,
   fields,
   columns = ['title'],
   emptyHint,
@@ -109,6 +120,10 @@ export default function ContentManager({
     }
     toast(editing ? 'Contenido actualizado' : 'Contenido creado', 'success')
     setModal(false)
+    // Avisa en tiempo real a todos los conectados (broadcast por Realtime)
+    if (!editing && type) {
+      publishContentCreated({ type, title: payload[columns[0]] || title })
+    }
   }
 
   const confirmDelete = async (item) => {

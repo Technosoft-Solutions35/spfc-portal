@@ -3,6 +3,14 @@ import { FileText, UploadCloud, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useToast } from './Toast'
 
+// Solo tipos de documento (sin imagen/video): evita que iOS ofrezca
+// "Tomar foto o video" en el selector (que pedía permisos de cámara/micrófono).
+const ACCEPT =
+  '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.odt,.ods,.csv,.md,.zip,.rar,.7z,' +
+  'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,' +
+  'application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,' +
+  'application/zip,application/x-rar-compressed,application/x-7z-compressed,text/plain,text/csv'
+
 /**
  * Selector de documentos adjuntos (cualquier tipo de archivo) para formularios.
  * Sube cada archivo al bucket "media" de Supabase Storage y guarda
@@ -12,14 +20,22 @@ export default function DocumentsInput({ value = [], onChange }) {
   const { toast } = useToast()
   const fileRef = useRef(null)
   const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [filesDone, setFilesDone] = useState(0)
+  const [totalFiles, setTotalFiles] = useState(0)
 
   const upload = async (files) => {
     const list = Array.from(files || [])
     if (!list.length) return
     setUploading(true)
+    setTotalFiles(list.length)
+    setFilesDone(0)
+    setProgress(0)
 
     const uploaded = []
-    for (const file of list) {
+    for (let idx = 0; idx < list.length; idx++) {
+      const file = list[idx]
+      setProgress(0)
       const ext = (file.name.split('.').pop() || 'bin').toLowerCase()
       const path = `docs/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
 
@@ -27,18 +43,22 @@ export default function DocumentsInput({ value = [], onChange }) {
         cacheControl: '3600',
         upsert: false,
         contentType: file.type || 'application/octet-stream',
+        onUploadProgress: (e) => {
+          if (e.total > 0) setProgress(Math.round((e.loaded / e.total) * 100))
+        },
       })
 
       if (error) {
         toast(`No se pudo subir ${file.name}: ${error.message}`, 'error')
-        continue
+      } else {
+        const { data: publicUrl } = supabase.storage.from('media').getPublicUrl(data.path)
+        uploaded.push({ name: file.name, url: publicUrl.publicUrl })
       }
-
-      const { data: publicUrl } = supabase.storage.from('media').getPublicUrl(data.path)
-      uploaded.push({ name: file.name, url: publicUrl.publicUrl })
+      setFilesDone(idx + 1)
     }
 
     setUploading(false)
+    setProgress(0)
     if (uploaded.length) {
       onChange([...(value || []), ...uploaded])
       toast(`${uploaded.length} documento(s) subido(s)`, 'success')
@@ -71,6 +91,7 @@ export default function DocumentsInput({ value = [], onChange }) {
           ref={fileRef}
           type="file"
           multiple
+          accept={ACCEPT}
           className="sr-only"
           onChange={(e) => {
             upload(e.target.files)
@@ -78,6 +99,20 @@ export default function DocumentsInput({ value = [], onChange }) {
           }}
         />
       </div>
+
+      {uploading && (
+        <div className="mt-2">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-edge">
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-150"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="mt-1 text-[10px] font-semibold text-soft">
+            Subiendo archivo {filesDone + (progress === 100 ? 0 : 1)} de {totalFiles}… {progress}%
+          </p>
+        </div>
+      )}
 
       {(value || []).length > 0 && (
         <ul className="mt-2 space-y-1.5">

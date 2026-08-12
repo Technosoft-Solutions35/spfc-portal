@@ -250,6 +250,7 @@ create table if not exists public.guides (
   content    text not null default '',
   tags       text[] not null default '{}',
   image_url  text,
+  video_url  text,
   documents  jsonb not null default '[]'::jsonb,
   author_id  uuid references public.profiles (id) on delete set null,
   created_at timestamptz not null default now(),

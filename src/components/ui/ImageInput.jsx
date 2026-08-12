@@ -6,11 +6,14 @@ import { useToast } from './Toast'
 /**
  * Selector de imagen para formularios de contenido.
  * Permite pegar una URL o subir un archivo al bucket "media" de Supabase Storage.
+ * Con `allowUrl={false}` se oculta el campo de URL (p. ej. en guías, donde se
+ * prefiere el enlace de YouTube en su propio campo).
  */
-export default function ImageInput({ value, onChange }) {
+export default function ImageInput({ value, onChange, allowUrl = true }) {
   const { toast } = useToast()
   const fileRef = useRef(null)
   const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState(0)
 
   // Los móviles (sobre todo iPhone) envían fotos en HEIC, que la mayoría de
   // navegadores no saben mostrar. Si el archivo es HEIC/HEIF se convierte a
@@ -53,6 +56,7 @@ export default function ImageInput({ value, onChange }) {
   const upload = async (file) => {
     if (!file) return
     setUploading(true)
+    setProgress(0)
     const normalized = await normalizeImage(file)
     const ext = normalized.name.split('.').pop() || 'png'
     const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
@@ -61,6 +65,9 @@ export default function ImageInput({ value, onChange }) {
       cacheControl: '3600',
       upsert: false,
       contentType: normalized.type || 'application/octet-stream',
+      onUploadProgress: (e) => {
+        if (e.total > 0) setProgress(Math.round((e.loaded / e.total) * 100))
+      },
     })
 
     if (error) {
@@ -73,6 +80,7 @@ export default function ImageInput({ value, onChange }) {
     onChange(publicUrl.publicUrl)
     toast('Imagen subida', 'success')
     setUploading(false)
+    setProgress(0)
     if (fileRef.current) fileRef.current.value = ''
   }
 
@@ -112,18 +120,40 @@ export default function ImageInput({ value, onChange }) {
         </div>
 
         <div className="flex-1">
-          <span className="mb-1 flex items-center gap-1.5 text-xs font-medium text-soft">
-            <Link2 size={12} /> O pega la URL de la imagen
-          </span>
-          <input
-            type="url"
-            className="input text-base"
-            placeholder="https://..."
-            value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
-          />
+          {allowUrl ? (
+            <>
+              <span className="mb-1 flex items-center gap-1.5 text-xs font-medium text-soft">
+                <Link2 size={12} /> O pega la URL de la imagen
+              </span>
+              <input
+                type="url"
+                className="input text-base"
+                placeholder="https://..."
+                value={value || ''}
+                onChange={(e) => onChange(e.target.value)}
+              />
+            </>
+          ) : (
+            value && (
+              <span className="ml-1 flex items-center gap-1.5 text-xs font-medium text-soft">
+                <Link2 size={12} /> Imagen subida desde tu dispositivo
+              </span>
+            )
+          )}
         </div>
       </div>
+
+      {uploading && (
+        <div className="mt-2">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-edge">
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-150"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="mt-1 text-[10px] font-semibold text-soft">Subiendo imagen… {progress}%</p>
+        </div>
+      )}
     </div>
   )
 }

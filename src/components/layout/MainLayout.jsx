@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import Background from './Background'
 import Sidebar from './Sidebar'
 import MobileHeader from './MobileHeader'
+import ContentNotifier from './ContentNotifier'
 
 /**
  * Layout principal del portal (solo usuarios logueados).
@@ -20,6 +21,7 @@ export default function MainLayout() {
   return (
     <div className="min-h-screen">
       <Background />
+      <ContentNotifier />
 
       <div className="flex">
         <Sidebar />
