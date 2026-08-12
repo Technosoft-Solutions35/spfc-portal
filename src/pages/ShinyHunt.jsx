@@ -9,6 +9,7 @@ import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 import Avatar, { RoleBadge } from '../components/ui/Avatar'
+import ProfileModal from '../components/profile/ProfileModal'
 
 /**
  * Tabla de Shiny Hunt sincronizada en TIEMPO REAL con Supabase.
@@ -21,6 +22,7 @@ export default function ShinyHunt() {
   const [hunters, setHunters] = useState(null)
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState(null)
+  const [viewingId, setViewingId] = useState(null)
   const isStaff = canManageShinies(role)
 
   const fetchHunters = useCallback(async () => {
@@ -129,14 +131,18 @@ export default function ShinyHunt() {
                   <Avatar name={h.username} src={h.avatar_url} size="sm" />
 
                   <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-2 truncate font-semibold text-text">
+                    <button
+                      type="button"
+                      onClick={() => setViewingId(h.id)}
+                      className="flex items-center gap-2 truncate font-semibold text-text transition hover:text-primary"
+                    >
                       {h.username}
                       {isMe && (
                         <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
                           TÚ
                         </span>
                       )}
-                    </p>
+                    </button>
                     <RoleBadge role={h.role} />
                   </div>
 
@@ -181,6 +187,9 @@ export default function ShinyHunt() {
           Los cambios se guardan al instante y se reflejan en todos los miembros conectados.
         </p>
       )}
+
+      {/* Perfil de un miembro al hacer clic en su nombre */}
+      <ProfileModal userId={viewingId} onClose={() => setViewingId(null)} />
     </div>
   )
 }

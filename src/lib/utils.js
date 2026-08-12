@@ -35,6 +35,16 @@ export const ROLE_LABELS = {
   member: 'Miembro',
 }
 
+// ── DLC 1: Datos personalizables del perfil ──
+// Afiliación de clan (solo estas dos opciones, como se definió)
+export const AFFILIATIONS = ['SpFc', 'SpGd']
+
+// Roles / profesiones en el juego (multiselección con tags)
+export const GAME_ROLES = ['Criador', 'Entrenador EVs', 'Jugador PvP', 'ShinyHunter', 'Jugador PvE']
+
+// Límite de la bio (caracteres)
+export const BIO_MAX = 200
+
 // Fecha legible en español (ej: 11/08/2026 · 20:30)
 export function formatDate(value) {
   if (!value) return '—'
@@ -80,6 +90,13 @@ export function initials(name = '') {
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase() ?? '')
     .join('')
+}
+
+// Extrae la ruta del objeto Storage desde su URL pública
+// (…/storage/v1/object/public/media/<carpeta>/<archivo> → <carpeta>/<archivo>)
+export function storagePathFromUrl(url = '') {
+  const m = url.match(/\/object\/public\/[^/]+\/(.+)$/)
+  return m ? m[1] : null
 }
 
 // Primer plano del fondo: genera una URL de imágenes con formato (p. ej. Unsplash)

@@ -22,6 +22,9 @@ const Guides = lazy(() => import('./pages/Guides'))
 const Events = lazy(() => import('./pages/Events'))
 const Raffles = lazy(() => import('./pages/Raffles'))
 const ContentManagement = lazy(() => import('./pages/ContentManagement'))
+const Profile = lazy(() => import('./pages/Profile'))
+const MyShinies = lazy(() => import('./pages/MyShinies'))
+const ReviewShinies = lazy(() => import('./pages/ReviewShinies'))
 
 /**
  * Raíz de la aplicación: proveedores globales + rutas.
@@ -59,6 +62,20 @@ export default function App() {
                   <Route path="/torneos" element={<Tournaments />} />
                   <Route path="/guias" element={<Guides />} />
                   <Route path="/eventos" element={<Events />} />
+
+                  {/* DLC 1: perfil propio */}
+                  <Route path="/perfil" element={<Profile />} />
+
+                  {/* DLC 2: reportes de shinies (miembro) y revisión (staff) */}
+                  <Route path="/mis-shinies" element={<MyShinies />} />
+                  <Route
+                    path="/revisar-shinies"
+                    element={
+                      <ProtectedRoute roles={['super-admin', 'admin', 'gestor']}>
+                        <ReviewShinies />
+                      </ProtectedRoute>
+                    }
+                  />
 
                   {/* Panel de sorteos: lo ve todo el clan; gestión solo admin */}
                   <Route path="/sorteos" element={<Raffles />} />

@@ -9,7 +9,7 @@ import { useToast } from './Toast'
  * Con `allowUrl={false}` se oculta el campo de URL (p. ej. en guías, donde se
  * prefiere el enlace de YouTube en su propio campo).
  */
-export default function ImageInput({ value, onChange, allowUrl = true }) {
+export default function ImageInput({ value, onChange, allowUrl = true, folder = '' }) {
   const { toast } = useToast()
   const fileRef = useRef(null)
   const [uploading, setUploading] = useState(false)
@@ -59,7 +59,9 @@ export default function ImageInput({ value, onChange, allowUrl = true }) {
     setProgress(0)
     const normalized = await normalizeImage(file)
     const ext = normalized.name.split('.').pop() || 'png'
-    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+    // `folder` permite subir a la carpeta del usuario (p. ej. avatars/<uid>)
+    // cumpliendo la política de storage "media_user_insert_own" (primer segmento = uid).
+    const path = `${folder ? folder + '/' : ''}${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
 
     const { data, error } = await supabase.storage.from('media').upload(path, normalized, {
       cacheControl: '3600',

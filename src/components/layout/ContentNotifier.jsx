@@ -23,6 +23,14 @@ export default function ContentNotifier() {
 
   useEffect(() => {
     return subscribeContentCreated((payload) => {
+      // Avisos personales: solo para el destinatario
+      if (payload.forUserId) {
+        if (payload.forUserId === uidRef.current && payload.message) {
+          toast(payload.message, 'info', 6000)
+        }
+        return
+      }
+      // Avisos globales: se omite el propio usuario que los publicó
       if (payload.uid && payload.uid === uidRef.current) return
       const label = CONTENT_META[payload.type] || 'Nuevo contenido'
       toast(`${label}: ${payload.title || ''}`.trim(), 'info', 5000)

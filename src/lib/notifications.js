@@ -31,6 +31,8 @@ function ensureChannel() {
 }
 
 // Emite el aviso de contenido nuevo. `payload`: { type, title, uid }
+// Si se pasa `forUserId`, el aviso solo se muestra a ese usuario (avisos
+// personales, p. ej. "tu reporte fue aprobado"). Sin `forUserId`, es global.
 export async function publishContentCreated(payload) {
   try {
     const { data } = await supabase.auth.getUser()
@@ -42,6 +44,15 @@ export async function publishContentCreated(payload) {
   } catch {
     // Si falla el broadcast no bloquea la creación del contenido
   }
+}
+
+// Aviso personal dirigido a un único usuario (revisión de reportes de shinies).
+// Combina el broadcast en tiempo real (pestaña abierta) con el push dirigido.
+export async function notifyUser({ userId, message, pushPayload = {} }) {
+  await publishContentCreated({ type: 'personal', message, forUserId: userId })
+  // El push se envía solo si el módulo está cargado (evita circular imports).
+  const { sendPushNotification } = await import('./push')
+  await sendPushNotification({ ...pushPayload, message, userId })
 }
 
 // Se suscribe a los avisos; devuelve una función para desuscribirse.

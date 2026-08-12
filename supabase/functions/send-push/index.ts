@@ -60,7 +60,10 @@ Deno.serve(async (req) => {
 
   const type = String(payload.type || 'noticia')
   const title = String(payload.title || 'Nuevo contenido')
-  const message = `Nuevo ${type}: ${title}${payload.username ? ` · ${payload.username}` : ''}`
+  // Mensaje personalizado (avisos dirigidos) o texto generado por defecto
+  const message =
+    payload.message ||
+    `Nuevo ${type}: ${title}${payload.username ? ` · ${payload.username}` : ''}`
 
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE)
 
@@ -69,9 +72,14 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
-  const { data: subscriptions, error } = await serviceClient
-    .from('push_subscriptions')
-    .select('endpoint, keys')
+
+  // Si llega `userId`, el aviso solo se envía a las suscripciones de ese usuario
+  // (avisos personales como "tu reporte fue aprobado").
+  let query = serviceClient.from('push_subscriptions').select('endpoint, keys')
+  if (payload.userId) {
+    query = query.eq('user_id', payload.userId)
+  }
+  const { data: subscriptions, error } = await query
 
   if (error) {
     return new Response('Error leyendo suscripciones: ' + error.message, { status: 500 })

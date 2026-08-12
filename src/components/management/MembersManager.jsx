@@ -9,6 +9,7 @@ import Modal from '../ui/Modal'
 import Avatar, { RoleBadge } from '../ui/Avatar'
 import { canAssignRoles, generateMemberEmail, ROLES } from '../../lib/utils'
 import { useAuth } from '../../context/AuthContext'
+import ProfileModal from '../profile/ProfileModal'
 
 const ROLE_OPTIONS = [
   { value: ROLES.SUPER_ADMIN, label: 'Super Administrador' },
@@ -32,6 +33,7 @@ export default function MembersManager() {
   const [members, setMembers] = useState(null)
   const [busy, setBusy] = useState(false)
   const [deleting, setDeleting] = useState(null)
+  const [viewingId, setViewingId] = useState(null)
   const [modal, setModal] = useState(null) // 'add' | 'edit'
   const [editingId, setEditingId] = useState(null)
   const [addForm, setAddForm] = useState(EMPTY_ADD)
@@ -164,7 +166,13 @@ export default function MembersManager() {
             >
               <Avatar name={m.username} src={m.avatar_url} size="sm" />
               <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold text-text">{m.username}</p>
+                <button
+                  type="button"
+                  onClick={() => setViewingId(m.id)}
+                  className="truncate font-semibold text-text transition hover:text-primary"
+                >
+                  {m.username}
+                </button>
                 <p className="truncate text-xs text-soft">{m.email}</p>
               </div>
               <div className="flex items-center gap-2">
@@ -311,6 +319,9 @@ export default function MembersManager() {
           </div>
         </form>
       </Modal>
+
+      {/* Perfil de un miembro al hacer clic en su nombre */}
+      <ProfileModal userId={viewingId} onClose={() => setViewingId(null)} />
     </div>
   )
 }
