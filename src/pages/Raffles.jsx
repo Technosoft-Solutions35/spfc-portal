@@ -2,14 +2,19 @@ import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   AlertTriangle,
+  Download,
   History,
+  Pencil,
   RefreshCcw,
   Sparkles,
   Ticket,
+  Trash2,
   Trophy,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/ui/Toast'
+import { canAccessRaffles } from '../lib/utils'
 import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
@@ -54,12 +59,16 @@ export function weightedDraw(tickets, numWinners = 3) {
 }
 
 /**
- * Panel de Sorteos — EXCLUSIVO de administradores.
- * Carga masiva de tickets (texto plano), visualización ordenada
- * y ejecución del sorteo ponderado con 3 ganadores.
+ * Panel de Sorteos.
+ * - Cualquier miembro logueado VE los ganadores del sorteo y cuántos
+ *   tickets tiene cada participante (en tiempo real).
+ * - Solo admin / super-admin pueden gestionar: editar la lista actual,
+ *   insertar una nueva reemplazando todos los datos, vaciarla y sortear.
  */
 export default function Raffles() {
   const { toast } = useToast()
+  const { role } = useAuth()
+  const isAdmin = canAccessRaffles(role)
 
   const [input, setInput] = useState('')
   const [tickets, setTickets] = useState(null)
@@ -74,6 +83,9 @@ export default function Raffles() {
     () => (tickets || []).reduce((s, t) => s + t.quantity, 0),
     [tickets]
   )
+
+  // Último sorteo realizado (ganadores vigentes)
+  const lastDraw = history[0] || null
 
   const loadTickets = async () => {
     const { data } = await supabase
@@ -95,13 +107,30 @@ export default function Raffles() {
   useEffect(() => {
     loadTickets()
     loadHistory()
-    // Suscripción en tiempo real para que la tabla se actualice sola
+    // Suscripción en tiempo real para que la tabla y los resultados se actualicen solos
     const channel = supabase
-      .channel('tickets-realtime')
+      .channel('raffles-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, loadTickets)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'draws' }, loadHistory)
       .subscribe()
     return () => supabase.removeChannel(channel)
   }, [])
+
+  // Lleva la lista actual de tickets al textarea para poder editarla
+  const loadCurrentIntoInput = () => {
+    if (!tickets || tickets.length === 0) {
+      toast('La lista está vacía; pega los participantes para crearla.', 'info')
+      setInput('')
+      return
+    }
+    setInput(
+      tickets
+        .map((t) => `${t.username} ${t.quantity}`)
+        .sort((a, b) => a.localeCompare(b, 'es'))
+        .join('\n')
+    )
+    toast('Lista actual cargada en el editor.', 'info')
+  }
 
   // Sincroniza los tickets del textarea con la base de datos (upsert masivo)
   const syncTickets = async () => {
@@ -132,13 +161,50 @@ export default function Raffles() {
     loadTickets()
   }
 
-  // Limpia todos los tickets (nuevo sorteo)
-  const clearTickets = async () => {
-    const { error } = await supabase.from('tickets').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    if (!error) {
-      toast('Tabla de tickets vaciada', 'info')
-      loadTickets()
+  // Inserta una lista NUEVA reemplazando todos los datos anteriores
+  const replaceTickets = async () => {
+    const parsed = parseTicketInput(input)
+    if (parsed.length === 0) {
+      toast('No se detectaron líneas válidas (formato: Nombre Cantidad)', 'error')
+      return
     }
+    if (!window.confirm(`¿Reemplazar TODOS los tickets por la nueva lista (${parsed.length} participantes)?`))
+      return
+
+    setSyncing(true)
+    const { error: delErr } = await supabase
+      .from('tickets')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000')
+    const { error: insErr } = await supabase.from('tickets').insert(
+      parsed.map((p) => ({ username: p.username, quantity: p.quantity }))
+    )
+    setSyncing(false)
+
+    if (delErr || insErr) {
+      toast('Error al reemplazar tickets', 'error')
+      return
+    }
+    toast(`Lista reemplazada: ${parsed.length} participantes`, 'success')
+    setInput('')
+    loadTickets()
+  }
+
+  // Limpia todos los tickets y resultados (nuevo sorteo)
+  const clearTickets = async () => {
+    if (!window.confirm('¿Vaciar tickets y resultados? Se eliminará también el historial de sorteos.')) return
+    const { error: delTickets } = await supabase
+      .from('tickets')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000')
+    const { error: delDraws } = await supabase.from('draws').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    if (delTickets || delDraws) {
+      toast('Error al vaciar', 'error')
+      return
+    }
+    toast('Tabla de tickets y resultados vaciada', 'info')
+    loadTickets()
+    loadHistory()
   }
 
   // Genera el sorteo ponderado
@@ -165,103 +231,144 @@ export default function Raffles() {
   return (
     <div>
       <PageHeader
-        title="Panel de Sorteos"
-        subtitle="Carga masiva de tickets y ejecución del sorteo ponderado (exclusivo admin)."
+        title="Sorteos"
+        subtitle={
+          isAdmin
+            ? 'Gestiona los tickets y ejecuta el sorteo ponderado (3 ganadores).'
+            : 'Consulta los ganadores del sorteo y los tickets de cada participante.'
+        }
         icon={Trophy}
       />
 
-      <div className="grid gap-6 lg:grid-cols-5">
-        {/* ── Columna izquierda: entrada de texto masiva ── */}
-        <div className="lg:col-span-2">
-          <div className="rounded-2xl border border-edge bg-elevated p-5">
-            <h3 className="mb-1 flex items-center gap-2 font-display font-bold text-text">
-              <Ticket size={18} className="text-primary" />
-              Entrada de tickets
-            </h3>
-            <p className="mb-3 text-xs text-soft">
-              Pega una línea por participante con el formato:{' '}
-              <code className="rounded bg-background px-1.5 py-0.5 font-bold text-secondary">
-                Nombre Cantidad
-              </code>
-            </p>
+      {/* ── Gestión (solo admin / super-admin) ── */}
+      {isAdmin && (
+        <div className="mb-6 rounded-2xl border border-edge bg-elevated p-5">
+          <h3 className="mb-1 flex items-center gap-2 font-display font-bold text-text">
+            <Ticket size={18} className="text-primary" />
+            Entrada de tickets
+          </h3>
+          <p className="mb-3 text-xs text-soft">
+            Pega una línea por participante con el formato:{' '}
+            <code className="rounded bg-background px-1.5 py-0.5 font-bold text-secondary">
+              Nombre Cantidad
+            </code>{' '}
+            — o pulsa <strong>Cargar actual</strong> para editar la lista ya insertada.
+          </p>
 
-            <textarea
-              className="input min-h-[180px] font-mono text-sm"
-              placeholder={'Ramón 5\nSofia 3\nKarpadorPro 8\n...'}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-            />
+          <textarea
+            className="input min-h-[180px] font-mono text-base"
+            placeholder={'Ramón 5\nSofia 3\nKarpadorPro 8\n...'}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+          />
 
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                onClick={syncTickets}
-                disabled={syncing}
-                className="btn-primary flex-1"
-              >
-                <RefreshCcw size={17} className={syncing ? 'animate-spin' : ''} />
-                {syncing ? 'Sincronizando...' : 'Sincronizar Tickets'}
-              </button>
-              <button
-                onClick={clearTickets}
-                disabled={!tickets || tickets.length === 0}
-                className="btn-ghost"
-                title="Vaciar todos los tickets"
-              >
-                <AlertTriangle size={17} />
-                Vaciar
-              </button>
-            </div>
-
-            {input.trim() && (
-              <p className="mt-2 text-xs text-soft">
-                {parseTicketInput(input).length} participantes detectados
-                {' · '}
-                {parseTicketInput(input).reduce((s, p) => s + p.quantity, 0)} boletas totales
-              </p>
-            )}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button onClick={syncTickets} disabled={syncing} className="btn-primary flex-1">
+              <RefreshCcw size={17} className={syncing ? 'animate-spin' : ''} />
+              {syncing ? 'Guardando...' : 'Sincronizar Tickets'}
+            </button>
+            <button onClick={loadCurrentIntoInput} className="btn-ghost">
+              <Pencil size={16} />
+              Cargar actual
+            </button>
+            <button onClick={replaceTickets} disabled={syncing} className="btn-ghost">
+              <Download size={16} />
+              Reemplazar todo
+            </button>
+            <button
+              onClick={clearTickets}
+              disabled={!tickets || tickets.length === 0}
+              className="btn-ghost"
+              title="Vaciar tickets y resultados"
+            >
+              <Trash2 size={16} />
+              Vaciar
+            </button>
           </div>
 
-          {/* Historial de sorteos */}
-          {history.length > 0 && (
-            <div className="mt-5 rounded-2xl border border-edge bg-elevated p-5">
-              <h3 className="mb-3 flex items-center gap-2 font-display font-bold text-text">
-                <History size={17} className="text-secondary" />
-                Últimos sorteos
-              </h3>
-              <ul className="space-y-2">
-                {history.map((d) => (
-                  <li key={d.id} className="rounded-xl bg-background p-3 text-xs">
-                    <p className="mb-1 text-soft">
-                      {new Date(d.created_at).toLocaleString('es-ES', {
-                        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
-                      })}{' '}
-                      · {d.total_balls} boletas
-                    </p>
-                    <p className="font-semibold text-text">
-                      {d.winners.join('  🏆  ')}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {input.trim() && (
+            <p className="mt-2 text-xs text-soft">
+              {parseTicketInput(input).length} participantes detectados
+              {' · '}
+              {parseTicketInput(input).reduce((s, p) => s + p.quantity, 0)} boletas totales
+            </p>
           )}
         </div>
+      )}
 
-        {/* ── Columna derecha: tabla de tickets + sorteo ── */}
+      <div className="grid gap-6 lg:grid-cols-5">
+        {/* ── Columna izquierda: resultados (todos) ── */}
+        <div className="lg:col-span-2">
+          <div className="rounded-2xl border border-edge bg-elevated p-5">
+            <h3 className="mb-4 flex items-center gap-2 font-display font-bold text-text">
+              <Trophy size={18} className="text-secondary" />
+              Ganadores del sorteo
+            </h3>
+
+            {lastDraw ? (
+              <>
+                <div className="rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 p-4 text-center">
+                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-soft">
+                    {new Date(lastDraw.created_at).toLocaleString('es-ES', {
+                      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+                    })}
+                    {' · '}
+                    {lastDraw.total_balls} boletas
+                  </p>
+                  <p className="font-display text-lg font-extrabold text-text">
+                    {lastDraw.winners.join('  🏆  ')}
+                  </p>
+                </div>
+
+                {history.length > 1 && (
+                  <div className="mt-5">
+                    <p className="mb-2 flex items-center gap-1.5 text-sm font-bold text-text">
+                      <History size={14} className="text-soft" />
+                      Sorteos anteriores
+                    </p>
+                    <ul className="space-y-2">
+                      {history.slice(1).map((d) => (
+                        <li key={d.id} className="rounded-xl bg-background p-3 text-xs">
+                          <p className="mb-1 text-soft">
+                            {new Date(d.created_at).toLocaleString('es-ES', {
+                              day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+                            })}{' '}
+                            · {d.total_balls} boletas
+                          </p>
+                          <p className="font-semibold text-text">{d.winners.join('  🏆  ')}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            ) : (
+              <EmptyState
+                title="Aún no hay ganadores"
+                hint="Cuando el staff realice el sorteo, los ganadores aparecerán aquí."
+                icon={Trophy}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* ── Columna derecha: tickets (todos) ── */}
         <div className="lg:col-span-3">
           <div className="rounded-2xl border border-edge bg-elevated p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h3 className="flex items-center gap-2 font-display font-bold text-text">
                 <Sparkles size={18} className="text-secondary" />
-                Boletas en la urna
+                Boletas por participante
                 <span className="rounded-full bg-secondary/15 px-2.5 py-0.5 text-xs font-bold text-secondary">
                   {totalBalls} total
                 </span>
               </h3>
-              <button onClick={runDraw} disabled={drawing || totalBalls === 0} className="btn-secondary">
-                <Trophy size={17} />
-                {drawing ? 'Generando...' : 'Generar Sorteo'}
-              </button>
+              {isAdmin && (
+                <button onClick={runDraw} disabled={drawing || totalBalls === 0} className="btn-secondary">
+                  <Trophy size={17} />
+                  {drawing ? 'Generando...' : 'Generar Sorteo'}
+                </button>
+              )}
             </div>
 
             {!tickets ? (
@@ -269,7 +376,11 @@ export default function Raffles() {
             ) : tickets.length === 0 ? (
               <EmptyState
                 title="Sin tickets"
-                hint="Pega los participantes en el textarea y pulsa Sincronizar Tickets."
+                hint={
+                  isAdmin
+                    ? 'Pega los participantes en el editor y pulsa Sincronizar Tickets.'
+                    : 'El staff aún no ha cargado los tickets del sorteo.'
+                }
                 icon={Ticket}
               />
             ) : (
@@ -305,8 +416,8 @@ export default function Raffles() {
           </div>
 
           <p className="mt-3 text-xs text-soft">
-            El algoritmo de la urna virtual da más probabilidad a quien más tickets tenga:
-            cada ticket equivale a una boleta en el sorteo. Se eligen 3 ganadores distintos.
+            Cada ticket equivale a una boleta en el sorteo: a más tickets, más probabilidad. Se
+            eligen 3 ganadores distintos.
           </p>
         </div>
       </div>

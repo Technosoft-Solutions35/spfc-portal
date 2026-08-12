@@ -111,9 +111,12 @@ body {
       disabled:opacity-50 disabled:pointer-events-none;
   }
 
-  /* Inputs limpios */
+  /* Inputs limpios.
+     IMPORTANTE: font-size >= 16px (text-base) para que iOS NO haga zoom
+     automático al enfocar campos; con menos de 16px Safari acercaba la
+     vista y la dejaba "pegada" en zoom hasta alejarse a mano. */
   .input {
-    @apply w-full rounded-xl border border-edge bg-elevated px-4 py-2.5 text-text
+    @apply w-full rounded-xl border border-edge bg-elevated px-4 py-2.5 text-base text-text
       placeholder-soft outline-none transition-all duration-200
       focus:border-primary focus:ring-2 focus:ring-primary/25;
   }

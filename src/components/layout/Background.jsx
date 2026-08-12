@@ -17,9 +17,11 @@ export default function Background() {
       <div className="absolute inset-0 bg-background/85" />
       <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
 
-      {/* Resplandores decorativos con la paleta del clan */}
-      <div className="absolute -left-32 top-[-10%] h-96 w-96 rounded-full bg-primary/20 blur-[120px]" />
-      <div className="absolute -right-32 bottom-[-10%] h-96 w-96 rounded-full bg-secondary/15 blur-[120px]" />
+      {/* Resplandores decorativos con la paleta del clan.
+          En móvil se usan blurs más suaves: los blurs enormes sobrecargan
+          el compositor de iOS Safari y provocan saltos de escala/zoom. */}
+      <div className="absolute -left-32 top-[-10%] h-96 w-96 rounded-full bg-primary/20 blur-[60px] lg:blur-[120px]" />
+      <div className="absolute -right-32 bottom-[-10%] h-96 w-96 rounded-full bg-secondary/15 blur-[60px] lg:blur-[120px]" />
     </div>
   )
 }

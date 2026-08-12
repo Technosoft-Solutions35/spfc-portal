@@ -16,6 +16,7 @@ export const NAV_ITEMS = [
   { to: '/guias', label: 'Guías y Buildeos', icon: BookOpen },
   { to: '/eventos', label: 'Eventos', icon: CalendarDays },
   // Secciones reservadas al staff / admin (se filtran según el rol)
-  { to: '/sorteos', label: 'Sorteos', icon: Trophy, roles: ['super-admin', 'admin'] },
+  // Sorteos lo ve todo el clan; la gestión de tickets es solo admin.
+  { to: '/sorteos', label: 'Sorteos', icon: Trophy },
   { to: '/gestion', label: 'Gestión', icon: Settings, roles: ['super-admin', 'admin', 'gestor'] },
 ]

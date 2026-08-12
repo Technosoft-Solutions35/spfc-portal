@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { BookOpen, FileText, Paperclip, Tag } from 'lucide-react'
+import { BookOpen, Download, FileText, Paperclip, Tag } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
@@ -14,6 +14,33 @@ import { formatShortDate } from '../lib/utils'
 export default function Guides() {
   const [guides, setGuides] = useState(null)
   const [active, setActive] = useState(null)
+  const [downloading, setDownloading] = useState(null)
+
+  // Descarga el documento sin abrirlo (fetch → blob → enlace con download).
+  // No usamos el atributo download del <a> directo porque los archivos están
+  // en otro dominio (Supabase Storage) y el navegador ignoraría el nombre.
+  const downloadDoc = async (doc) => {
+    if (downloading) return
+    setDownloading(doc.url)
+    try {
+      const res = await fetch(doc.url)
+      if (!res.ok) throw new Error('HTTP ' + res.status)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = doc.name || 'documento'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch {
+      // Si el fetch cruzado falla, abre el archivo en otra pestaña
+      window.open(doc.url, '_blank', 'noopener,noreferrer')
+    } finally {
+      setDownloading(null)
+    }
+  }
 
   useEffect(() => {
     supabase
@@ -127,16 +154,28 @@ export default function Guides() {
                 </p>
                 <ul className="space-y-2">
                   {active.documents.map((doc, i) => (
-                    <li key={i}>
+                    <li
+                      key={i}
+                      className="flex items-center gap-2 rounded-xl border border-edge bg-background px-3 py-2"
+                    >
+                      <FileText size={15} className="shrink-0 text-primary" />
                       <a
                         href={doc.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-2 rounded-xl border border-edge bg-background px-3 py-2 text-sm font-medium text-text transition hover:border-primary/40 hover:text-primary"
+                        className="min-w-0 flex-1 truncate text-sm font-medium text-text transition hover:text-primary"
                       >
-                        <FileText size={15} className="shrink-0 text-primary" />
-                        <span className="truncate">{doc.name}</span>
+                        {doc.name}
                       </a>
+                      <button
+                        type="button"
+                        onClick={() => downloadDoc(doc)}
+                        disabled={downloading === doc.url}
+                        className="flex items-center gap-1.5 rounded-lg bg-secondary/10 px-2.5 py-1.5 text-xs font-bold text-secondary transition hover:bg-secondary hover:text-white disabled:opacity-50"
+                      >
+                        <Download size={14} />
+                        {downloading === doc.url ? 'Descargando...' : 'Descargar'}
+                      </button>
                     </li>
                   ))}
                 </ul>

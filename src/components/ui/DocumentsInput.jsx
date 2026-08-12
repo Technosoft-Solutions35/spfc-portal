@@ -26,6 +26,7 @@ export default function DocumentsInput({ value = [], onChange }) {
       const { data, error } = await supabase.storage.from('media').upload(path, file, {
         cacheControl: '3600',
         upsert: false,
+        contentType: file.type || 'application/octet-stream',
       })
 
       if (error) {
@@ -70,8 +71,11 @@ export default function DocumentsInput({ value = [], onChange }) {
           ref={fileRef}
           type="file"
           multiple
-          className="hidden"
-          onChange={(e) => upload(e.target.files)}
+          className="sr-only"
+          onChange={(e) => {
+            upload(e.target.files)
+            e.target.value = ''
+          }}
         />
       </div>
 

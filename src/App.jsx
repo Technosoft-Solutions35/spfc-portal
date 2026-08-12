@@ -60,15 +60,8 @@ export default function App() {
                   <Route path="/guias" element={<Guides />} />
                   <Route path="/eventos" element={<Events />} />
 
-                  {/* Panel de sorteos: solo admin / super-admin */}
-                  <Route
-                    path="/sorteos"
-                    element={
-                      <ProtectedRoute roles={['super-admin', 'admin']}>
-                        <Raffles />
-                      </ProtectedRoute>
-                    }
-                  />
+                  {/* Panel de sorteos: lo ve todo el clan; gestión solo admin */}
+                  <Route path="/sorteos" element={<Raffles />} />
 
                   {/* Gestión de contenido: admin, gestor y super-admin */}
                   <Route

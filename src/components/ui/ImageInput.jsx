@@ -12,15 +12,55 @@ export default function ImageInput({ value, onChange }) {
   const fileRef = useRef(null)
   const [uploading, setUploading] = useState(false)
 
+  // Los móviles (sobre todo iPhone) envían fotos en HEIC, que la mayoría de
+  // navegadores no saben mostrar. Si el archivo es HEIC/HEIF se convierte a
+  // JPEG antes de subir; si el navegador no puede decodificarlo se sube tal cual.
+  const normalizeImage = (file) =>
+    new Promise((resolve) => {
+      if (!/image\/(heic|heif)/i.test(file.type)) {
+        resolve(file)
+        return
+      }
+      const url = URL.createObjectURL(file)
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = img.naturalWidth
+        canvas.height = img.naturalHeight
+        canvas.getContext('2d').drawImage(img, 0, 0)
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(url)
+            resolve(
+              blob
+                ? new File([blob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), {
+                    type: 'image/jpeg',
+                  })
+                : file
+            )
+          },
+          'image/jpeg',
+          0.9
+        )
+      }
+      img.onerror = () => {
+        URL.revokeObjectURL(url)
+        resolve(file)
+      }
+      img.src = url
+    })
+
   const upload = async (file) => {
     if (!file) return
     setUploading(true)
-    const ext = file.name.split('.').pop() || 'png'
+    const normalized = await normalizeImage(file)
+    const ext = normalized.name.split('.').pop() || 'png'
     const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
 
-    const { data, error } = await supabase.storage.from('media').upload(path, file, {
+    const { data, error } = await supabase.storage.from('media').upload(path, normalized, {
       cacheControl: '3600',
       upsert: false,
+      contentType: normalized.type || 'application/octet-stream',
     })
 
     if (error) {
@@ -33,6 +73,7 @@ export default function ImageInput({ value, onChange }) {
     onChange(publicUrl.publicUrl)
     toast('Imagen subida', 'success')
     setUploading(false)
+    if (fileRef.current) fileRef.current.value = ''
   }
 
   return (
@@ -65,7 +106,7 @@ export default function ImageInput({ value, onChange }) {
             ref={fileRef}
             type="file"
             accept="image/*"
-            className="hidden"
+            className="sr-only"
             onChange={(e) => upload(e.target.files?.[0])}
           />
         </div>
@@ -76,7 +117,7 @@ export default function ImageInput({ value, onChange }) {
           </span>
           <input
             type="url"
-            className="input text-sm"
+            className="input text-base"
             placeholder="https://..."
             value={value || ''}
             onChange={(e) => onChange(e.target.value)}
