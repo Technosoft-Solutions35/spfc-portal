@@ -8,6 +8,7 @@ import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 import CommentSection from '../components/ui/CommentSection'
+import RsvpBox from '../components/ui/RsvpBox'
 import PostActions from '../components/ui/PostActions'
 import { readDeepLink } from '../lib/share'
 
@@ -94,6 +95,7 @@ export default function Events() {
         </div>
       </div>
       <div className="px-5 pb-5">
+        <RsvpBox parentType="event" parentId={e.id} />
         <CommentSection parentType="event" parentId={e.id} />
       </div>
     </motion.div>

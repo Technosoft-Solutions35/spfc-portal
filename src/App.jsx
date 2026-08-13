@@ -21,6 +21,10 @@ const ShinyHunt = lazy(() => import('./pages/ShinyHunt'))
 const Tournaments = lazy(() => import('./pages/Tournaments'))
 const Guides = lazy(() => import('./pages/Guides'))
 const Events = lazy(() => import('./pages/Events'))
+const Birthdays = lazy(() => import('./pages/Birthdays'))
+const Builds = lazy(() => import('./pages/Builds'))
+const Commerce = lazy(() => import('./pages/Commerce'))
+const Brackets = lazy(() => import('./pages/Brackets'))
 const Raffles = lazy(() => import('./pages/Raffles'))
 const ContentManagement = lazy(() => import('./pages/ContentManagement'))
 const Profile = lazy(() => import('./pages/Profile'))
@@ -64,6 +68,10 @@ export default function App() {
                   <Route path="/torneos" element={<Tournaments />} />
                   <Route path="/guias" element={<Guides />} />
                   <Route path="/eventos" element={<Events />} />
+                  <Route path="/cumpleanos" element={<Birthdays />} />
+                  <Route path="/builds" element={<Builds />} />
+                  <Route path="/comercio" element={<Commerce />} />
+                  <Route path="/brackets" element={<Brackets />} />
 
                   {/* DLC 1: perfil propio */}
                   <Route path="/perfil" element={<Profile />} />

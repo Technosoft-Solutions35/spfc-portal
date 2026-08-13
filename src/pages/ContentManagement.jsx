@@ -50,7 +50,9 @@ const FIELD_CONFIGS = {
     fields: [
       { key: 'title', label: 'Nombre del torneo', type: 'text' },
       { key: 'description', label: 'Descripción', type: 'textarea' },
-      { key: 'format', label: 'Formato', type: 'text', placeholder: 'OU Singles · Bo3' },
+      { key: 'tier', label: 'Categoría / Tier', type: 'text', placeholder: 'OU · Singles' },
+      { key: 'format', label: 'Formato', type: 'text', placeholder: 'Bo3 · Doble eliminación' },
+      { key: 'max_participants', label: 'Límite de participantes (opcional)', type: 'number', placeholder: '16' },
       { key: 'prize', label: 'Premio', type: 'text', placeholder: '100k PokeYen + medalla' },
       { key: 'start_date', label: 'Fecha de inicio', type: 'date' },
       { key: 'status', label: 'Estado', type: 'select', options: [

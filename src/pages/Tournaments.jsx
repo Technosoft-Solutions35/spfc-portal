@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { CalendarDays, ClipboardList, Swords, Trophy } from 'lucide-react'
+import { CalendarDays, ClipboardList, Network, Swords, Trophy } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { markSeen } from '../lib/newContent'
 import { formatDate } from '../lib/utils'
@@ -8,6 +8,7 @@ import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 import CommentSection from '../components/ui/CommentSection'
+import RsvpBox from '../components/ui/RsvpBox'
 import PostActions from '../components/ui/PostActions'
 import { readDeepLink } from '../lib/share'
 
@@ -113,32 +114,42 @@ export default function Tournaments() {
                     )}
                   </dl>
 
-                  {t.rules && (
-                    <button
-                      onClick={() => setExpanded(open ? null : t.id)}
-                      className="mt-2 text-xs font-semibold text-primary hover:underline"
-                    >
-                      {open ? 'Ocultar reglas' : 'Ver reglas'}
-                    </button>
-                  )}
-                  {open && t.rules && (
-                    <p className="mt-2 whitespace-pre-wrap rounded-xl bg-background p-3 text-sm leading-relaxed text-text">
-                      {t.rules}
-                    </p>
-                  )}
-                  <div className="mt-3 border-t border-edge pt-3">
-                    <PostActions
-                      parentType="tournament"
-                      parentId={t.id}
-                      shareRoute="/torneos"
-                      shareParam="tournament"
-                      shareText={t.title}
-                    />
-                  </div>
+                    {t.rules && (
+                      <button
+                        onClick={() => setExpanded(open ? null : t.id)}
+                        className="mt-2 text-xs font-semibold text-primary hover:underline"
+                      >
+                        {open ? 'Ocultar reglas' : 'Ver reglas'}
+                      </button>
+                    )}
+                    {open && t.rules && (
+                      <p className="mt-2 whitespace-pre-wrap rounded-xl bg-background p-3 text-sm leading-relaxed text-text">
+                        {t.rules}
+                      </p>
+                    )}
+                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-edge pt-3">
+                      <PostActions
+                        parentType="tournament"
+                        parentId={t.id}
+                        shareRoute="/torneos"
+                        shareParam="tournament"
+                        shareText={t.title}
+                      />
+                      {t.bracket_ready && (
+                        <a
+                          href={`#/brackets?brackets=${t.id}`}
+                          className="flex shrink-0 items-center gap-1.5 rounded-xl border border-edge px-3 py-2 text-xs font-bold text-soft transition hover:border-secondary hover:text-secondary"
+                        >
+                          <Network size={14} />
+                          Ver llaves
+                        </a>
+                      )}
+                    </div>
                 </div>
 
-                {/* Inscripciones */}
+                {/* Inscripción y comentarios */}
                 <div className="mt-auto px-5 pb-5">
+                  <RsvpBox parentType="tournament" parentId={t.id} />
                   <CommentSection parentType="tournament" parentId={t.id} />
                 </div>
               </motion.div>

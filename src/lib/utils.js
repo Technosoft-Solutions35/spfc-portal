@@ -77,6 +77,27 @@ export function formatShortDate(value) {
   })
 }
 
+// Convierte "YYYY-MM-DD" (columna date de Supabase) a un Date local a medianoche.
+// new Date("2026-06-23") se interpreta como UTC y en zonas al oeste de UTC
+// muestra el día anterior; este parseo evita ese desplazamiento.
+export function parseDateOnly(value) {
+  if (!value) return null
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [y, m, d] = value.split('-').map(Number)
+    return new Date(y, m - 1, d)
+  }
+  return new Date(value)
+}
+
+// Día de cumpleaños (ej: 13 de agosto) — sin año
+export function formatBirthDay(value) {
+  if (!value) return '—'
+  return parseDateOnly(value).toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'long',
+  })
+}
+
 // Email interno derivado del username: Supabase Auth exige un correo como
 // identificador, pero el clan no valida emails reales. Se genera uno
 // automáticamente a partir del usuario (que sí es único) para no pedirlo.

@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { LayoutDashboard } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import NewsBanner from '../components/NewsBanner'
+import BirthdayBanner from '../components/ui/BirthdayBanner'
 import DashboardWidgets from '../components/DashboardWidgets'
 import PushNotificationsCard from '../components/ui/PushNotificationsCard'
 import { RoleBadge } from '../components/ui/Avatar'
@@ -36,6 +37,8 @@ export default function Dashboard() {
       </motion.div>
 
       <NewsBanner />
+
+      <BirthdayBanner />
 
       <div className="mt-6">
         <PushNotificationsCard />

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { CalendarDays, Sparkles, Trophy, X, ZoomIn } from 'lucide-react'
 import Avatar, { RoleBadge } from '../ui/Avatar'
-import { formatShortDate, GAME_ROLES, AFFILIATIONS } from '../../lib/utils'
+import { formatShortDate, formatBirthDay, GAME_ROLES, AFFILIATIONS } from '../../lib/utils'
 import EmptyState from '../ui/EmptyState'
 import Spinner from '../ui/Spinner'
 
@@ -47,6 +47,9 @@ export default function ProfileView({ profile, hall, loadingHall = false }) {
             )}
             {profile.ign && (
               <span className="badge bg-edge text-soft">IGN: {profile.ign}</span>
+            )}
+            {profile.birth_date && (
+              <span className="badge bg-primary/10 text-primary">🎂 {formatBirthDay(profile.birth_date)}</span>
             )}
             <span className="badge bg-secondary/10 text-secondary">
               <Sparkles size={12} />

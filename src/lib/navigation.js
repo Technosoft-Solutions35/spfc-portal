@@ -10,6 +10,10 @@ import {
   User,
   Send,
   ClipboardCheck,
+  Cake,
+  Layers,
+  Handshake,
+  Network,
 } from 'lucide-react'
 
 // Definición única de navegación (sidebar y menú móvil comparten esta lista).
@@ -20,8 +24,16 @@ export const NAV_ITEMS = [
   { to: '/noticias', label: 'Noticias', icon: Newspaper, section: 'news', load: () => import('../pages/News') },
   { to: '/shiny-hunt', label: 'Shiny Hunt', icon: Sparkles, load: () => import('../pages/ShinyHunt') },
   { to: '/torneos', label: 'Torneos', icon: Swords, section: 'tournaments', load: () => import('../pages/Tournaments') },
+  // DLC 8: llaves de torneo e historial de campeones (todos)
+  { to: '/brackets', label: 'Brackets', icon: Network, load: () => import('../pages/Brackets') },
   { to: '/guias', label: 'Guías y Buildeos', icon: BookOpen, section: 'guides', load: () => import('../pages/Guides') },
+  // DLC 9: almacén de builds por tier (todos)
+  { to: '/builds', label: 'Almacén de Builds', icon: Layers, load: () => import('../pages/Builds') },
+  // DLC 10: comercio del clan (todos)
+  { to: '/comercio', label: 'Comercio', icon: Handshake, load: () => import('../pages/Commerce') },
   { to: '/eventos', label: 'Eventos', icon: CalendarDays, section: 'events', load: () => import('../pages/Events') },
+  // DLC 6: cumpleaños del clan (todos)
+  { to: '/cumpleanos', label: 'Cumpleaños', icon: Cake, load: () => import('../pages/Birthdays') },
   // Secciones reservadas al staff / admin (se filtran según el rol)
   // Sorteos lo ve todo el clan; la gestión de tickets es solo admin.
   { to: '/sorteos', label: 'Sorteos', icon: Trophy, load: () => import('../pages/Raffles') },

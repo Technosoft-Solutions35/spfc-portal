@@ -32,6 +32,7 @@ export default function Profile() {
     affiliation: '',
     game_roles: [],
     bio: '',
+    birth_date: '',
   })
 
   useEffect(() => {
@@ -53,6 +54,7 @@ export default function Profile() {
           affiliation: data.affiliation || '',
           game_roles: data.game_roles || [],
           bio: data.bio || '',
+          birth_date: data.birth_date || '',
         })
       })
 
@@ -92,6 +94,7 @@ export default function Profile() {
         affiliation: form.affiliation || null,
         game_roles: form.game_roles,
         bio: form.bio.trim() || null,
+        birth_date: form.birth_date || null,
       })
       .eq('id', authProfile.id)
 
@@ -187,6 +190,20 @@ export default function Profile() {
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Fecha de nacimiento */}
+          <div>
+            <label className="label">Fecha de nacimiento (opcional)</label>
+            <input
+              type="date"
+              className="input"
+              value={form.birth_date}
+              onChange={(e) => setForm((f) => ({ ...f, birth_date: e.target.value }))}
+            />
+            <p className="mt-1 text-[10px] text-soft">
+              Se usa solo para el calendario de cumpleaños del clan. Puedes dejarla vacía.
+            </p>
           </div>
 
           {/* Roles de juego */}

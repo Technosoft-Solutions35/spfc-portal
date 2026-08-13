@@ -15,6 +15,15 @@ const FIELD = {
   text: (f, v, set) => (
     <input type="text" className="input" placeholder={f.placeholder} value={v || ''} onChange={(e) => set({ [f.key]: e.target.value })} />
   ),
+  number: (f, v, set) => (
+    <input
+      type="number"
+      className="input"
+      placeholder={f.placeholder}
+      value={v ?? ''}
+      onChange={(e) => set({ [f.key]: e.target.value === '' ? null : Number(e.target.value) })}
+    />
+  ),
   textarea: (f, v, set) => (
     <textarea className="input min-h-[120px]" placeholder={f.placeholder} value={v || ''} onChange={(e) => set({ [f.key]: e.target.value })} />
   ),
