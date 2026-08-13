@@ -5,6 +5,9 @@ node_modules
 dist
 dist-ssr
 
+# Cache de Vite
+.vite
+
 # Variables de entorno (nunca subir claves reales)
 .env
 .env.local

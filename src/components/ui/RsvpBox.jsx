@@ -110,6 +110,7 @@ export default function RsvpBox({ parentType = 'event', parentId }) {
                   name={r.member?.username}
                   src={r.member?.avatar_url}
                   className="h-6 w-6 text-[10px]"
+                  interactive={false}
                 />
                 <span className="truncate">{r.member?.username ?? 'Usuario'}</span>
                 <RoleBadge role={r.member?.role} />

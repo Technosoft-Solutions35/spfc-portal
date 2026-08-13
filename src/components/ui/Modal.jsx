@@ -45,6 +45,7 @@ export default function Modal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 12 }}
             transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+            onClick={(e) => e.stopPropagation()}
             className={`relative z-10 w-full ${maxWidth} max-h-[88vh] overflow-y-auto rounded-2xl border border-edge bg-elevated shadow-card`}
           >
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-edge bg-elevated px-6 py-4">

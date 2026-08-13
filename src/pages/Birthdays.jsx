@@ -7,7 +7,7 @@ import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 import ProfileAvatar from '../components/ui/ProfileAvatar'
-import ProfileModal from '../components/profile/ProfileModal'
+import { useToast } from '../components/ui/Toast'
 
 /**
  * DLC 6 — Cumpleaños del clan.
@@ -28,10 +28,10 @@ const MAX_YEAR = 2050
 
 export default function Birthdays() {
   const today = new Date()
+  const { toast } = useToast()
   const [members, setMembers] = useState(null)
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
-  const [viewProfileId, setViewProfileId] = useState(null)
 
   useEffect(() => {
     supabase
@@ -108,7 +108,7 @@ export default function Birthdays() {
               <button
                 key={m.id}
                 type="button"
-                onClick={() => setViewProfileId(m.id)}
+                onClick={() => toast(`🎂 Cumple ${m.username}`, 'success')}
                 className="flex items-center gap-1.5 rounded-full border border-edge bg-elevated py-1 pl-1 pr-2.5 text-xs font-semibold text-text transition hover:border-primary/50 hover:text-primary"
               >
                 <ProfileAvatar
@@ -116,6 +116,7 @@ export default function Birthdays() {
                   name={m.username}
                   src={m.avatar_url}
                   className="h-5 w-5 text-[9px]"
+                  interactive={false}
                 />
                 {m.username}
               </button>
@@ -216,7 +217,7 @@ export default function Birthdays() {
                     <button
                       key={m.id}
                       type="button"
-                      onClick={() => setViewProfileId(m.id)}
+                      onClick={() => toast(`🎂 Cumple ${m.username}`, 'success')}
                       title={`${m.username} · ${formatMonthDay(m.birth_date)}`}
                       className="flex w-full items-center gap-1 rounded-md bg-elevated px-1 py-0.5 text-left text-[10px] font-semibold text-text transition hover:bg-primary/10 hover:text-primary"
                     >
@@ -225,6 +226,7 @@ export default function Birthdays() {
                         name={m.username}
                         src={m.avatar_url}
                         className="h-3.5 w-3.5 shrink-0 text-[7px]"
+                        interactive={false}
                       />
                       <span className="truncate">{m.username}</span>
                     </button>
@@ -240,8 +242,6 @@ export default function Birthdays() {
           </div>
         </>
       )}
-
-      <ProfileModal userId={viewProfileId} onClose={() => setViewProfileId(null)} />
     </div>
   )
 }
