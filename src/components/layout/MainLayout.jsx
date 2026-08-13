@@ -5,6 +5,7 @@ import Background from './Background'
 import Sidebar from './Sidebar'
 import MobileHeader from './MobileHeader'
 import ContentNotifier from './ContentNotifier'
+import FooterLinks from './FooterLinks'
 
 /**
  * Layout principal del portal (solo usuarios logueados).
@@ -47,6 +48,8 @@ export default function MainLayout() {
               <Outlet />
             </motion.div>
           </div>
+
+          <FooterLinks />
         </main>
       </div>
     </div>
