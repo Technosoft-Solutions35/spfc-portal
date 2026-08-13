@@ -14,7 +14,7 @@
 --      match_type → 'standard' | 'bronze' (bronce = partido por el 3er/4to)
 --      p1/p2 (id + nombre) → jugadores; winner → 1 o 2 (null = sin decidir)
 --      score / notes → resultado y anotaciones (walkover, etc.)
--- Gestión de llaves: solo admin/super-admin (is_admin). Visualización: todos.
+-- Gestión de llaves: staff admin + gestor (is_staff). Visualización: todos.
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- 1) Nuevas columnas en tournaments
@@ -63,15 +63,15 @@ create policy "bracket_matches_select_auth" on public.bracket_matches
 
 drop policy if exists "bracket_matches_insert_admin" on public.bracket_matches;
 create policy "bracket_matches_insert_admin" on public.bracket_matches
-  for insert with check (public.is_admin());
+  for insert with check (public.is_staff());
 
 drop policy if exists "bracket_matches_update_admin" on public.bracket_matches;
 create policy "bracket_matches_update_admin" on public.bracket_matches
-  for update using (public.is_admin()) with check (public.is_admin());
+  for update using (public.is_staff()) with check (public.is_staff());
 
 drop policy if exists "bracket_matches_delete_admin" on public.bracket_matches;
 create policy "bracket_matches_delete_admin" on public.bracket_matches
-  for delete using (public.is_admin());
+  for delete using (public.is_staff());
 
 -- 3) Realtime: llaves y torneos visibles al instante en pantallas abiertas
 do $$

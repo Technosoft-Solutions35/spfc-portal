@@ -11,9 +11,9 @@
 --   image_url    → imagen de la oferta (adjunto)
 --   documents    → lista jsonb [{ name, url }] con archivos adjuntos
 --
--- Permisos de borrado: el autor siempre puede borrar; además SOLO los
--- super-admins y admins pueden eliminar ofertas de otros miembros (gestores
--- NO). Para eso usamos is_admin() que cubre super-admin + admin.
+-- Permisos de borrado: el autor siempre puede borrar; además TODO el staff
+-- (super-admins, admins y gestores) puede eliminar ofertas de otros miembros.
+-- Para eso usamos is_staff() que cubre super-admin + admin + gestor.
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- 1) Tabla de ofertas de comercio
@@ -54,10 +54,10 @@ drop policy if exists "trades_update_own" on public.trades;
 create policy "trades_update_own" on public.trades
   for update using (auth.uid() = author_id) with check (auth.uid() = author_id);
 
--- Borrado: el autor, o admin/super-admin (NO gestor). is_admin() = super-admin + admin
+-- Borrado: el autor, o cualquier staff (admin + gestor). is_staff() = super-admin + admin + gestor
 drop policy if exists "trades_delete_own_or_admin" on public.trades;
 create policy "trades_delete_own_or_admin" on public.trades
-  for delete using (auth.uid() = author_id or public.is_admin());
+  for delete using (auth.uid() = author_id or public.is_staff());
 
 -- 2) Realtime: ofertas nuevas/borradas visibles al instante en pantallas abiertas
 do $$

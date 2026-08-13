@@ -15,9 +15,10 @@ export const canAssignRoles = (role) => role === ROLES.SUPER_ADMIN
 export const canManageContent = (role) =>
   role === ROLES.SUPER_ADMIN || role === ROLES.ADMIN || role === ROLES.GESTOR
 
-// ¿Puede gestionar TODO el contenido (super-admin + admin)?
+// ¿Puede gestionar TODO el contenido (super-admin + admin + gestor)?
+// Desde el ajuste de permisos, gestor == admin en todo excepto sorteos.
 export const canManageAll = (role) =>
-  role === ROLES.SUPER_ADMIN || role === ROLES.ADMIN
+  role === ROLES.SUPER_ADMIN || role === ROLES.ADMIN || role === ROLES.GESTOR
 
 // ¿Puede corregir contadores de Shiny Hunt (+ / -)?
 export const canManageShinies = (role) =>

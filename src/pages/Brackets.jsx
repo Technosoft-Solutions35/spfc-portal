@@ -171,7 +171,7 @@ function BracketBoard({ rounds, bronze, editable, onSetWinner, onRemoveWinner, o
  * DLC 8 — Brackets de torneo.
  * Llaves (bracket) por torneo con partido por el 3er/4to, campos del torneo
  * (tier, formato, límite de participantes, premios) e historial de ganadores.
- * Gestión (generar llaves, marcar ganadores, finalizar): solo admin/super-admin.
+ * Gestión (generar llaves, marcar ganadores, finalizar): staff (admin + gestor).
  */
 export default function Brackets() {
   const { profile } = useAuth()

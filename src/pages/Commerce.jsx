@@ -142,11 +142,12 @@ export default function Commerce() {
     load()
   }
 
-  // Autor siempre; ajenas solo admin/super-admin (NO gestor)
+  // Autor siempre; ajenas todo el staff (admin + gestor)
   const canModerate = (trade) =>
     trade.author_id === user?.id ||
     profile?.role === 'admin' ||
-    profile?.role === 'super-admin'
+    profile?.role === 'super-admin' ||
+    profile?.role === 'gestor'
 
   const cardBody = (t, onClick) => (
     <>

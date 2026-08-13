@@ -10,10 +10,10 @@ import { useCrud } from '../hooks/useCrud'
 
 const TABS = {
   news: { label: 'Noticias', icon: Newspaper, roles: ['super-admin', 'admin', 'gestor'] },
-  events: { label: 'Eventos', icon: CalendarDays, roles: ['super-admin', 'admin'] },
-  tournaments: { label: 'Torneos', icon: Swords, roles: ['super-admin', 'admin'] },
-  guides: { label: 'Guías y Buildeos', icon: BookOpen, roles: ['super-admin', 'admin'] },
-  members: { label: 'Miembros y roles', icon: Users, roles: ['super-admin', 'admin'] },
+  events: { label: 'Eventos', icon: CalendarDays, roles: ['super-admin', 'admin', 'gestor'] },
+  tournaments: { label: 'Torneos', icon: Swords, roles: ['super-admin', 'admin', 'gestor'] },
+  guides: { label: 'Guías y Buildeos', icon: BookOpen, roles: ['super-admin', 'admin', 'gestor'] },
+  members: { label: 'Miembros y roles', icon: Users, roles: ['super-admin', 'admin', 'gestor'] },
 }
 
 const FIELD_CONFIGS = {
@@ -90,8 +90,9 @@ const FIELD_CONFIGS = {
 
 /**
  * Página de Gestión: CRUD de contenido según el rol.
- * - admin: noticias, eventos, torneos, guías y roles de miembros.
- * - gestor: solo noticias (puede publicar y anunciar).
+ * - admin y gestor: noticias, eventos, torneos, guías y miembros (mismos permisos).
+ * - Los sorteos se gestionan aparte en /sorteos (solo admin/super-admin).
+ * - Solo el super-admin puede otorgar/cambiar roles.
  */
 export default function ContentManagement() {
   const { role } = useAuth()
@@ -147,13 +148,6 @@ export default function ContentManagement() {
         )
       ) : (
         <ActiveTab key={tab} tab={tab} />
-      )}
-
-      {!isAdmin && (
-        <p className="mt-4 rounded-xl bg-secondary/10 px-4 py-3 text-xs text-secondary">
-          Como gestor puedes publicar y editar noticias. El resto del contenido lo gestiona un
-          administrador.
-        </p>
       )}
 
       {isAdmin && !canAssignRoles(role) && (

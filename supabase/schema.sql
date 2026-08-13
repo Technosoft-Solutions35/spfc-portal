@@ -330,7 +330,7 @@ create policy "profiles_update_own"   on public.profiles for update using (auth.
 drop policy if exists "profiles_update_staff" on public.profiles;
 create policy "profiles_update_staff" on public.profiles for update using (public.is_staff());
 drop policy if exists "profiles_delete_admin" on public.profiles;
-create policy "profiles_delete_admin" on public.profiles for delete using (public.is_admin());
+create policy "profiles_delete_admin" on public.profiles for delete using (public.is_staff());
 
 -- Noticias: lectura autenticada, escritura admin/gestor
 drop policy if exists "news_select_auth"   on public.news;
@@ -342,35 +342,35 @@ create policy "news_update_staff"  on public.news for update using (public.is_st
 drop policy if exists "news_delete_staff"  on public.news;
 create policy "news_delete_staff"  on public.news for delete using (public.is_staff());
 
--- Eventos: lectura autenticada, escritura admin (el gestor solo publica noticias)
+-- Eventos: lectura autenticada, escritura del staff (admin y gestor)
 drop policy if exists "events_select_auth"   on public.events;
 create policy "events_select_auth"   on public.events for select using (auth.role() = 'authenticated');
 drop policy if exists "events_insert_admin"  on public.events;
-create policy "events_insert_admin"  on public.events for insert with check (public.is_admin());
+create policy "events_insert_admin"  on public.events for insert with check (public.is_staff());
 drop policy if exists "events_update_admin"  on public.events;
-create policy "events_update_admin"  on public.events for update using (public.is_admin());
+create policy "events_update_admin"  on public.events for update using (public.is_staff());
 drop policy if exists "events_delete_admin"  on public.events;
-create policy "events_delete_admin"  on public.events for delete using (public.is_admin());
+create policy "events_delete_admin"  on public.events for delete using (public.is_staff());
 
--- Torneos: lectura autenticada, escritura admin
+-- Torneos: lectura autenticada, escritura del staff (admin y gestor)
 drop policy if exists "tournaments_select_auth"   on public.tournaments;
 create policy "tournaments_select_auth"   on public.tournaments for select using (auth.role() = 'authenticated');
 drop policy if exists "tournaments_insert_admin"  on public.tournaments;
-create policy "tournaments_insert_admin"  on public.tournaments for insert with check (public.is_admin());
+create policy "tournaments_insert_admin"  on public.tournaments for insert with check (public.is_staff());
 drop policy if exists "tournaments_update_admin"  on public.tournaments;
-create policy "tournaments_update_admin"  on public.tournaments for update using (public.is_admin());
+create policy "tournaments_update_admin"  on public.tournaments for update using (public.is_staff());
 drop policy if exists "tournaments_delete_admin"  on public.tournaments;
-create policy "tournaments_delete_admin"  on public.tournaments for delete using (public.is_admin());
+create policy "tournaments_delete_admin"  on public.tournaments for delete using (public.is_staff());
 
--- Guías: lectura autenticada, escritura admin
+-- Guías: lectura autenticada, escritura del staff (admin y gestor)
 drop policy if exists "guides_select_auth"   on public.guides;
 create policy "guides_select_auth"   on public.guides for select using (auth.role() = 'authenticated');
 drop policy if exists "guides_insert_admin"  on public.guides;
-create policy "guides_insert_admin"  on public.guides for insert with check (public.is_admin());
+create policy "guides_insert_admin"  on public.guides for insert with check (public.is_staff());
 drop policy if exists "guides_update_admin"  on public.guides;
-create policy "guides_update_admin"  on public.guides for update using (public.is_admin());
+create policy "guides_update_admin"  on public.guides for update using (public.is_staff());
 drop policy if exists "guides_delete_admin"  on public.guides;
-create policy "guides_delete_admin"  on public.guides for delete using (public.is_admin());
+create policy "guides_delete_admin"  on public.guides for delete using (public.is_staff());
 
 -- Comentarios: todos leen; cada usuario crea, edita y elimina los suyos; staff los modera
 drop policy if exists "comments_select_auth"   on public.comments;
