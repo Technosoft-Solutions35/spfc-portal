@@ -44,16 +44,11 @@ html {
      de orientación/zoom, que era lo que "mareaba" la vista en el móvil. */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  /* Si un elemento es más ancho que la pantalla empuja el layout y el móvil
-     queda "ampliado" sin poder verse entero. Oculta el desborde horizontal
-     para que la página siempre quepa a ancho 100%. */
-  overflow-x: hidden;
 }
 
 body {
   @apply bg-background text-text font-sans antialiased;
   transition: background-color 0.35s ease, color 0.35s ease;
-  overflow-x: hidden;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -62,6 +57,11 @@ body {
    contenido (`min-width: auto`). Un título o nombre largo hacía la
    tarjeta más ancha que la pantalla y "estiraba" toda la sección.
    Con min-width: 0 el hijo encoge y el texto se corta/parte al borde.
+   NOTA: NO usar overflow-x en html/body ni en <main>. `hidden` (y `clip`
+   en navegadores antiguos) convierte al contenedor en caja de scroll y
+   rompe el `position: sticky` del sidebar de escritorio y de la cabecera
+   móvil: al bajar, el navbar se ve "picado". El desborde se previene aquí
+   con min-width: 0 + overflow-wrap, no con recortes del contenedor.
    ───────────────────────────────────────────────────────────── */
 @layer base {
   .grid > *,

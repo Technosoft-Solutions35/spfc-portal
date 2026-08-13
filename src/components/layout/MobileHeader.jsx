@@ -33,7 +33,7 @@ export default function MobileHeader() {
   return (
     <>
       {/* Barra superior móvil */}
-      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-edge bg-surface/80 px-4 py-3 backdrop-blur-lg lg:hidden">
+      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-edge bg-surface/95 px-4 py-3 backdrop-blur-lg lg:hidden">
         <div className="flex items-center gap-2.5">
           <img
             src="images/logo-clan.png"
