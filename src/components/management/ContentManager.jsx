@@ -163,11 +163,23 @@ export default function ContentManager({
     if (!editing && type) {
       publishContentCreated({ type, title: payload[columns[0]] || title })
       // Además envía notificación push a todos los suscritos (web cerrada incluida)
-      sendPushNotification({
+      const push = await sendPushNotification({
         type,
         title: payload[columns[0]] || title,
         username: currentUser?.username,
       })
+      if (push.ok) {
+        const sent = push.results?.sent ?? 0
+        toast(
+          sent > 0
+            ? `🔔 Notificación enviada a ${sent} ${sent === 1 ? 'dispositivo' : 'dispositivos'}`
+            : '🔔 Aviso publicado. Aún no hay suscriptores de push.',
+          'success',
+          5000,
+        )
+      } else {
+        toast(`⚠️ Aviso publicado, pero el push falló (${push.reason || `HTTP ${push.status}`})`, 'error', 8000)
+      }
     }
   }
 

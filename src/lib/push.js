@@ -94,17 +94,20 @@ export function handlePushSubscriptionChange() {
 // Envía la notificación push al publicar contenido (lo recibe la Edge Function,
 // que la reparte a todos los suscritos aunque tengan el navegador cerrado).
 // Si se pasa `userId`, el push solo llega a las suscripciones de ese usuario.
+// Devuelve el resultado para que la UI pueda avisar si el push falló.
 export async function sendPushNotification({ type, title, username, message, userId }) {
   try {
     const { data: session } = await supabase.auth.getSession()
     const token = session?.session?.access_token
-    if (!token) return
-    await fetch(EDGE_FUNCTION_URL, {
+    if (!token) return { ok: false, reason: 'sin-sesion' }
+    const res = await fetch(EDGE_FUNCTION_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ type, title, username, message, userId }),
     })
-  } catch {
-    // si la Edge Function no está desplegada, el broadcast por Realtime sigue funcionando
+    const body = await res.json().catch(() => null)
+    return { ok: res.ok, status: res.status, results: body }
+  } catch (e) {
+    return { ok: false, reason: e?.message || 'network' }
   }
 }
