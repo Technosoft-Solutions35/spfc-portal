@@ -1,29 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Crown, Minus, Plus, Sparkles } from 'lucide-react'
+import { Crown, Sparkles } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { useToast } from '../components/ui/Toast'
-import { canManageShinies } from '../lib/utils'
 import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
-import Avatar, { RoleBadge } from '../components/ui/Avatar'
+import { RoleBadge } from '../components/ui/Avatar'
+import ProfileAvatar from '../components/ui/ProfileAvatar'
 import ProfileModal from '../components/profile/ProfileModal'
 
 /**
  * Tabla de Shiny Hunt sincronizada en TIEMPO REAL con Supabase.
  * - Ordenada estrictamente de mayor a menor (ORDER BY shinies DESC).
- * - member: solo lectura. admin/gestor: botones + / - para corregir conteos.
+ * - Solo lectura para todos; el staff corrige conteos desde la gestión.
  */
 export default function ShinyHunt() {
-  const { role, profile } = useAuth()
-  const { toast } = useToast()
+  const { profile } = useAuth()
   const [hunters, setHunters] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [updatingId, setUpdatingId] = useState(null)
   const [viewingId, setViewingId] = useState(null)
-  const isStaff = canManageShinies(role)
 
   const fetchHunters = useCallback(async () => {
     const { data, error } = await supabase
@@ -52,39 +48,11 @@ export default function ShinyHunt() {
     }
   }, [fetchHunters])
 
-  // Corrige el contador de shinies (+ / -)
-  const adjustShinies = async (hunterId, delta) => {
-    if (!isStaff) return
-    setUpdatingId(hunterId)
-    const current = hunters?.find((h) => h.id === hunterId)
-    const newValue = Math.max(0, (current?.shinies ?? 0) + delta)
-    const { error } = await supabase
-      .from('profiles')
-      .update({ shinies: newValue })
-      .eq('id', hunterId)
-    setUpdatingId(null)
-
-    if (error) {
-      toast('No se pudo actualizar el contador', 'error')
-      return
-    }
-    toast(
-      delta > 0
-        ? `+1 shiny registrado a ${current?.username}`
-        : `-1 shiny corregido a ${current?.username}`,
-      'success'
-    )
-  }
-
   return (
     <div>
       <PageHeader
         title="Shiny Hunt"
-        subtitle={
-          isStaff
-            ? 'Usa los botones + / - para corregir los conteos reportados.'
-            : 'Clasificación de cazadores de shinies del clan (de mayor a menor).'
-        }
+        subtitle="Clasificación de cazadores de shinies del clan (de mayor a menor)."
         icon={Sparkles}
       />
 
@@ -109,13 +77,13 @@ export default function ShinyHunt() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(i * 0.03, 0.4) }}
-                  className={`flex items-center gap-3 px-4 py-3 transition ${
+                  className={`flex items-center gap-2.5 px-3 py-2.5 transition sm:gap-3 sm:px-4 sm:py-3 ${
                     isMe ? 'bg-primary/5' : 'hover:bg-background'
                   }`}
                 >
                   {/* Posición */}
                   <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-extrabold sm:h-9 sm:w-9 sm:text-sm ${
                       i === 0
                         ? 'bg-secondary text-white shadow-glowSecondary'
                         : i === 1
@@ -125,10 +93,16 @@ export default function ShinyHunt() {
                             : 'bg-edge text-soft'
                     }`}
                   >
-                    {i === 0 ? <Crown size={16} /> : i + 1}
+                    {i === 0 ? <Crown size={16} className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : i + 1}
                   </span>
 
-                  <Avatar name={h.username} src={h.avatar_url} size="sm" />
+                  <ProfileAvatar
+                    userId={h.id}
+                    name={h.username}
+                    src={h.avatar_url}
+                    size="sm"
+                    className="h-7 w-7 text-[11px] sm:h-8 sm:w-8 sm:text-xs"
+                  />
 
                   <div className="min-w-0 flex-1">
                     <button
@@ -147,32 +121,12 @@ export default function ShinyHunt() {
                   </div>
 
                   {/* Contador */}
-                  <div className="flex items-center gap-2">
-                    {isStaff && (
-                      <>
-                        <button
-                          onClick={() => adjustShinies(h.id, -1)}
-                          disabled={updatingId === h.id || h.shinies === 0}
-                          title="Restar shiny"
-                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-edge text-soft transition hover:border-primary hover:bg-primary/10 hover:text-primary disabled:opacity-30"
-                        >
-                          <Minus size={15} />
-                        </button>
-                        <button
-                          onClick={() => adjustShinies(h.id, 1)}
-                          disabled={updatingId === h.id}
-                          title="Sumar shiny"
-                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-edge text-soft transition hover:border-success hover:bg-success/10 hover:text-success disabled:opacity-30"
-                        >
-                          <Plus size={15} />
-                        </button>
-                      </>
-                    )}
+                  <div className="flex shrink-0 items-center gap-2">
                     <span
-                      className="flex min-w-[4.5rem] items-center justify-center gap-1 rounded-xl bg-secondary/10 px-3 py-1.5 font-display text-lg font-extrabold text-secondary"
+                      className="flex min-w-[3.5rem] items-center justify-center gap-1 rounded-lg bg-secondary/10 px-2.5 py-1 font-display text-base font-extrabold text-secondary sm:min-w-[4.5rem] sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-lg"
                     >
                       {h.shinies}
-                      <Sparkles size={14} />
+                      <Sparkles size={14} className="h-3.5 w-3.5 sm:h-3.5 sm:w-3.5" />
                     </span>
                   </div>
                 </motion.li>
@@ -181,12 +135,6 @@ export default function ShinyHunt() {
           </ul>
         )}
       </div>
-
-      {isStaff && (
-        <p className="mt-3 text-xs text-soft">
-          Los cambios se guardan al instante y se reflejan en todos los miembros conectados.
-        </p>
-      )}
 
       {/* Perfil de un miembro al hacer clic en su nombre */}
       <ProfileModal userId={viewingId} onClose={() => setViewingId(null)} />

@@ -40,6 +40,73 @@
 
 html {
   scroll-behavior: smooth;
+  /* Evita que iOS/Android reajusten el tamaño de texto al girar o al cambiar
+     de orientación/zoom, que era lo que "mareaba" la vista en el móvil. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Si un elemento es más ancho que la pantalla empuja el layout y el móvil
+     queda "ampliado" sin poder verse entero. Oculta el desborde horizontal
+     para que la página siempre quepa a ancho 100%. */
+  overflow-x: hidden;
+}
+
+body {
+  @apply bg-background text-text font-sans antialiased;
+  transition: background-color 0.35s ease, color 0.35s ease;
+  overflow-x: hidden;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ANTI-DESBORDE (móvil)
+   El problema: CSS Grid/Flex NO encogen sus hijos por debajo del
+   contenido (`min-width: auto`). Un título o nombre largo hacía la
+   tarjeta más ancha que la pantalla y "estiraba" toda la sección.
+   Con min-width: 0 el hijo encoge y el texto se corta/parte al borde.
+   ───────────────────────────────────────────────────────────── */
+@layer base {
+  .grid > *,
+  .flex > * {
+    min-width: 0;
+  }
+
+  /* Palabras largas o URLs sin espacios (títulos de noticias, eventos,
+     torneos, guías, nombres de usuario...) se parten en el borde de la
+     tarjeta en lugar de desbordar hacia la derecha. */
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  a,
+  li,
+  button,
+  span,
+  td,
+  th {
+    overflow-wrap: anywhere;
+  }
+}
+
+/* En el móvil, tocar dos veces rápido un botón/pestaña dispara el zoom del
+   navegador (por eso "se ampliaba sola" al cambiar de categoría). Con
+   touch-action: manipulation se elimina ese zoom de doble-toque y el retraso
+   del tap, SIN quitar el pellizco manual para acercar/alejar. */
+button,
+a,
+input,
+select,
+textarea,
+label {
+  touch-action: manipulation;
+}
+
+/* iOS amplía automáticamente al enfocar un campo cuyo texto mida menos de
+   16px. Todos los .input ya usan text-base, pero esta regla garantiza que
+   ningún input/select/textarea quede por debajo y dispare ese zoom. */
+input,
+select,
+textarea {
+  font-size: 16px;
 }
 
 body {
@@ -122,7 +189,7 @@ body {
   }
 
   .label {
-    @apply mb-1.5 block text-sm font-medium text-soft;
+    @apply mb-1.5 block text-base font-medium text-soft;
   }
 
   /* Badge de rol */

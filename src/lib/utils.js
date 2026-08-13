@@ -45,6 +45,16 @@ export const GAME_ROLES = ['Criador', 'Entrenador EVs', 'Jugador PvP', 'ShinyHun
 // Límite de la bio (caracteres)
 export const BIO_MAX = 200
 
+// ── DLC 4: Categorías de noticias (selección múltiple)
+export const NEWS_CATEGORIES = [
+  'Eventos',
+  'Nuevas Mecánicas',
+  'Mods',
+  'Informaciones del juego',
+  'Informaciones del clan',
+  'Otras',
+]
+
 // Fecha legible en español (ej: 11/08/2026 · 20:30)
 export function formatDate(value) {
   if (!value) return '—'

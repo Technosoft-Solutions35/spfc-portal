@@ -19,6 +19,7 @@ import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 import WinnerReveal from '../components/RaffleDraw/WinnerReveal'
+import PostActions from '../components/ui/PostActions'
 
 // Parsea las líneas del textarea: "Nombre Cantidad" → [{ username, quantity }]
 export function parseTicketInput(text) {
@@ -318,6 +319,16 @@ export default function Raffles() {
                   <p className="font-display text-lg font-extrabold text-text">
                     {lastDraw.winners.join('  🏆  ')}
                   </p>
+                </div>
+
+                <div className="mt-3 border-t border-edge pt-3">
+                  <PostActions
+                    parentType="raffle"
+                    parentId={lastDraw.id}
+                    shareRoute="/sorteos"
+                    shareParam="raffle"
+                    shareText={`Sorteo del clan SpFc/Gd — Ganadores: ${lastDraw.winners.join(', ')}`}
+                  />
                 </div>
 
                 {history.length > 1 && (

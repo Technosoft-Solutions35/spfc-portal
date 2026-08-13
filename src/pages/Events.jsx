@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { CalendarDays, MapPin } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { markSeen } from '../lib/newContent'
 import { formatDate } from '../lib/utils'
 import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 import CommentSection from '../components/ui/CommentSection'
+import PostActions from '../components/ui/PostActions'
+import { readDeepLink } from '../lib/share'
 
 /**
  * Eventos del clan: próximos primero, con sus comentarios.
@@ -15,12 +18,25 @@ export default function Events() {
   const [events, setEvents] = useState(null)
 
   useEffect(() => {
+    markSeen('events')
     supabase
       .from('events')
       .select('*')
       .order('date', { ascending: true })
       .then(({ data }) => setEvents(data || []))
   }, [])
+
+  // Enlace directo: si se llegó con ?event=<id> (en el hash), se desplaza hasta ese evento
+  useEffect(() => {
+    if (!events) return
+    const dl = readDeepLink()
+    if (dl?.param === 'event') {
+      const el = document.querySelector(`[data-item-id="${dl.id}"]`)
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 150)
+      }
+    }
+  }, [events])
 
   const now = new Date()
   const upcoming = (events || []).filter((e) => new Date(e.date) >= now)
@@ -29,6 +45,7 @@ export default function Events() {
   const EventCard = ({ e, i }) => (
     <motion.div
       key={e.id}
+      data-item-id={e.id}
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: i * 0.05 }}
@@ -49,7 +66,7 @@ export default function Events() {
             {new Date(e.date) >= now ? 'Próximo' : 'Finalizado'}
           </span>
         </div>
-        <h3 className="mt-2 font-display text-lg font-extrabold text-text">{e.title}</h3>
+        <h3 className="mt-2 line-clamp-2 font-display text-lg font-extrabold text-text">{e.title}</h3>
         <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-soft">
           {e.description}
         </p>
@@ -57,6 +74,7 @@ export default function Events() {
           <span className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5 font-semibold text-text">
             <CalendarDays size={13} className="text-primary" />
             {formatDate(e.date)}
+            <span className="font-normal text-soft">· hora local</span>
           </span>
           {e.location && (
             <span className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5 font-semibold text-text">
@@ -64,6 +82,15 @@ export default function Events() {
               {e.location}
             </span>
           )}
+        </div>
+        <div className="mt-3 border-t border-edge pt-3">
+          <PostActions
+            parentType="event"
+            parentId={e.id}
+            shareRoute="/eventos"
+            shareParam="event"
+            shareText={e.title}
+          />
         </div>
       </div>
       <div className="px-5 pb-5">

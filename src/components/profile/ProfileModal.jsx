@@ -17,7 +17,7 @@ export default function ProfileModal({ userId, onClose }) {
 
     supabase
       .from('profiles')
-      .select('id, username, email, avatar_url, role, shinies, ign, affiliation, game_roles, bio, created_at')
+      .select('id, username, email, avatar_url, title, role, shinies, ign, affiliation, game_roles, bio, created_at')
       .eq('id', userId)
       .single()
       .then(({ data }) => mounted && setProfile(data))

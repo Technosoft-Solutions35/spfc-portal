@@ -145,7 +145,7 @@ function UpcomingEvents() {
             <p className="min-w-0 truncate text-sm font-semibold text-text">{e.title}</p>
             <EventCountdown date={e.date} />
           </div>
-          <p className="mt-0.5 text-xs text-soft">{formatDate(e.date)}</p>
+          <p className="mt-0.5 text-xs text-soft">{formatDate(e.date)} · hora local</p>
           {e.location && <p className="mt-0.5 text-xs text-soft">📍 {e.location}</p>}
         </motion.li>
       ))}

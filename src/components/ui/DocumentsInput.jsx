@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { FileText, UploadCloud, X } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
+import { supabase, uploadWithProgress } from '../../lib/supabase'
 import { useToast } from './Toast'
 
 // Solo tipos de documento (sin imagen/video): evita que iOS ofrezca
@@ -39,20 +39,18 @@ export default function DocumentsInput({ value = [], onChange }) {
       const ext = (file.name.split('.').pop() || 'bin').toLowerCase()
       const path = `docs/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
 
-      const { data, error } = await supabase.storage.from('media').upload(path, file, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: file.type || 'application/octet-stream',
-        onUploadProgress: (e) => {
-          if (e.total > 0) setProgress(Math.round((e.loaded / e.total) * 100))
-        },
-      })
+      try {
+        const data = await uploadWithProgress({
+          bucket: 'media',
+          path,
+          file,
+          onProgress: setProgress,
+        })
 
-      if (error) {
-        toast(`No se pudo subir ${file.name}: ${error.message}`, 'error')
-      } else {
         const { data: publicUrl } = supabase.storage.from('media').getPublicUrl(data.path)
         uploaded.push({ name: file.name, url: publicUrl.publicUrl })
+      } catch (err) {
+        toast(`No se pudo subir ${file.name}: ${err.message}`, 'error')
       }
       setFilesDone(idx + 1)
     }

@@ -7,7 +7,7 @@ import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 import Modal from '../components/ui/Modal'
-import Avatar from '../components/ui/Avatar'
+import ProfileAvatar from '../components/ui/ProfileAvatar'
 import { formatDate } from '../lib/utils'
 import { notifyUser } from '../lib/notifications'
 
@@ -23,6 +23,7 @@ export default function ReviewShinies() {
   const [reports, setReports] = useState(null)
   const [reviewing, setReviewing] = useState(null) // reporte abierto en el modal
   const [busy, setBusy] = useState(null) // id en proceso
+  const [approvingAll, setApprovingAll] = useState(false)
 
   const fetchReports = useCallback(async () => {
     const { data } = await supabase
@@ -88,6 +89,43 @@ export default function ReviewShinies() {
     }
   }
 
+  // Aprueba todos los reportes pendientes de una vez (uno por uno, atómico)
+  const approveAll = async () => {
+    if (!reports?.length || approvingAll) return
+    if (
+      !window.confirm(
+        `¿Aprobar los ${reports.length} reportes pendientes? Se sumará +1 shiny a cada autor.`
+      )
+    )
+      return
+    setApprovingAll(true)
+    const approved = []
+    for (const r of reports) {
+      const { data, error } = await supabase.rpc('approve_shiny_report', {
+        p_report_id: r.id,
+      })
+      if (error) {
+        toast('No se pudo aprobar: ' + error.message, 'error')
+        break
+      }
+      if (data) approved.push(data)
+    }
+    setApprovingAll(false)
+    setReviewing(null)
+    fetchReports()
+    toast(`Se aprobaron ${approved.length} reportes (+1 shiny cada autor)`, 'success')
+    // Avisa a cada autor cuyo reporte se aprobó
+    for (const d of approved) {
+      if (d?.user_id) {
+        await notifyUser({
+          userId: d.user_id,
+          message: `¡Tu reporte de ${d.pokemon} fue APROBADO! (+1 shiny) 🎉`,
+          pushPayload: { type: 'reporte', title: 'Shiny aprobado' },
+        })
+      }
+    }
+  }
+
   return (
     <div>
       <PageHeader
@@ -95,6 +133,23 @@ export default function ReviewShinies() {
         subtitle="Reportes de captura del clan pendientes de validación."
         icon={ClipboardCheck}
       />
+
+      {reports && reports.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-soft">
+            <strong className="font-bold text-text">{reports.length}</strong> reporte
+            {reports.length !== 1 ? 's' : ''} pendiente{reports.length !== 1 ? 's' : ''}
+          </p>
+          <button
+            onClick={approveAll}
+            disabled={approvingAll}
+            className="btn-primary"
+          >
+            <CheckCircle2 size={17} />
+            {approvingAll ? 'Aprobando...' : 'Aprobar todos'}
+          </button>
+        </div>
+      )}
 
       {!reports ? (
         <Spinner label="Cargando reportes..." />
@@ -125,7 +180,7 @@ export default function ReviewShinies() {
                   {r.pokemon_name}
                 </p>
                 <p className="flex items-center gap-1.5 text-xs text-soft">
-                  <Avatar name={r.author_id?.username} src={r.author_id?.avatar_url} size="sm" />
+                  <ProfileAvatar userId={r.author_id} name={r.author_id?.username} src={r.author_id?.avatar_url} size="sm" />
                   {r.author_id?.username} · {formatDate(r.created_at)}
                 </p>
               </div>
@@ -154,7 +209,7 @@ export default function ReviewShinies() {
             />
             <div className="mb-4 space-y-1 rounded-xl bg-background p-4 text-sm">
               <p className="flex items-center gap-2 font-bold text-text">
-                <Avatar name={reviewing.author_id?.username} src={reviewing.author_id?.avatar_url} size="sm" />
+                <ProfileAvatar userId={reviewing.author_id} name={reviewing.author_id?.username} src={reviewing.author_id?.avatar_url} size="sm" />
                 {reviewing.author_id?.username}
               </p>
               <p className="text-xs text-soft">

@@ -7,7 +7,63 @@ self.addEventListener('install', () => {
 })
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim())
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE_ASSETS && k !== CACHE_SHELL).map((k) => caches.delete(k)))
+      )
+      .then(() => self.clients.claim())
+  )
+})
+
+// ── Caché de navegación ──
+// Los assets de Vite llevan hash (inmutables) → cache-first: tras la primera
+// visita se sirven desde caché sin tocar la red.
+// El index.html (navegación) → network-first con fallback a caché: siempre
+// contenido fresco, y si se pierde la red se muestra la última versión.
+const CACHE_ASSETS = 'spfc-assets-v1'
+const CACHE_SHELL = 'spfc-shell-v1'
+
+self.addEventListener('fetch', (event) => {
+  const request = event.request
+  if (request.method !== 'GET') return
+
+  const url = new URL(request.url)
+  if (url.origin !== self.location.origin) return
+
+  // Assets con hash: inmutable, cache-first
+  if (url.pathname.includes('/assets/') && url.pathname.match(/\.(js|css|woff2?)$/)) {
+    event.respondWith(
+      caches.open(CACHE_ASSETS).then((cache) =>
+        cache.match(request).then((cached) => {
+          if (cached) return cached
+          return fetch(request).then((res) => {
+            if (res.ok) cache.put(request, res.clone())
+            return res
+          })
+        })
+      )
+    )
+    return
+  }
+
+  // Navegación (index.html): network-first con fallback a caché
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone()
+            caches.open(CACHE_SHELL).then((cache) => cache.put(request, copy))
+          }
+          return res
+        })
+        .catch(() =>
+          caches.open(CACHE_SHELL).then((cache) => cache.match(request).then((cached) => cached || caches.match('/')))
+        )
+    )
+  }
 })
 
 self.addEventListener('push', (event) => {

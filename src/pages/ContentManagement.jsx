@@ -5,6 +5,7 @@ import { canAssignRoles, canManageAll } from '../lib/utils'
 import PageHeader from '../components/ui/PageHeader'
 import ContentManager from '../components/management/ContentManager'
 import MembersManager from '../components/management/MembersManager'
+import { NEWS_CATEGORIES } from '../lib/utils'
 import { useCrud } from '../hooks/useCrud'
 
 const TABS = {
@@ -23,7 +24,9 @@ const FIELD_CONFIGS = {
       { key: 'title', label: 'Título', type: 'text', placeholder: 'Nuevo evento de la semana' },
       { key: 'excerpt', label: 'Extracto corto', type: 'textarea', placeholder: 'Resumen breve que aparece en el banner' },
       { key: 'content', label: 'Contenido completo', type: 'textarea', placeholder: 'Cuerpo de la noticia...' },
-      { key: 'image_url', label: 'Imagen de portada', type: 'image' },
+      { key: 'image_url', label: 'Imagen de la noticia', type: 'image' },
+      { key: 'url', label: 'URL (web o video de YouTube)', type: 'url', placeholder: 'https://www.youtube.com/watch?v=...' },
+      { key: 'categories', label: 'Categorías (selección múltiple)', type: 'categories', options: NEWS_CATEGORIES },
     ],
     columns: ['title'],
     emptyHint: 'Publica la primera noticia del clan.',
@@ -112,7 +115,7 @@ export default function ContentManagement() {
       />
 
       {/* Pestañas */}
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="mb-6 flex flex-wrap gap-2.5">
         {availableTabs.map(([key, t]) => {
           const Icon = t.icon
           const active = tab === key
@@ -120,13 +123,13 @@ export default function ContentManagement() {
             <button
               key={key}
               onClick={() => setTab(key)}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+              className={`flex items-center gap-2 rounded-xl px-5 py-3 text-base font-semibold transition ${
                 active
                   ? 'bg-primary text-white shadow-glow'
                   : 'border border-edge bg-elevated text-soft hover:text-text'
               }`}
             >
-              <Icon size={16} />
+              <Icon size={18} />
               {t.label}
             </button>
           )

@@ -1,9 +1,11 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { LogOut } from 'lucide-react'
-import { NAV_ITEMS } from '../../lib/navigation'
+import { NAV_ITEMS, prefetchPage } from '../../lib/navigation'
+import { useNewContent } from '../../lib/newContent'
 import { useAuth } from '../../context/AuthContext'
 import Avatar, { RoleBadge } from '../ui/Avatar'
+import NewContentDot from '../ui/NewContentDot'
 
 /**
  * Sidebar vertical fija (escritorio).
@@ -11,6 +13,7 @@ import Avatar, { RoleBadge } from '../ui/Avatar'
  */
 export default function Sidebar() {
   const { profile, logout } = useAuth()
+  const { hasNew, pendingReports } = useNewContent()
   const navigate = useNavigate()
 
   // Filtra los enlaces según el rol del usuario logueado
@@ -42,8 +45,14 @@ export default function Sidebar() {
 
       {/* Navegación */}
       <nav className="flex-1 space-y-1 overflow-y-auto px-4">
-        {items.map(({ to, label, icon: Icon, end }) => (
-          <NavLink key={to} to={to} end={end}>
+        {items.map(({ to, label, icon: Icon, end, section, reports }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            onMouseEnter={() => prefetchPage(to)}
+            onFocus={() => prefetchPage(to)}
+          >
             {({ isActive }) => (
               <div
                 className={`group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 ${
@@ -60,6 +69,7 @@ export default function Sidebar() {
                 )}
                 <Icon size={19} className="shrink-0" />
                 {label}
+                <NewContentDot show={hasNew[section] || (reports && pendingReports)} />
               </div>
             )}
           </NavLink>

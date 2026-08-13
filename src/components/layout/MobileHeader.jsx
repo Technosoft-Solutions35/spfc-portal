@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { LogOut, Menu, X } from 'lucide-react'
-import { NAV_ITEMS } from '../../lib/navigation'
+import { NAV_ITEMS, prefetchPage } from '../../lib/navigation'
+import { useNewContent } from '../../lib/newContent'
 import { useAuth } from '../../context/AuthContext'
 import Avatar, { RoleBadge } from '../ui/Avatar'
+import NewContentDot from '../ui/NewContentDot'
 
 /**
  * Cabecera móvil: logo compacto + botón hamburguesa.
@@ -15,6 +17,7 @@ import Avatar, { RoleBadge } from '../ui/Avatar'
 export default function MobileHeader() {
   const [open, setOpen] = useState(false)
   const { profile, logout } = useAuth()
+  const { hasNew, pendingReports } = useNewContent()
   const navigate = useNavigate()
 
   const items = NAV_ITEMS.filter(
@@ -90,8 +93,15 @@ export default function MobileHeader() {
             </div>
 
             <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
-              {items.map(({ to, label, icon: Icon, end }) => (
-                <NavLink key={to} to={to} end={end} onClick={() => setOpen(false)}>
+              {items.map(({ to, label, icon: Icon, end, section, reports }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={end}
+                  onClick={() => setOpen(false)}
+                  onMouseEnter={() => prefetchPage(to)}
+                  onFocus={() => prefetchPage(to)}
+                >
                   {({ isActive }) => (
                     <div
                       className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition ${
@@ -102,6 +112,7 @@ export default function MobileHeader() {
                     >
                       <Icon size={19} />
                       {label}
+                      <NewContentDot show={hasNew[section] || (reports && pendingReports)} />
                     </div>
                   )}
                 </NavLink>

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { ImagePlus, Link2, UploadCloud, X } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
+import { supabase, uploadWithProgress } from '../../lib/supabase'
 import { useToast } from './Toast'
 
 /**
@@ -63,24 +63,20 @@ export default function ImageInput({ value, onChange, allowUrl = true, folder = 
     // cumpliendo la política de storage "media_user_insert_own" (primer segmento = uid).
     const path = `${folder ? folder + '/' : ''}${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
 
-    const { data, error } = await supabase.storage.from('media').upload(path, normalized, {
-      cacheControl: '3600',
-      upsert: false,
-      contentType: normalized.type || 'application/octet-stream',
-      onUploadProgress: (e) => {
-        if (e.total > 0) setProgress(Math.round((e.loaded / e.total) * 100))
-      },
-    })
+    try {
+      const data = await uploadWithProgress({
+        bucket: 'media',
+        path,
+        file: normalized,
+        onProgress: setProgress,
+      })
 
-    if (error) {
-      toast('Subida fallida: ' + error.message, 'error')
-      setUploading(false)
-      return
+      const { data: publicUrl } = supabase.storage.from('media').getPublicUrl(data.path)
+      onChange(publicUrl.publicUrl)
+      toast('Imagen subida', 'success')
+    } catch (err) {
+      toast('Subida fallida: ' + err.message, 'error')
     }
-
-    const { data: publicUrl } = supabase.storage.from('media').getPublicUrl(data.path)
-    onChange(publicUrl.publicUrl)
-    toast('Imagen subida', 'success')
     setUploading(false)
     setProgress(0)
     if (fileRef.current) fileRef.current.value = ''

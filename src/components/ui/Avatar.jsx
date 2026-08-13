@@ -1,13 +1,15 @@
 import { Crown, Shield, ShieldCheck } from 'lucide-react'
 
 // Avatar con la inicial del usuario; usa avatar_url si existe.
-export default function Avatar({ name = '', src, size = 'md' }) {
+// `className` (opcional) sustituye al tamaño por defecto si se pasa.
+export default function Avatar({ name = '', src, size = 'md', className = '' }) {
   const sizes = {
     sm: 'h-8 w-8 text-xs',
     md: 'h-10 w-10 text-sm',
     lg: 'h-14 w-14 text-lg',
     xl: 'h-20 w-20 text-2xl',
   }
+  const sizeClass = className || sizes[size]
   const initial = (name || '?').trim().charAt(0).toUpperCase()
 
   if (src) {
@@ -15,13 +17,13 @@ export default function Avatar({ name = '', src, size = 'md' }) {
       <img
         src={src}
         alt={name}
-        className={`${sizes[size]} rounded-full object-cover ring-2 ring-primary/30`}
+        className={`${sizeClass} rounded-full object-cover ring-2 ring-primary/30`}
       />
     )
   }
   return (
     <div
-      className={`${sizes[size]} flex items-center justify-center rounded-full bg-primary/15 font-bold text-primary ring-2 ring-primary/20`}
+      className={`${sizeClass} flex items-center justify-center rounded-full bg-primary/15 font-bold text-primary ring-2 ring-primary/20`}
     >
       {initial}
     </div>

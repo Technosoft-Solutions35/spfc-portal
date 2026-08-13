@@ -46,6 +46,33 @@ const FIELD = {
       onChange={(e) => set({ [f.key]: e.target.value.split(',').map((t) => t.trim()).filter(Boolean) })}
     />
   ),
+  categories: (f, v, set) => (
+    <div className="flex flex-wrap gap-2">
+      {f.options.map((opt) => {
+        const active = (v || []).includes(opt)
+        return (
+          <button
+            key={opt}
+            type="button"
+            onClick={() =>
+              set({
+                [f.key]: active
+                  ? (v || []).filter((c) => c !== opt)
+                  : [...(v || []), opt],
+              })
+            }
+            className={`rounded-full border px-4 py-2 text-base font-semibold transition ${
+              active
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-edge text-soft hover:border-primary/40 hover:text-text'
+            }`}
+          >
+            {active ? '✓ ' : ''}{opt}
+          </button>
+        )
+      })}
+    </div>
+  ),
   image: (f, v, set) => (
     <ImageInput value={v || ''} onChange={(url) => set({ [f.key]: url })} allowUrl={f.allowUrl !== false} />
   ),

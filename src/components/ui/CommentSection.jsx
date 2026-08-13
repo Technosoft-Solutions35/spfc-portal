@@ -5,8 +5,10 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from './Toast'
 import { formatShortDate } from '../../lib/utils'
-import Avatar, { RoleBadge } from './Avatar'
+import { RoleBadge } from './Avatar'
+import ProfileAvatar from './ProfileAvatar'
 import EmptyState from './EmptyState'
+import ProfileModal from '../profile/ProfileModal'
 
 /**
  * Sección de comentarios reutilizable (torneos, eventos, noticias).
@@ -22,6 +24,7 @@ export default function CommentSection({ parentType, parentId }) {
   const [sending, setSending] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [editingText, setEditingText] = useState('')
+  const [viewProfileId, setViewProfileId] = useState(null)
 
   const isStaff = role === 'admin' || role === 'gestor'
 
@@ -129,14 +132,21 @@ export default function CommentSection({ parentType, parentId }) {
                 className="rounded-xl border border-edge bg-elevated p-3"
               >
                 <div className="mb-1.5 flex items-center gap-2">
-                  <Avatar
+                  <ProfileAvatar
+                    userId={c.author_id}
                     name={c.author?.username}
                     src={c.author?.avatar_url}
                     size="sm"
                   />
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-2 text-sm font-bold text-text">
-                      {c.author?.username ?? 'Usuario'}
+                      <button
+                        type="button"
+                        onClick={() => setViewProfileId(c.author_id)}
+                        className="truncate transition hover:text-primary"
+                      >
+                        {c.author?.username ?? 'Usuario'}
+                      </button>
                       <RoleBadge role={c.author?.role} />
                     </p>
                     <p className="text-[11px] text-soft">{formatShortDate(c.created_at)}</p>
@@ -199,6 +209,9 @@ export default function CommentSection({ parentType, parentId }) {
           })}
         </ul>
       )}
+
+      {/* Perfil del autor del comentario al tocar su avatar/nombre */}
+      <ProfileModal userId={viewProfileId} onClose={() => setViewProfileId(null)} />
     </div>
   )
 }

@@ -16,6 +16,7 @@ const Verify = lazy(() => import('./pages/Verify'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
+const News = lazy(() => import('./pages/News'))
 const ShinyHunt = lazy(() => import('./pages/ShinyHunt'))
 const Tournaments = lazy(() => import('./pages/Tournaments'))
 const Guides = lazy(() => import('./pages/Guides'))
@@ -58,6 +59,7 @@ export default function App() {
                   }
                 >
                   <Route path="/" element={<Dashboard />} />
+                  <Route path="/noticias" element={<News />} />
                   <Route path="/shiny-hunt" element={<ShinyHunt />} />
                   <Route path="/torneos" element={<Tournaments />} />
                   <Route path="/guias" element={<Guides />} />

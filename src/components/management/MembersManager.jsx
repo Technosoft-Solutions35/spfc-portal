@@ -6,7 +6,8 @@ import { useToast } from '../ui/Toast'
 import Spinner from '../ui/Spinner'
 import EmptyState from '../ui/EmptyState'
 import Modal from '../ui/Modal'
-import Avatar, { RoleBadge } from '../ui/Avatar'
+import { RoleBadge } from '../ui/Avatar'
+import ProfileAvatar from '../ui/ProfileAvatar'
 import { canAssignRoles, generateMemberEmail, ROLES } from '../../lib/utils'
 import { useAuth } from '../../context/AuthContext'
 import ProfileModal from '../profile/ProfileModal'
@@ -42,7 +43,7 @@ export default function MembersManager() {
   const load = async () => {
     const { data } = await supabase
       .from('profiles')
-      .select('id, username, email, role, shinies, avatar_url, created_at')
+      .select('id, username, email, role, shinies, avatar_url, title, created_at')
       .order('created_at', { ascending: false })
     setMembers(data || [])
   }
@@ -64,6 +65,7 @@ export default function MembersManager() {
       role: m.role,
       shinies: m.shinies ?? 0,
       avatar_url: m.avatar_url || '',
+      title: m.title || '',
     })
     setModal('edit')
   }
@@ -98,6 +100,7 @@ export default function MembersManager() {
         role: editForm.role,
         shinies: Number(editForm.shinies) || 0,
         avatar_url: editForm.avatar_url.trim() || null,
+        title: editForm.title.trim() || null,
       })
       .eq('id', editingId)
     setBusy(false)
@@ -164,7 +167,7 @@ export default function MembersManager() {
               animate={{ opacity: 1 }}
               className="flex flex-wrap items-center gap-3 px-4 py-3 transition hover:bg-background"
             >
-              <Avatar name={m.username} src={m.avatar_url} size="sm" />
+              <ProfileAvatar userId={m.id} name={m.username} src={m.avatar_url} size="sm" />
               <div className="min-w-0 flex-1">
                 <button
                   type="button"
@@ -296,6 +299,18 @@ export default function MembersManager() {
               className="input"
               value={editForm.shinies ?? 0}
               onChange={(e) => setEditForm({ ...editForm, shinies: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="label" htmlFor="edit-title">Título personal (opcional)</label>
+            <input
+              id="edit-title"
+              type="text"
+              className="input"
+              maxLength={60}
+              placeholder="Ej: Youtuber, Capitán, Creador de contenido…"
+              value={editForm.title || ''}
+              onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
             />
           </div>
           <div>

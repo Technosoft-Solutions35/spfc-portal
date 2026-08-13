@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { BookOpen, Download, FileText, Paperclip, Tag, Youtube } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { markSeen } from '../lib/newContent'
 import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 import Modal from '../components/ui/Modal'
 import { formatShortDate } from '../lib/utils'
+import PostActions from '../components/ui/PostActions'
+import { readDeepLink } from '../lib/share'
 
 // Convierte cualquier formato de enlace de YouTube a la URL embebible.
 export function youtubeVideoId(url = '') {
@@ -62,11 +65,20 @@ export default function Guides() {
   }
 
   useEffect(() => {
+    markSeen('guides')
     supabase
       .from('guides')
       .select('*')
       .order('created_at', { ascending: false })
-      .then(({ data }) => setGuides(data || []))
+      .then(({ data }) => {
+        setGuides(data || [])
+        // Enlace directo: si se llegó con ?guide=<id> (en el hash), se abre esa guía
+        const dl = readDeepLink()
+        if (dl?.param === 'guide') {
+          const found = (data || []).find((g) => g.id === dl.id)
+          if (found) setActive(found)
+        }
+      })
   }, [])
 
   return (
@@ -94,13 +106,21 @@ export default function Guides() {
               'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200"><rect width="400" height="200" fill="%231A1D24"/><rect width="400" height="200" fill="url(%23g)"/><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%23FF3E3E" stop-opacity="0.4"/><stop offset="1" stop-color="%23FFB703" stop-opacity="0.25"/></linearGradient></defs></svg>'
             const isVideoCover = !g.image_url && youtubeThumbUrl(g.video_url)
             return (
-            <motion.button
+            <motion.div
               key={g.id}
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
               onClick={() => setActive(g)}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-edge bg-elevated text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-card"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  setActive(g)
+                }
+              }}
+              className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-edge bg-elevated text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-card"
             >
               <div
                 className="relative h-36 w-full bg-cover bg-center transition group-hover:scale-[1.03]"
@@ -114,8 +134,8 @@ export default function Guides() {
                   </span>
                 )}
               </div>
-              <div className="flex-1 p-4">
-                <h3 className="font-display font-bold text-text transition group-hover:text-primary">
+              <div className="flex flex-1 flex-col p-4">
+                <h3 className="line-clamp-2 font-display font-bold text-text transition group-hover:text-primary">
                   {g.title}
                 </h3>
                 <p className="mt-1 line-clamp-2 text-sm text-soft">{g.excerpt}</p>
@@ -130,17 +150,28 @@ export default function Guides() {
                     </span>
                   ))}
                 </div>
-                <p className="mt-3 text-[11px] text-soft">
-                  Publicado el {formatShortDate(g.created_at)}
-                </p>
-                {g.documents?.length > 0 && (
-                  <span className="mt-1 flex items-center gap-1 text-[11px] text-soft">
-                    <Paperclip size={11} />
-                    {g.documents.length} documento{g.documents.length > 1 ? 's' : ''}
-                  </span>
-                )}
+                <div className="mt-4 flex items-center justify-between gap-2 border-t border-edge pt-3">
+                  <PostActions
+                    parentType="guide"
+                    parentId={g.id}
+                    shareRoute="/guias"
+                    shareParam="guide"
+                    shareText={g.title}
+                  />
+                  <div className="text-right">
+                    {g.documents?.length > 0 && (
+                      <span className="flex items-center justify-end gap-1 text-[11px] text-soft">
+                        <Paperclip size={11} />
+                        {g.documents.length} documento{g.documents.length > 1 ? 's' : ''}
+                      </span>
+                    )}
+                    <p className="text-[11px] text-soft">
+                      Publicado el {formatShortDate(g.created_at)}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </motion.button>
+            </motion.div>
             )
           })}
         </div>

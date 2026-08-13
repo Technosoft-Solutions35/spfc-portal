@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { CalendarDays, ClipboardList, Swords, Trophy } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { markSeen } from '../lib/newContent'
 import { formatDate } from '../lib/utils'
 import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 import CommentSection from '../components/ui/CommentSection'
+import PostActions from '../components/ui/PostActions'
+import { readDeepLink } from '../lib/share'
 
 const STATUS_META = {
   open: { label: 'Inscripciones abiertas', class: 'bg-success/15 text-success' },
@@ -22,12 +25,25 @@ export default function Tournaments() {
   const [expanded, setExpanded] = useState(null)
 
   useEffect(() => {
+    markSeen('tournaments')
     supabase
       .from('tournaments')
       .select('*')
       .order('start_date', { ascending: false })
       .then(({ data }) => setTournaments(data || []))
   }, [])
+
+  // Enlace directo: si se llegó con ?tournament=<id> (en el hash), se desplaza hasta ese torneo
+  useEffect(() => {
+    if (!tournaments) return
+    const dl = readDeepLink()
+    if (dl?.param === 'tournament') {
+      const el = document.querySelector(`[data-item-id="${dl.id}"]`)
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 150)
+      }
+    }
+  }, [tournaments])
 
   return (
     <div>
@@ -53,6 +69,7 @@ export default function Tournaments() {
             return (
               <motion.div
                 key={t.id}
+                data-item-id={t.id}
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
@@ -68,14 +85,17 @@ export default function Tournaments() {
                       {status.label}
                     </span>
                   </div>
-                  <h3 className="font-display text-lg font-extrabold text-text">{t.title}</h3>
+                  <h3 className="line-clamp-2 font-display text-lg font-extrabold text-text">{t.title}</h3>
                   <p className="mt-1 text-sm text-soft">{t.description}</p>
 
                   <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
                     <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
                       <CalendarDays size={13} className="text-primary" />
                       <span className="text-soft">Inicio</span>
-                      <span className="ml-auto font-semibold text-text">{formatDate(t.start_date)}</span>
+                      <span className="ml-auto text-right font-semibold text-text">
+                        {formatDate(t.start_date)}
+                        <span className="ml-1 font-normal text-soft">· hora local</span>
+                      </span>
                     </div>
                     {t.prize && (
                       <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
@@ -106,6 +126,15 @@ export default function Tournaments() {
                       {t.rules}
                     </p>
                   )}
+                  <div className="mt-3 border-t border-edge pt-3">
+                    <PostActions
+                      parentType="tournament"
+                      parentId={t.id}
+                      shareRoute="/torneos"
+                      shareParam="tournament"
+                      shareText={t.title}
+                    />
+                  </div>
                 </div>
 
                 {/* Inscripciones */}

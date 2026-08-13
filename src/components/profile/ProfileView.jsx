@@ -35,6 +35,9 @@ export default function ProfileView({ profile, hall, loadingHall = false }) {
         <div className="min-w-0 flex-1 text-center sm:text-left">
           <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
             <h3 className="font-display text-2xl font-extrabold text-text">{profile.username}</h3>
+            {profile.title && (
+              <span className="font-display text-lg font-bold text-soft">({profile.title})</span>
+            )}
             <RoleBadge role={profile.role} />
           </div>
 

@@ -27,6 +27,7 @@ export default function Profile() {
 
   const [form, setForm] = useState({
     avatar_url: '',
+    title: '',
     ign: '',
     affiliation: '',
     game_roles: [],
@@ -47,6 +48,7 @@ export default function Profile() {
         setProfile(data)
         setForm({
           avatar_url: data.avatar_url || '',
+          title: data.title || '',
           ign: data.ign || '',
           affiliation: data.affiliation || '',
           game_roles: data.game_roles || [],
@@ -85,6 +87,7 @@ export default function Profile() {
       .from('profiles')
       .update({
         avatar_url: form.avatar_url || null,
+        title: form.title.trim() || null,
         ign: form.ign.trim() || null,
         affiliation: form.affiliation || null,
         game_roles: form.game_roles,
@@ -139,6 +142,22 @@ export default function Profile() {
               allowUrl={false}
               folder={`${authProfile.id}/avatars`}
             />
+          </div>
+
+          {/* Título personal */}
+          <div>
+            <label className="label">Título personal (opcional)</label>
+            <input
+              type="text"
+              className="input"
+              maxLength={60}
+              placeholder="Ej: Youtuber, Capitán, Creador de contenido…"
+              value={form.title}
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+            />
+            <p className="mt-1 text-[10px] text-soft">
+              Aparece junto a tu nombre en tu perfil. Déjalo vacío para no mostrar título.
+            </p>
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
