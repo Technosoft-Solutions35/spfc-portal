@@ -33,6 +33,10 @@ export default function MembersManager() {
   const { isOnline } = usePresence()
   const canAssign = canAssignRoles(myRole)
 
+  const totalCount = members?.length ?? 0
+  const onlineCount = members ? members.filter((m) => isOnline(m.id)).length : 0
+  const offlineCount = Math.max(0, totalCount - onlineCount)
+
   const [members, setMembers] = useState(null)
   const [busy, setBusy] = useState(false)
   const [deleting, setDeleting] = useState(null)
@@ -146,16 +150,26 @@ export default function MembersManager() {
             <strong>admin</strong> (acceso total), <strong>gestor</strong> (noticias y contadores){' '}
             y <strong>member</strong> (solo lectura).
           </p>
-          <p className="mt-1 flex items-center gap-4 text-xs text-soft">
-            <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-success ring-2 ring-background" />
-              Conectado
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-gray-300 ring-2 ring-background" />
-              Desconectado
-            </span>
-          </p>
+          <div className="mt-3 grid max-w-md grid-cols-3 gap-3">
+            <div className="rounded-xl border border-edge bg-surface px-4 py-3">
+              <p className="font-display text-2xl font-extrabold leading-none text-text">{totalCount}</p>
+              <p className="mt-1 text-xs text-soft">Cuentas registradas</p>
+            </div>
+            <div className="rounded-xl border border-edge bg-surface px-4 py-3">
+              <p className="flex items-center gap-2 font-display text-2xl font-extrabold leading-none text-text">
+                {onlineCount}
+                <span className="h-2.5 w-2.5 rounded-full bg-success" />
+              </p>
+              <p className="mt-1 text-xs text-soft">Conectados</p>
+            </div>
+            <div className="rounded-xl border border-edge bg-surface px-4 py-3">
+              <p className="flex items-center gap-2 font-display text-2xl font-extrabold leading-none text-text">
+                {offlineCount}
+                <span className="h-2.5 w-2.5 rounded-full bg-gray-300" />
+              </p>
+              <p className="mt-1 text-xs text-soft">Desconectados</p>
+            </div>
+          </div>
         </div>
         {canAssign && (
           <button onClick={openAdd} className="btn-primary">
