@@ -22,8 +22,8 @@ self.addEventListener('activate', (event) => {
 // visita se sirven desde caché sin tocar la red.
 // El index.html (navegación) → network-first con fallback a caché: siempre
 // contenido fresco, y si se pierde la red se muestra la última versión.
-const CACHE_ASSETS = 'spfc-assets-v1'
-const CACHE_SHELL = 'spfc-shell-v1'
+const CACHE_ASSETS = 'spfc-assets-v2'
+const CACHE_SHELL = 'spfc-shell-v2'
 
 self.addEventListener('fetch', (event) => {
   const request = event.request
@@ -77,8 +77,8 @@ self.addEventListener('push', (event) => {
   const root = self.location.origin + self.location.pathname
   const options = {
     body: data.body || 'Entra al portal para verlo.',
-    icon: 'images/logo-clan.png',
-    badge: 'images/logo-clan.png',
+    icon: 'images/icon-192.png',
+    badge: 'images/icon-192.png',
     data: { url: (data.url || '') || root + '#/' },
     vibrate: [120, 60, 120],
     tag: data.tag || 'spfc-content',
@@ -86,7 +86,17 @@ self.addEventListener('push', (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'SpFc/Gd', options)
+    self.registration
+      .showNotification(data.title || 'SpFc/Gd', options)
+      .catch(() =>
+        // Si el icono falla, reintenta sin él para no perder la notificación.
+        self.registration.showNotification(data.title || 'SpFc/Gd', {
+          body: options.body,
+          data: options.data,
+          tag: options.tag,
+          renotify: true,
+        })
+      )
   )
 })
 
