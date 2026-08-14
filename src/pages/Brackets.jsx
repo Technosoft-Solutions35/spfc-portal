@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { CalendarDays, ChevronDown, ChevronUp, Crown, GitBranch, Network, Pencil, Plus, RefreshCw, Trophy, X } from 'lucide-react'
+import { CalendarDays, ChevronDown, Crown, GitBranch, Network, Pencil, Plus, RefreshCw, Trophy, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/ui/Toast'
@@ -445,99 +445,38 @@ export default function Brackets() {
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: i * 0.05 }}
-        className="flex flex-col overflow-hidden rounded-2xl border border-edge bg-elevated"
+        className="overflow-hidden rounded-2xl border border-edge bg-elevated"
       >
-        {/* Cabecera compacta (clic para expandir) */}
-        <div
-          role="button"
-          tabIndex={0}
+        {/* Tupla compacta: se abre para ver todo */}
+        <button
+          type="button"
           onClick={() => toggle(t.id)}
-          onKeyDown={(ev) => {
-            if (ev.key === 'Enter' || ev.key === ' ') {
-              ev.preventDefault()
-              toggle(t.id)
-            }
-          }}
-          className="cursor-pointer p-4"
+          className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-background"
         >
-          <div className="mb-2 flex items-start justify-between gap-2">
-            <span className="rounded-xl bg-secondary/10 p-2 text-secondary">
-              <Network size={18} />
-            </span>
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${status.class}`}>
-              {status.label}
-            </span>
-          </div>
-
-          <h3 className="font-display text-lg font-extrabold text-text">{t.title}</h3>
-          <p className="mt-1 line-clamp-2 text-sm text-soft">{t.description}</p>
-
-          <div className="mt-3 flex flex-wrap gap-2 text-xs">
-            {(t.tier || t.format) && (
-              <span className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5 font-semibold text-text">
-                <GitBranch size={13} className="text-primary" />
-                {[t.tier, t.format].filter(Boolean).join(' · ')}
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
+            <Network size={20} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-2">
+              <span className="min-w-0 truncate font-display text-sm font-extrabold text-text">{t.title}</span>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${status.class}`}>
+                {status.label}
               </span>
-            )}
-            <span className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5 font-semibold text-text">
-              <Trophy size={13} className="text-secondary" />
-              {t.prize || '—'}
             </span>
-            <span className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5 font-semibold text-text">
-              <CalendarDays size={13} className="text-primary" />
-              {formatDate(t.start_date)}
+            <span className="mt-0.5 block truncate text-xs text-soft">
+              {[t.tier, t.format].filter(Boolean).join(' · ') || t.prize || formatDate(t.start_date)}
             </span>
-          </div>
-        </div>
+          </span>
+          <span className={`shrink-0 text-soft transition-transform ${open ? 'rotate-180' : ''}`}>
+            <ChevronDown size={18} />
+          </span>
+        </button>
 
-        {/* Acciones rápidas */}
-        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-edge px-4 py-2.5">
-          <PostActions
-            parentType="tournament"
-            parentId={t.id}
-            shareRoute="/torneos"
-            shareParam="tournament"
-            shareText={t.title}
-          />
-          <div className="flex flex-wrap items-center gap-2">
-            {t.bracket_ready && (
-              <button
-                onClick={() => openView(t)}
-                className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-bold text-white transition hover:brightness-110"
-              >
-                <Network size={14} />
-                Ver llaves
-              </button>
-            )}
-            {isAdmin && (
-              <button
-                onClick={() => openManage(t)}
-                className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition ${
-                  t.bracket_ready
-                    ? 'border-edge text-soft hover:border-primary hover:text-primary'
-                    : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'
-                }`}
-              >
-                {t.bracket_ready ? <RefreshCw size={14} /> : <Plus size={14} />}
-                {t.bracket_ready ? 'Gestionar' : 'Crear llaves'}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => toggle(t.id)}
-              className="inline-flex items-center gap-1 rounded-full border border-edge bg-background px-3 py-1.5 text-xs font-bold text-soft transition hover:border-primary/40 hover:text-primary"
-            >
-              {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              {open ? 'Ocultar' : 'Inscripción y comentarios'}
-            </button>
-          </div>
-        </div>
-
-        {/* Detalle expandido: historial, campos, inscripción y comentarios */}
+        {/* Detalle expandido: historial, campos, llaves, inscripción y comentarios */}
         {open && (
-          <div className="border-t border-edge px-4 pb-4">
+          <div className="space-y-4 border-t border-edge px-4 pb-4 pt-3">
             {winners.length > 0 && (
-              <div className="mt-3 space-y-1.5 rounded-xl border border-secondary/20 bg-secondary/5 p-3">
+              <div className="space-y-1.5 rounded-xl border border-secondary/20 bg-secondary/5 p-3">
                 {winners.map((w) => (
                   <p key={w.label} className="flex items-center gap-2 text-sm">
                     <span>{w.icon}</span>
@@ -548,7 +487,9 @@ export default function Brackets() {
               </div>
             )}
 
-            <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-text">{t.description}</p>
+
+            <dl className="grid grid-cols-2 gap-2 text-xs">
               {(t.tier || t.format) && (
                 <div className="col-span-2 flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
                   <GitBranch size={13} className="text-primary" />
@@ -575,6 +516,38 @@ export default function Brackets() {
                 </div>
               )}
             </dl>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <PostActions
+                parentType="tournament"
+                parentId={t.id}
+                shareRoute="/torneos"
+                shareParam="tournament"
+                shareText={t.title}
+              />
+              {t.bracket_ready && (
+                <button
+                  onClick={() => openView(t)}
+                  className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-bold text-white transition hover:brightness-110"
+                >
+                  <Network size={14} />
+                  Ver llaves
+                </button>
+              )}
+              {isAdmin && (
+                <button
+                  onClick={() => openManage(t)}
+                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                    t.bracket_ready
+                      ? 'border-edge text-soft hover:border-primary hover:text-primary'
+                      : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'
+                  }`}
+                >
+                  {t.bracket_ready ? <RefreshCw size={14} /> : <Plus size={14} />}
+                  {t.bracket_ready ? 'Gestionar' : 'Crear llaves'}
+                </button>
+              )}
+            </div>
 
             <RsvpBox parentType="tournament" parentId={t.id} />
             <CommentSection parentType="tournament" parentId={t.id} />

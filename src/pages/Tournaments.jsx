@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { CalendarDays, ChevronDown, ChevronUp, ClipboardList, Network, Swords, Trophy } from 'lucide-react'
+import { CalendarDays, ChevronDown, ClipboardList, Network, Swords, Trophy } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { markSeen, useLiveSection } from '../lib/newContent'
 import { formatDate, sortTournaments } from '../lib/utils'
@@ -83,6 +83,7 @@ export default function Tournaments() {
             const status = STATUS_META[t.status] || STATUS_META.open
             const open = expanded.has(t.id)
             const rulesOpen = rulesExpanded === t.id
+            const secondary = [formatDate(t.start_date), t.prize].filter(Boolean).join(' · ')
             return (
               <motion.div
                 key={t.id}
@@ -90,81 +91,37 @@ export default function Tournaments() {
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="flex flex-col overflow-hidden rounded-2xl border border-edge bg-elevated"
+                className="overflow-hidden rounded-2xl border border-edge bg-elevated"
               >
-                {/* Cabecera compacta (clic para expandir) */}
-                <div
-                  role="button"
-                  tabIndex={0}
+                {/* Tupla compacta: se abre para ver todo */}
+                <button
+                  type="button"
                   onClick={() => toggle(t.id)}
-                  onKeyDown={(ev) => {
-                    if (ev.key === 'Enter' || ev.key === ' ') {
-                      ev.preventDefault()
-                      toggle(t.id)
-                    }
-                  }}
-                  className="cursor-pointer p-4"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-background"
                 >
-                  <div className="mb-2 flex items-start justify-between gap-2">
-                    <span className="rounded-xl bg-primary/10 p-2 text-primary">
-                      <Trophy size={18} />
-                    </span>
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${status.class}`}>
-                      {status.label}
-                    </span>
-                  </div>
-                  <h3 className="line-clamp-2 font-display text-lg font-extrabold text-text">{t.title}</h3>
-                  <p className="mt-1 line-clamp-2 text-sm text-soft">{t.description}</p>
-
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                    <span className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5 font-semibold text-text">
-                      <CalendarDays size={13} className="text-primary" />
-                      {formatDate(t.start_date)}
-                      <span className="font-normal text-soft">· hora local</span>
-                    </span>
-                    {t.prize && (
-                      <span className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5 font-semibold text-text">
-                        <Trophy size={13} className="text-secondary" />
-                        {t.prize}
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Trophy size={20} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2">
+                      <span className="min-w-0 truncate font-display text-sm font-extrabold text-text">{t.title}</span>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${status.class}`}>
+                        {status.label}
                       </span>
-                    )}
-                  </div>
-                </div>
+                    </span>
+                    <span className="mt-0.5 block truncate text-xs text-soft">{secondary}</span>
+                  </span>
+                  <span className={`shrink-0 text-soft transition-transform ${open ? 'rotate-180' : ''}`}>
+                    <ChevronDown size={18} />
+                  </span>
+                </button>
 
-                {/* Acciones rápidas */}
-                <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-edge px-4 py-2.5">
-                  <PostActions
-                    parentType="tournament"
-                    parentId={t.id}
-                    shareRoute="/torneos"
-                    shareParam="tournament"
-                    shareText={t.title}
-                  />
-                  <div className="flex flex-wrap items-center gap-2">
-                    {t.bracket_ready && (
-                      <a
-                        href={`#/brackets?brackets=${t.id}`}
-                        className="flex items-center gap-1.5 rounded-full border border-edge px-3 py-1.5 text-xs font-bold text-soft transition hover:border-secondary hover:text-secondary"
-                      >
-                        <Network size={14} />
-                        Ver llaves
-                      </a>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => toggle(t.id)}
-                      className="inline-flex items-center gap-1 rounded-full border border-edge bg-background px-3 py-1.5 text-xs font-bold text-soft transition hover:border-primary/40 hover:text-primary"
-                    >
-                      {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                      {open ? 'Ocultar' : 'Inscripción y comentarios'}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Detalle expandido: campos, reglas, inscripción y comentarios */}
+                {/* Detalle expandido: toda la información + acciones */}
                 {open && (
-                  <div className="border-t border-edge px-4 pb-4">
-                    <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                  <div className="space-y-4 border-t border-edge px-4 pb-4 pt-3">
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-text">{t.description}</p>
+
+                    <dl className="grid grid-cols-2 gap-2 text-xs">
                       <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
                         <CalendarDays size={13} className="text-primary" />
                         <span className="text-soft">Inicio</span>
@@ -193,17 +150,36 @@ export default function Tournaments() {
                       <>
                         <button
                           onClick={() => setRulesExpanded(rulesOpen ? null : t.id)}
-                          className="mt-2 text-xs font-semibold text-primary hover:underline"
+                          className="text-xs font-semibold text-primary hover:underline"
                         >
                           {rulesOpen ? 'Ocultar reglas' : 'Ver reglas'}
                         </button>
                         {rulesOpen && t.rules && (
-                          <p className="mt-2 whitespace-pre-wrap rounded-xl bg-background p-3 text-sm leading-relaxed text-text">
+                          <p className="whitespace-pre-wrap rounded-xl bg-background p-3 text-sm leading-relaxed text-text">
                             {t.rules}
                           </p>
                         )}
                       </>
                     )}
+
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <PostActions
+                        parentType="tournament"
+                        parentId={t.id}
+                        shareRoute="/torneos"
+                        shareParam="tournament"
+                        shareText={t.title}
+                      />
+                      {t.bracket_ready && (
+                        <a
+                          href={`#/brackets?brackets=${t.id}`}
+                          className="flex items-center gap-1.5 rounded-full border border-edge px-3 py-1.5 text-xs font-bold text-soft transition hover:border-secondary hover:text-secondary"
+                        >
+                          <Network size={14} />
+                          Ver llaves
+                        </a>
+                      )}
+                    </div>
 
                     <RsvpBox parentType="tournament" parentId={t.id} />
                     <CommentSection parentType="tournament" parentId={t.id} />
