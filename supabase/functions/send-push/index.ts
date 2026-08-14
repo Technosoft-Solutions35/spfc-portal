@@ -88,6 +88,7 @@ Deno.serve(async (req) => {
     events: { label: 'Eventos', text: '¡Nuevo evento! Ven a echarle un ojo.' },
     tournaments: { label: 'Torneos', text: '¡Nuevo torneo! Ven a echarle un ojo.' },
     guides: { label: 'Guías y Buildeos', text: '¡Nueva guía! Ven a echarle un ojo.' },
+    reporte: { label: 'Shiny', text: '¡Nuevo reporte shiny! Ven a revisarlo.' },
   }
   const friendly = TYPE_LABELS[type] || { label: type, text: '' }
 
@@ -103,11 +104,19 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
-  // Si llega `userId`, el aviso solo se envía a las suscripciones de ese usuario
-  // (avisos personales como "tu reporte fue aprobado").
-  let query = serviceClient.from('push_subscriptions').select('endpoint, keys')
+  // Destinatarios:
+  //  - `userId`: solo ese usuario (avisos personales).
+  //  - `roles`: todos los suscritos cuyo perfil tenga alguno de esos roles
+  //    (p. ej. avisar al staff de un nuevo reporte shiny por aprobar).
+  //  - ninguno: todos los suscritos (avisos globales).
+  let query = serviceClient
+    .from('push_subscriptions')
+    .select('endpoint, keys, user_id, profiles!inner(role)')
   if (payload.userId) {
     query = query.eq('user_id', payload.userId)
+  }
+  if (Array.isArray(payload.roles) && payload.roles.length) {
+    query = query.in('profiles.role', payload.roles)
   }
   const { data: subscriptions, error } = await query
 
@@ -115,11 +124,14 @@ Deno.serve(async (req) => {
     return json({ error: 'Error leyendo suscripciones: ' + error.message }, 500)
   }
 
+  const TYPE_URL = {
+    reporte: '/#/revisar-shinies',
+  }
   const results = { total: (subscriptions || []).length, sent: 0, failed: 0, errors: [] }
   const pushPayload = JSON.stringify({
     title: `SpFc/Gd · ${friendly.label}`,
     body: message,
-    url: `/#/${type}`,
+    url: TYPE_URL[type] || `/#/${type}`,
     tag: 'spfc-' + type,
   })
 

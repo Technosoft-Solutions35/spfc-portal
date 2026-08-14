@@ -41,7 +41,7 @@ export default function ReviewShinies() {
       .channel('review-shiny-reports')
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'shiny_reports', filter: 'status=eq.pending' },
+        { event: '*', schema: 'public', table: 'shiny_reports', filter: 'status=eq.pending' },
         () => fetchReports()
       )
       .subscribe()

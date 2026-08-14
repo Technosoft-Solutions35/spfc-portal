@@ -91,6 +91,18 @@ export default function MyShinies() {
       toast('No se pudo guardar: ' + error.message, 'error')
       return
     }
+    // Reporte nuevo: avisa al staff (super-admin/admin/gestor) por push para
+    // que no tarde en revisar la bandeja. El push abre la página de revisión.
+    if (!editingId) {
+      const { sendPushNotification } = await import('../lib/push')
+      const sender = profile?.username || 'Un miembro'
+      await sendPushNotification({
+        type: 'reporte',
+        title: `${sender} reportó un shiny`,
+        message: `${sender} reportó un ${payload.pokemon_name}. ¡Ven a revisarlo!`,
+        roles: ['super-admin', 'admin', 'gestor'],
+      })
+    }
     toast(editingId ? 'Reporte actualizado' : 'Reporte enviado. ¡Suerte!', 'success')
     setModal(false)
     fetchReports()
