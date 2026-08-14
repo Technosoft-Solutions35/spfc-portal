@@ -53,6 +53,16 @@ async function fetchFlags() {
   return next
 }
 
+// Refresco en vivo de una sección: cuando el staff publica contenido nuevo de
+// ese tipo, se vuelve a cargar la lista (sin necesidad de recargar la página).
+export function useLiveSection(section, load) {
+  useEffect(() => {
+    return subscribeContentCreated((payload) => {
+      if (payload?.type === section) load()
+    })
+  }, [section, load])
+}
+
 // ¿Hay reportes de shinies pendientes de revisión? (foco en "Revisar shinies")
 async function fetchPendingReports() {
   const { count } = await supabase

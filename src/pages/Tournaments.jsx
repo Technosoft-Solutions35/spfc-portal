@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { CalendarDays, ClipboardList, Network, Swords, Trophy } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { markSeen } from '../lib/newContent'
+import { markSeen, useLiveSection } from '../lib/newContent'
 import { formatDate } from '../lib/utils'
 import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
@@ -25,14 +25,21 @@ export default function Tournaments() {
   const [tournaments, setTournaments] = useState(null)
   const [expanded, setExpanded] = useState(null)
 
-  useEffect(() => {
-    markSeen('tournaments')
-    supabase
+  const load = useCallback(() => {
+    return supabase
       .from('tournaments')
       .select('*')
       .order('start_date', { ascending: false })
       .then(({ data }) => setTournaments(data || []))
   }, [])
+
+  useEffect(() => {
+    markSeen('tournaments')
+    load()
+  }, [load])
+
+  // Refresco en vivo cuando el staff publica un torneo nuevo
+  useLiveSection('tournaments', load)
 
   // Enlace directo: si se llegó con ?tournament=<id> (en el hash), se desplaza hasta ese torneo
   useEffect(() => {

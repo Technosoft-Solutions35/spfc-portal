@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ExternalLink, Newspaper, Share2, Tag, Youtube } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { markSeen } from '../lib/newContent'
+import { markSeen, useLiveSection } from '../lib/newContent'
 import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
@@ -25,9 +25,8 @@ export default function News() {
   const [news, setNews] = useState(null)
   const [active, setActive] = useState(null)
 
-  useEffect(() => {
-    markSeen('news')
-    supabase
+  const load = useCallback(() => {
+    return supabase
       .from('news')
       .select('*')
       .order('created_at', { ascending: false })
@@ -41,6 +40,14 @@ export default function News() {
         }
       })
   }, [])
+
+  useEffect(() => {
+    markSeen('news')
+    load()
+  }, [load])
+
+  // Refresco en vivo cuando el staff publica una noticia nueva
+  useLiveSection('news', load)
 
   const cover = (n) =>
     n.image_url ||

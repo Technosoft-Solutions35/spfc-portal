@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { CalendarDays, MapPin } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { markSeen } from '../lib/newContent'
+import { markSeen, useLiveSection } from '../lib/newContent'
 import { formatDate } from '../lib/utils'
 import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
@@ -18,14 +18,21 @@ import { readDeepLink } from '../lib/share'
 export default function Events() {
   const [events, setEvents] = useState(null)
 
-  useEffect(() => {
-    markSeen('events')
-    supabase
+  const load = useCallback(() => {
+    return supabase
       .from('events')
       .select('*')
       .order('date', { ascending: true })
       .then(({ data }) => setEvents(data || []))
   }, [])
+
+  useEffect(() => {
+    markSeen('events')
+    load()
+  }, [load])
+
+  // Refresco en vivo cuando el staff publica un evento nuevo
+  useLiveSection('events', load)
 
   // Enlace directo: si se llegó con ?event=<id> (en el hash), se desplaza hasta ese evento
   useEffect(() => {

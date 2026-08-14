@@ -166,6 +166,7 @@ function ActiveTab({ tab }) {
   const crud = useCrud(config.table, config.orderBy && { orderBy: config.orderBy })
   return (
     <ContentManager
+      type={tab}
       title={TABS[tab].label}
       fields={config.fields}
       columns={config.columns}

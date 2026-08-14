@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { BookOpen, Download, FileText, Paperclip, Tag, Youtube } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { markSeen } from '../lib/newContent'
+import { markSeen, useLiveSection } from '../lib/newContent'
 import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
@@ -64,9 +64,8 @@ export default function Guides() {
     }
   }
 
-  useEffect(() => {
-    markSeen('guides')
-    supabase
+  const load = useCallback(() => {
+    return supabase
       .from('guides')
       .select('*')
       .order('created_at', { ascending: false })
@@ -80,6 +79,14 @@ export default function Guides() {
         }
       })
   }, [])
+
+  useEffect(() => {
+    markSeen('guides')
+    load()
+  }, [load])
+
+  // Refresco en vivo cuando el staff publica una guía nueva
+  useLiveSection('guides', load)
 
   return (
     <div>
