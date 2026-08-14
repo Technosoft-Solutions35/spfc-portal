@@ -4,7 +4,7 @@ import { supabase } from './supabase'
 // como secreto en la Edge Function send-push (no se sube al repositorio).
 export const VAPID_PUBLIC_KEY =
   import.meta.env.VITE_VAPID_PUBLIC_KEY ||
-  'BBHfOylyIiGH1SzXcYjvxMZVUQI641VHH8BYBvt1KJGAdUsBZbNmuRg8sxuLy2wvMjLFsUBizOSKO_PH00BZUOM'
+  'BN-EnpDyNVPYvELtSFEwXhzruU2t3zvM4NMTBhTqHESq1eKc0P8Jde8-5epObGBNqmH0tr87CfNn3XkY0GEBIGM'
 
 // URL de la Edge Function que envía los pushes a todos los suscritos.
 const EDGE_FUNCTION_URL = `${
