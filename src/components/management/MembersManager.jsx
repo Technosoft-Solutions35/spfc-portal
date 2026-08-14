@@ -10,6 +10,7 @@ import { RoleBadge } from '../ui/Avatar'
 import ProfileAvatar from '../ui/ProfileAvatar'
 import { canAssignRoles, generateMemberEmail, ROLES } from '../../lib/utils'
 import { useAuth } from '../../context/AuthContext'
+import { usePresence } from '../../context/PresenceContext'
 import ProfileModal from '../profile/ProfileModal'
 
 const ROLE_OPTIONS = [
@@ -29,6 +30,7 @@ const EMPTY_ADD = { username: '', password: '' }
 export default function MembersManager() {
   const { toast } = useToast()
   const { role: myRole } = useAuth()
+  const { isOnline } = usePresence()
   const canAssign = canAssignRoles(myRole)
 
   const [members, setMembers] = useState(null)
@@ -144,6 +146,16 @@ export default function MembersManager() {
             <strong>admin</strong> (acceso total), <strong>gestor</strong> (noticias y contadores){' '}
             y <strong>member</strong> (solo lectura).
           </p>
+          <p className="mt-1 flex items-center gap-4 text-xs text-soft">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-success ring-2 ring-background" />
+              Conectado
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-gray-300 ring-2 ring-background" />
+              Desconectado
+            </span>
+          </p>
         </div>
         {canAssign && (
           <button onClick={openAdd} className="btn-primary">
@@ -167,7 +179,14 @@ export default function MembersManager() {
               animate={{ opacity: 1 }}
               className="flex flex-wrap items-center gap-3 px-4 py-3 transition hover:bg-background"
             >
-              <ProfileAvatar userId={m.id} name={m.username} src={m.avatar_url} size="sm" />
+              <div className="relative shrink-0">
+                <ProfileAvatar userId={m.id} name={m.username} src={m.avatar_url} size="sm" />
+                <span
+                  className={`pointer-events-none absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full ring-2 ring-background ${
+                    isOnline(m.id) ? 'bg-success' : 'bg-gray-300'
+                  }`}
+                />
+              </div>
               <div className="min-w-0 flex-1">
                 <button
                   type="button"

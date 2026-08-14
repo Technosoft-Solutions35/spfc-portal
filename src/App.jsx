@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { PresenceProvider } from './context/PresenceContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { ToastProvider } from './components/ui/Toast'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -42,7 +43,8 @@ export default function App() {
     <ThemeProvider>
       <ToastProvider>
         <AuthProvider>
-          <HashRouter>
+          <PresenceProvider>
+            <HashRouter>
             <ThemeToggle />
 
             <Suspense fallback={<Spinner full label="Cargando..." />}>
@@ -105,7 +107,8 @@ export default function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
-          </HashRouter>
+            </HashRouter>
+          </PresenceProvider>
         </AuthProvider>
       </ToastProvider>
     </ThemeProvider>
