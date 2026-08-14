@@ -124,6 +124,27 @@ export function initials(name = '') {
     .join('')
 }
 
+// ── Ordenación de la sección Comunidad (eventos, torneos, brackets) ──
+// Los contenidos se ordenan por fecha de creación (más recientes arriba),
+// dando prioridad a los activos: torneos que aceptan inscripciones (open) o
+// están en curso (in_progress) primero, y finalizados al final.
+const TOURNAMENT_RANK = { open: 0, in_progress: 1, finished: 2 }
+
+// Más recientes primero (por created_at)
+export function sortByCreatedDesc(list) {
+  return [...list].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+}
+
+// Torneos activos primero y, dentro de cada grupo, por fecha de creación
+export function sortTournaments(list) {
+  return [...list].sort((a, b) => {
+    const ra = TOURNAMENT_RANK[a.status] ?? 0
+    const rb = TOURNAMENT_RANK[b.status] ?? 0
+    if (ra !== rb) return ra - rb
+    return new Date(b.created_at) - new Date(a.created_at)
+  })
+}
+
 // Extrae la ruta del objeto Storage desde su URL pública
 // (…/storage/v1/object/public/media/<carpeta>/<archivo> → <carpeta>/<archivo>)
 export function storagePathFromUrl(url = '') {

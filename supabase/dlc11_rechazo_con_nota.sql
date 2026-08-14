@@ -5,6 +5,11 @@
 -- y se le notifica con ese motivo.
 --
 -- EJECUTAR EN Supabase → SQL Editor (o: supabase db push).
+--
+-- ⚠️ Fix (DLC 11 v2): el borrado de la foto YA NO se hace desde SQL con
+-- `delete from storage.objects` — Supabase Storage lo bloquea con "Direct
+-- deletion from storage tables is not allowed. Use the Storage API instead."
+-- La imagen la elimina el cliente con la Storage API (media_staff_delete).
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- 1) Columna con el motivo del rechazo
@@ -12,16 +17,16 @@ alter table public.shiny_reports
   add column if not exists rejection_reason text not null default '';
 
 -- 2) RPC de rechazo con motivo opcional (p_reason). Resto del flujo intacto:
---    borra la foto del Storage y cierra el reporte como 'rejected'.
+--    marca el reporte como 'rejected'. El borrado de la foto se hace desde el
+--    cliente con supabase.storage.from('media').remove([...]) (Storage API).
 create or replace function public.reject_shiny_report(p_report_id uuid, p_reason text default '')
 returns jsonb
 language plpgsql
 security definer
-set search_path = public, storage
+set search_path = public
 as $$
 declare
   v_report public.shiny_reports%rowtype;
-  v_path   text;
 begin
   if auth.uid() is null then
     raise exception 'Debes iniciar sesión';
@@ -37,13 +42,6 @@ begin
   if v_report.status <> 'pending' then
     raise exception 'Ese reporte ya fue revisado';
   end if;
-
-  -- Extrae la ruta del objeto Storage a partir de la URL pública:
-  -- .../storage/v1/object/public/media/<carpeta>/<archivo>
-  v_path := regexp_replace(v_report.image_url, '^.*/object/public/[^/]+/', '');
-
-  delete from storage.objects
-   where bucket_id = 'media' and name = v_path;
 
   update public.shiny_reports
      set status = 'rejected', reviewed_by = auth.uid(), reviewed_at = now(),

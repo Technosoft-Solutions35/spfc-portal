@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { CalendarDays, ClipboardList, Network, Swords, Trophy } from 'lucide-react'
+import { CalendarDays, ChevronDown, ChevronUp, ClipboardList, Network, Swords, Trophy } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { markSeen, useLiveSection } from '../lib/newContent'
-import { formatDate } from '../lib/utils'
+import { formatDate, sortTournaments } from '../lib/utils'
 import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
@@ -23,14 +23,22 @@ const STATUS_META = {
  */
 export default function Tournaments() {
   const [tournaments, setTournaments] = useState(null)
-  const [expanded, setExpanded] = useState(null)
+  const [expanded, setExpanded] = useState(() => new Set()) // cards abiertas
+  const [rulesExpanded, setRulesExpanded] = useState(null) // reglas de una card
+
+  const toggle = (id) =>
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
 
   const load = useCallback(() => {
     return supabase
       .from('tournaments')
       .select('*')
-      .order('start_date', { ascending: false })
-      .then(({ data }) => setTournaments(data || []))
+      .then(({ data }) => setTournaments(sortTournaments(data || [])))
   }, [])
 
   useEffect(() => {
@@ -73,7 +81,8 @@ export default function Tournaments() {
         <div className="grid gap-5 lg:grid-cols-2">
           {tournaments.map((t, i) => {
             const status = STATUS_META[t.status] || STATUS_META.open
-            const open = expanded === t.id
+            const open = expanded.has(t.id)
+            const rulesOpen = rulesExpanded === t.id
             return (
               <motion.div
                 key={t.id}
@@ -83,8 +92,19 @@ export default function Tournaments() {
                 transition={{ delay: i * 0.05 }}
                 className="flex flex-col overflow-hidden rounded-2xl border border-edge bg-elevated"
               >
-                {/* Cabecera */}
-                <div className="p-5 pb-3">
+                {/* Cabecera compacta (clic para expandir) */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggle(t.id)}
+                  onKeyDown={(ev) => {
+                    if (ev.key === 'Enter' || ev.key === ' ') {
+                      ev.preventDefault()
+                      toggle(t.id)
+                    }
+                  }}
+                  className="cursor-pointer p-4"
+                >
                   <div className="mb-2 flex items-start justify-between gap-2">
                     <span className="rounded-xl bg-primary/10 p-2 text-primary">
                       <Trophy size={18} />
@@ -94,71 +114,101 @@ export default function Tournaments() {
                     </span>
                   </div>
                   <h3 className="line-clamp-2 font-display text-lg font-extrabold text-text">{t.title}</h3>
-                  <p className="mt-1 text-sm text-soft">{t.description}</p>
+                  <p className="mt-1 line-clamp-2 text-sm text-soft">{t.description}</p>
 
-                  <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                    <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                    <span className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5 font-semibold text-text">
                       <CalendarDays size={13} className="text-primary" />
-                      <span className="text-soft">Inicio</span>
-                      <span className="ml-auto text-right font-semibold text-text">
-                        {formatDate(t.start_date)}
-                        <span className="ml-1 font-normal text-soft">· hora local</span>
-                      </span>
-                    </div>
+                      {formatDate(t.start_date)}
+                      <span className="font-normal text-soft">· hora local</span>
+                    </span>
                     {t.prize && (
-                      <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
+                      <span className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5 font-semibold text-text">
                         <Trophy size={13} className="text-secondary" />
-                        <span className="text-soft">Premio</span>
-                        <span className="ml-auto truncate font-semibold text-text">{t.prize}</span>
-                      </div>
+                        {t.prize}
+                      </span>
                     )}
-                    {t.format && (
-                      <div className="col-span-2 flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
-                        <ClipboardList size={13} className="text-secondary" />
-                        <span className="text-soft">Formato</span>
-                        <span className="ml-auto truncate font-semibold text-text">{t.format}</span>
-                      </div>
+                  </div>
+                </div>
+
+                {/* Acciones rápidas */}
+                <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-edge px-4 py-2.5">
+                  <PostActions
+                    parentType="tournament"
+                    parentId={t.id}
+                    shareRoute="/torneos"
+                    shareParam="tournament"
+                    shareText={t.title}
+                  />
+                  <div className="flex flex-wrap items-center gap-2">
+                    {t.bracket_ready && (
+                      <a
+                        href={`#/brackets?brackets=${t.id}`}
+                        className="flex items-center gap-1.5 rounded-full border border-edge px-3 py-1.5 text-xs font-bold text-soft transition hover:border-secondary hover:text-secondary"
+                      >
+                        <Network size={14} />
+                        Ver llaves
+                      </a>
                     )}
-                  </dl>
+                    <button
+                      type="button"
+                      onClick={() => toggle(t.id)}
+                      className="inline-flex items-center gap-1 rounded-full border border-edge bg-background px-3 py-1.5 text-xs font-bold text-soft transition hover:border-primary/40 hover:text-primary"
+                    >
+                      {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      {open ? 'Ocultar' : 'Inscripción y comentarios'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Detalle expandido: campos, reglas, inscripción y comentarios */}
+                {open && (
+                  <div className="border-t border-edge px-4 pb-4">
+                    <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                      <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
+                        <CalendarDays size={13} className="text-primary" />
+                        <span className="text-soft">Inicio</span>
+                        <span className="ml-auto text-right font-semibold text-text">
+                          {formatDate(t.start_date)}
+                          <span className="ml-1 font-normal text-soft">· hora local</span>
+                        </span>
+                      </div>
+                      {t.prize && (
+                        <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
+                          <Trophy size={13} className="text-secondary" />
+                          <span className="text-soft">Premio</span>
+                          <span className="ml-auto truncate font-semibold text-text">{t.prize}</span>
+                        </div>
+                      )}
+                      {t.format && (
+                        <div className="col-span-2 flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
+                          <ClipboardList size={13} className="text-secondary" />
+                          <span className="text-soft">Formato</span>
+                          <span className="ml-auto truncate font-semibold text-text">{t.format}</span>
+                        </div>
+                      )}
+                    </dl>
 
                     {t.rules && (
-                      <button
-                        onClick={() => setExpanded(open ? null : t.id)}
-                        className="mt-2 text-xs font-semibold text-primary hover:underline"
-                      >
-                        {open ? 'Ocultar reglas' : 'Ver reglas'}
-                      </button>
-                    )}
-                    {open && t.rules && (
-                      <p className="mt-2 whitespace-pre-wrap rounded-xl bg-background p-3 text-sm leading-relaxed text-text">
-                        {t.rules}
-                      </p>
-                    )}
-                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-edge pt-3">
-                      <PostActions
-                        parentType="tournament"
-                        parentId={t.id}
-                        shareRoute="/torneos"
-                        shareParam="tournament"
-                        shareText={t.title}
-                      />
-                      {t.bracket_ready && (
-                        <a
-                          href={`#/brackets?brackets=${t.id}`}
-                          className="flex shrink-0 items-center gap-1.5 rounded-xl border border-edge px-3 py-2 text-xs font-bold text-soft transition hover:border-secondary hover:text-secondary"
+                      <>
+                        <button
+                          onClick={() => setRulesExpanded(rulesOpen ? null : t.id)}
+                          className="mt-2 text-xs font-semibold text-primary hover:underline"
                         >
-                          <Network size={14} />
-                          Ver llaves
-                        </a>
-                      )}
-                    </div>
-                </div>
+                          {rulesOpen ? 'Ocultar reglas' : 'Ver reglas'}
+                        </button>
+                        {rulesOpen && t.rules && (
+                          <p className="mt-2 whitespace-pre-wrap rounded-xl bg-background p-3 text-sm leading-relaxed text-text">
+                            {t.rules}
+                          </p>
+                        )}
+                      </>
+                    )}
 
-                {/* Inscripción y comentarios */}
-                <div className="mt-auto px-5 pb-5">
-                  <RsvpBox parentType="tournament" parentId={t.id} />
-                  <CommentSection parentType="tournament" parentId={t.id} />
-                </div>
+                    <RsvpBox parentType="tournament" parentId={t.id} />
+                    <CommentSection parentType="tournament" parentId={t.id} />
+                  </div>
+                )}
               </motion.div>
             )
           })}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Crown, GitBranch, Network, Pencil, Plus, RefreshCw, Trophy, X } from 'lucide-react'
+import { CalendarDays, ChevronDown, ChevronUp, Crown, GitBranch, Network, Pencil, Plus, RefreshCw, Trophy, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/ui/Toast'
@@ -8,7 +8,10 @@ import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 import Modal from '../components/ui/Modal'
-import { canManageAll, formatDate } from '../lib/utils'
+import PostActions from '../components/ui/PostActions'
+import RsvpBox from '../components/ui/RsvpBox'
+import CommentSection from '../components/ui/CommentSection'
+import { canManageAll, formatDate, sortTournaments } from '../lib/utils'
 import { readDeepLink } from '../lib/share'
 import {
   buildBracket,
@@ -185,16 +188,22 @@ export default function Brackets() {
   const [participants, setParticipants] = useState('')
   const [editingParticipants, setEditingParticipants] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [expanded, setExpanded] = useState(() => new Set()) // cards abiertas
   const targetRef = useRef(null)
   const viewRef = useRef(null)
   const deepHandled = useRef(false)
 
+  const toggle = (id) =>
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+
   const loadTournaments = async () => {
-    const { data } = await supabase
-      .from('tournaments')
-      .select('*')
-      .order('start_date', { ascending: false })
-    setTournaments(data || [])
+    const { data } = await supabase.from('tournaments').select('*')
+    setTournaments(sortTournaments(data || []))
     // Enlace directo: ?brackets=<id> abre las llaves de ese torneo (solo la primera vez)
     if (!deepHandled.current) {
       deepHandled.current = true
@@ -423,6 +432,7 @@ export default function Brackets() {
 
   const card = (t, i) => {
     const status = STATUS_META[t.status] || STATUS_META.open
+    const open = expanded.has(t.id)
     const winners = [
       t.champion_name && { label: 'Campeón', name: t.champion_name, icon: '🥇' },
       t.second_name && { label: 'Subcampeón', name: t.second_name, icon: '🥈' },
@@ -435,92 +445,141 @@ export default function Brackets() {
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: i * 0.05 }}
-        className="flex flex-col rounded-2xl border border-edge bg-elevated p-5"
+        className="flex flex-col overflow-hidden rounded-2xl border border-edge bg-elevated"
       >
-        <div className="mb-2 flex items-start justify-between gap-2">
-          <span className="rounded-xl bg-secondary/10 p-2 text-secondary">
-            <Network size={18} />
-          </span>
-          <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${status.class}`}>
-            {status.label}
-          </span>
-        </div>
+        {/* Cabecera compacta (clic para expandir) */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => toggle(t.id)}
+          onKeyDown={(ev) => {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+              ev.preventDefault()
+              toggle(t.id)
+            }
+          }}
+          className="cursor-pointer p-4"
+        >
+          <div className="mb-2 flex items-start justify-between gap-2">
+            <span className="rounded-xl bg-secondary/10 p-2 text-secondary">
+              <Network size={18} />
+            </span>
+            <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${status.class}`}>
+              {status.label}
+            </span>
+          </div>
 
-        <h3 className="font-display text-lg font-extrabold text-text">{t.title}</h3>
-        <p className="mt-1 text-sm text-soft">{t.description}</p>
+          <h3 className="font-display text-lg font-extrabold text-text">{t.title}</h3>
+          <p className="mt-1 line-clamp-2 text-sm text-soft">{t.description}</p>
 
-        <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
-          {(t.tier || t.format) && (
-            <div className="col-span-2 flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
-              <GitBranch size={13} className="text-primary" />
-              <span className="text-soft">Campos</span>
-              <span className="ml-auto truncate font-semibold text-text">
+          <div className="mt-3 flex flex-wrap gap-2 text-xs">
+            {(t.tier || t.format) && (
+              <span className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5 font-semibold text-text">
+                <GitBranch size={13} className="text-primary" />
                 {[t.tier, t.format].filter(Boolean).join(' · ')}
               </span>
-            </div>
-          )}
-          <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
-            <Trophy size={13} className="text-secondary" />
-            <span className="text-soft">Premio</span>
-            <span className="ml-auto truncate font-semibold text-text">{t.prize || '—'}</span>
+            )}
+            <span className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5 font-semibold text-text">
+              <Trophy size={13} className="text-secondary" />
+              {t.prize || '—'}
+            </span>
+            <span className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5 font-semibold text-text">
+              <CalendarDays size={13} className="text-primary" />
+              {formatDate(t.start_date)}
+            </span>
           </div>
-          <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
-            <span className="text-soft">Inicio</span>
-            <span className="ml-auto font-semibold text-text">{formatDate(t.start_date)}</span>
-          </div>
-          {t.max_participants && (
-            <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
-              <span className="text-soft">Límite</span>
-              <span className="ml-auto font-semibold text-text">{t.max_participants} cupos</span>
-            </div>
-          )}
-        </dl>
+        </div>
 
-        {winners.length > 0 && (
-          <div className="mt-3 space-y-1.5 rounded-xl border border-secondary/20 bg-secondary/5 p-3">
-            {winners.map((w) => (
-              <p key={w.label} className="flex items-center gap-2 text-sm">
-                <span>{w.icon}</span>
-                <span className="font-bold text-text">{w.name}</span>
-                <span className="ml-auto text-[11px] text-soft">{w.label}</span>
-              </p>
-            ))}
+        {/* Acciones rápidas */}
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-edge px-4 py-2.5">
+          <PostActions
+            parentType="tournament"
+            parentId={t.id}
+            shareRoute="/torneos"
+            shareParam="tournament"
+            shareText={t.title}
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            {t.bracket_ready && (
+              <button
+                onClick={() => openView(t)}
+                className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-bold text-white transition hover:brightness-110"
+              >
+                <Network size={14} />
+                Ver llaves
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                onClick={() => openManage(t)}
+                className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                  t.bracket_ready
+                    ? 'border-edge text-soft hover:border-primary hover:text-primary'
+                    : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'
+                }`}
+              >
+                {t.bracket_ready ? <RefreshCw size={14} /> : <Plus size={14} />}
+                {t.bracket_ready ? 'Gestionar' : 'Crear llaves'}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => toggle(t.id)}
+              className="inline-flex items-center gap-1 rounded-full border border-edge bg-background px-3 py-1.5 text-xs font-bold text-soft transition hover:border-primary/40 hover:text-primary"
+            >
+              {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              {open ? 'Ocultar' : 'Inscripción y comentarios'}
+            </button>
+          </div>
+        </div>
+
+        {/* Detalle expandido: historial, campos, inscripción y comentarios */}
+        {open && (
+          <div className="border-t border-edge px-4 pb-4">
+            {winners.length > 0 && (
+              <div className="mt-3 space-y-1.5 rounded-xl border border-secondary/20 bg-secondary/5 p-3">
+                {winners.map((w) => (
+                  <p key={w.label} className="flex items-center gap-2 text-sm">
+                    <span>{w.icon}</span>
+                    <span className="font-bold text-text">{w.name}</span>
+                    <span className="ml-auto text-[11px] text-soft">{w.label}</span>
+                  </p>
+                ))}
+              </div>
+            )}
+
+            <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+              {(t.tier || t.format) && (
+                <div className="col-span-2 flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
+                  <GitBranch size={13} className="text-primary" />
+                  <span className="text-soft">Campos</span>
+                  <span className="ml-auto truncate font-semibold text-text">
+                    {[t.tier, t.format].filter(Boolean).join(' · ')}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
+                <Trophy size={13} className="text-secondary" />
+                <span className="text-soft">Premio</span>
+                <span className="ml-auto truncate font-semibold text-text">{t.prize || '—'}</span>
+              </div>
+              <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
+                <CalendarDays size={13} className="text-primary" />
+                <span className="text-soft">Inicio</span>
+                <span className="ml-auto font-semibold text-text">{formatDate(t.start_date)}</span>
+              </div>
+              {t.max_participants && (
+                <div className="col-span-2 flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
+                  <span className="text-soft">Límite</span>
+                  <span className="ml-auto font-semibold text-text">{t.max_participants} cupos</span>
+                </div>
+              )}
+            </dl>
+
+            <RsvpBox parentType="tournament" parentId={t.id} />
+            <CommentSection parentType="tournament" parentId={t.id} />
           </div>
         )}
-
-        <div className="mt-4 flex flex-wrap gap-2 border-t border-edge pt-3">
-          {t.bracket_ready && (
-            <button
-              onClick={() => openView(t)}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-secondary px-3 py-2 text-sm font-bold text-white transition hover:brightness-110"
-            >
-              <Network size={15} />
-              Ver llaves
-            </button>
-          )}
-          {isAdmin && (
-            <button
-              onClick={() => openManage(t)}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-bold transition ${
-                t.bracket_ready
-                  ? 'border-edge text-soft hover:border-primary hover:text-primary'
-                  : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'
-              }`}
-            >
-              {t.bracket_ready ? (
-                <>
-                  <RefreshCw size={14} />
-                  Gestionar
-                </>
-              ) : (
-                <>
-                  <Plus size={14} />
-                  Crear llaves
-                </>
-              )}
-            </button>
-          )}
-        </div>
       </motion.div>
     )
   }

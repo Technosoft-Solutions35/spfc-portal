@@ -8,7 +8,7 @@ import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 import Modal from '../components/ui/Modal'
 import ProfileAvatar from '../components/ui/ProfileAvatar'
-import { formatDate } from '../lib/utils'
+import { formatDate, storagePathFromUrl } from '../lib/utils'
 import { notifyUser } from '../lib/notifications'
 
 /**
@@ -93,6 +93,13 @@ export default function ReviewShinies() {
     if (error) {
       toast('No se pudo desaprobar: ' + error.message, 'error')
       return
+    }
+    // SQL no permite borrar objetos de Storage (Storage API obligatoria):
+    // la foto se elimina aquí con supabase.storage, que respeta las políticas
+    // media_staff_delete / media_user_delete_own. Si falla, no bloquea el rechazo.
+    const path = storagePathFromUrl(r.image_url)
+    if (path) {
+      await supabase.storage.from('media').remove([path]).catch(() => {})
     }
     toast(`Reporte de ${r.author_id?.username} rechazado`, 'info')
     closeReview()
