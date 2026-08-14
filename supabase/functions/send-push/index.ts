@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
     return json({ error: 'Error leyendo suscripciones: ' + error.message }, 500)
   }
 
-  const results = { sent: 0, failed: 0, errors: [] }
+  const results = { total: (subscriptions || []).length, sent: 0, failed: 0, errors: [] }
   const pushPayload = JSON.stringify({
     title: 'SpFc/Gd · ' + type,
     body: message,

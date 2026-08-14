@@ -169,6 +169,7 @@ export default function ContentManager({
         username: currentUser?.username,
       })
       if (push.ok) {
+        const total = push.results?.total ?? 0
         const sent = push.results?.sent ?? 0
         const failed = push.results?.failed ?? 0
         if (sent > 0) {
@@ -180,9 +181,9 @@ export default function ContentManager({
           )
         } else if (failed > 0) {
           const err = push.results?.errors?.[0] || 'desconocido'
-          toast(`🔔 Aviso publicado, pero el push falló (${failed} intentos). Error: ${err}`, 'error', 8000)
+          toast(`🔔 Aviso publicado, pero el push falló (${total} leídas, ${failed} fallaron). Error: ${err}`, 'error', 8000)
         } else {
-          toast('🔔 Aviso publicado. Aún no hay suscriptores de push.', 'success', 5000)
+          toast(`🔔 Aviso publicado. ${total} ${total === 1 ? 'suscriptor' : 'suscriptores'} en la base.`, 'success', 5000)
         }
       } else {
         toast(`⚠️ Aviso publicado, pero el push falló (${push.reason || `HTTP ${push.status}`})`, 'error', 8000)
