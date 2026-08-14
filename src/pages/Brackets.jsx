@@ -186,6 +186,7 @@ export default function Brackets() {
   const [editingParticipants, setEditingParticipants] = useState(false)
   const [busy, setBusy] = useState(false)
   const targetRef = useRef(null)
+  const viewRef = useRef(null)
   const deepHandled = useRef(false)
 
   const loadTournaments = async () => {
@@ -211,7 +212,11 @@ export default function Brackets() {
       .channel('brackets-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tournaments' }, () => loadTournaments())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bracket_matches' }, () => {
-        if (targetRef.current) loadMatches(targetRef.current)
+        // Mientras se gestionan las llaves NO se recarga con realtime: el
+        // estado se actualiza en optimista y cada cambio se persiste; la
+        // recarga pisaba el clic del ganador (parpadeo). La vista de solo
+        // lectura sí se refresca en vivo con los cambios del staff.
+        if (viewRef.current) loadMatches(viewRef.current)
       })
       .subscribe()
     return () => supabase.removeChannel(channel)
@@ -233,18 +238,32 @@ export default function Brackets() {
     setTarget(t)
     targetRef.current = t
     setViewTarget(null)
-    setParticipants('')
+    viewRef.current = null
     setEditingParticipants(false)
     setMatches(null)
+    // Precarga los inscritos vía "Me inscribo" para que las llaves los incluyan;
+    // el admin puede añadir o quitar nombres encima de la lista.
+    setParticipants((await loadRegisteredPlayers(t)).join('\n'))
     await loadMatches(t)
   }
 
   const openView = async (t) => {
     setViewTarget(t)
+    viewRef.current = t
     setTarget(null)
     targetRef.current = null
     setMatches(null)
     if (t.bracket_ready) await loadMatches(t)
+  }
+
+  // Miembros que pulsaron "Me inscribo" en el torneo (tabla tournament_rsvps).
+  const loadRegisteredPlayers = async (t) => {
+    const { data } = await supabase
+      .from('tournament_rsvps')
+      .select('member:profiles(username)')
+      .eq('tournament_id', t.id)
+      .order('created_at', { ascending: true })
+    return (data || []).map((r) => r.member?.username).filter(Boolean)
   }
 
   const bracket = useMemo(
@@ -266,8 +285,16 @@ export default function Brackets() {
     return list
   }
 
-  const startEditParticipants = () => {
-    setParticipants(allParticipants().join('\n'))
+  const startEditParticipants = async () => {
+    // Junta los que ya están en la llave con los inscritos por "Me inscribo"
+    // que se hayan apuntado después de crearla, sin duplicar nombres.
+    const current = allParticipants()
+    const registered = await loadRegisteredPlayers(target)
+    const merged = [...current]
+    registered.forEach((name) => {
+      if (!merged.some((n) => n.toLowerCase() === name.toLowerCase())) merged.push(name)
+    })
+    setParticipants(merged.join('\n'))
     setEditingParticipants(true)
   }
 
@@ -641,7 +668,10 @@ export default function Brackets() {
       {/* Ver llaves (lectura) */}
       <Modal
         open={!!viewTarget}
-        onClose={() => setViewTarget(null)}
+        onClose={() => {
+          setViewTarget(null)
+          viewRef.current = null
+        }}
         title={viewTarget ? `Llaves · ${viewTarget.title}` : ''}
         maxWidth="max-w-6xl"
       >

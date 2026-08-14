@@ -24,6 +24,8 @@ export default function ReviewShinies() {
   const [reviewing, setReviewing] = useState(null) // reporte abierto en el modal
   const [busy, setBusy] = useState(null) // id en proceso
   const [approvingAll, setApprovingAll] = useState(false)
+  const [confirmingReject, setConfirmingReject] = useState(false)
+  const [rejectNote, setRejectNote] = useState('')
 
   const fetchReports = useCallback(async () => {
     const { data } = await supabase
@@ -48,6 +50,18 @@ export default function ReviewShinies() {
     return () => supabase.removeChannel(channel)
   }, [fetchReports])
 
+  const openReview = (r) => {
+    setRejectNote('')
+    setConfirmingReject(false)
+    setReviewing(r)
+  }
+
+  const closeReview = () => {
+    setReviewing(null)
+    setConfirmingReject(false)
+    setRejectNote('')
+  }
+
   const approve = async (r) => {
     setBusy(r.id)
     const { data, error } = await supabase.rpc('approve_shiny_report', { p_report_id: r.id })
@@ -57,7 +71,7 @@ export default function ReviewShinies() {
       return
     }
     toast(`+1 shiny aprobado a ${r.author_id?.username || 'el miembro'}`, 'success')
-    setReviewing(null)
+    closeReview()
     fetchReports()
     if (data?.user_id) {
       await notifyUser({
@@ -69,21 +83,26 @@ export default function ReviewShinies() {
   }
 
   const reject = async (r) => {
-    if (!window.confirm(`¿Rechazar el reporte de "${r.pokemon_name}" de ${r.author_id?.username}?`)) return
+    const reason = rejectNote.trim()
     setBusy(r.id)
-    const { data, error } = await supabase.rpc('reject_shiny_report', { p_report_id: r.id })
+    const { data, error } = await supabase.rpc('reject_shiny_report', {
+      p_report_id: r.id,
+      p_reason: reason,
+    })
     setBusy(null)
     if (error) {
-      toast('No se pudo rechazar: ' + error.message, 'error')
+      toast('No se pudo desaprobar: ' + error.message, 'error')
       return
     }
     toast(`Reporte de ${r.author_id?.username} rechazado`, 'info')
-    setReviewing(null)
+    closeReview()
     fetchReports()
     if (data?.user_id) {
       await notifyUser({
         userId: data.user_id,
-        message: `Tu reporte de ${data.pokemon} fue rechazado.`,
+        message:
+          `Tu reporte de ${data.pokemon} fue rechazado.` +
+          (reason ? ` Motivo: ${reason}` : ''),
         pushPayload: { type: 'reporte', title: 'Shiny rechazado' },
       })
     }
@@ -111,7 +130,7 @@ export default function ReviewShinies() {
       if (data) approved.push(data)
     }
     setApprovingAll(false)
-    setReviewing(null)
+    closeReview()
     fetchReports()
     toast(`Se aprobaron ${approved.length} reportes (+1 shiny cada autor)`, 'success')
     // Avisa a cada autor cuyo reporte se aprobó
@@ -164,10 +183,9 @@ export default function ReviewShinies() {
           {reports.map((r) => (
             <motion.li
               key={r.id}
-              layout
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex flex-wrap items-center gap-3 px-4 py-3 transition hover:bg-background"
+              className="flex items-center gap-3 px-4 py-3 transition hover:bg-background"
             >
               <img
                 src={r.image_url}
@@ -184,7 +202,7 @@ export default function ReviewShinies() {
                   {r.author_id?.username} · {formatDate(r.created_at)}
                 </p>
               </div>
-              <button onClick={() => setReviewing(r)} className="btn-ghost">
+              <button onClick={() => openReview(r)} className="btn-ghost">
                 <Eye size={16} />
                 Ver reporte
               </button>
@@ -196,7 +214,7 @@ export default function ReviewShinies() {
       {/* Detalle de revisión */}
       <Modal
         open={!!reviewing}
-        onClose={() => setReviewing(null)}
+        onClose={closeReview}
         title={reviewing?.pokemon_name || 'Reporte'}
         maxWidth="max-w-xl"
       >
@@ -220,24 +238,56 @@ export default function ReviewShinies() {
               )}
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => approve(reviewing)}
-                disabled={busy === reviewing.id}
-                className="btn-primary flex-1"
-              >
-                <CheckCircle2 size={17} />
-                {busy === reviewing.id ? 'Procesando...' : 'Aprobar (+1 shiny)'}
-              </button>
-              <button
-                onClick={() => reject(reviewing)}
-                disabled={busy === reviewing.id}
-                className="btn-ghost flex-1 text-primary hover:border-primary/40 hover:bg-primary/10"
-              >
-                <XCircle size={17} />
-                Rechazar
-              </button>
-            </div>
+            {!confirmingReject ? (
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => approve(reviewing)}
+                  disabled={busy === reviewing.id}
+                  className="btn-primary flex-1"
+                >
+                  <CheckCircle2 size={17} />
+                  {busy === reviewing.id ? 'Procesando...' : 'Aprobar (+1 shiny)'}
+                </button>
+                <button
+                  onClick={() => setConfirmingReject(true)}
+                  disabled={busy === reviewing.id}
+                  className="btn-ghost flex-1 text-primary hover:border-primary/40 hover:bg-primary/10"
+                >
+                  <XCircle size={17} />
+                  Desaprobar
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <label className="label">Motivo de la desaprobación</label>
+                  <textarea
+                    className="input min-h-[90px]"
+                    placeholder="Escribe el motivo (ej: la foto no es un shiny). Se lo notificaremos al miembro."
+                    value={rejectNote}
+                    onChange={(e) => setRejectNote(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => reject(reviewing)}
+                    disabled={busy === reviewing.id}
+                    className="btn-primary flex-1"
+                  >
+                    <XCircle size={17} />
+                    {busy === reviewing.id ? 'Desaprobando...' : 'Confirmar desaprobación'}
+                  </button>
+                  <button
+                    onClick={() => setConfirmingReject(false)}
+                    disabled={busy === reviewing.id}
+                    className="btn-ghost"
+                  >
+                    Volver
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Modal>

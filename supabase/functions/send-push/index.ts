@@ -65,17 +65,23 @@ Deno.serve(async (req) => {
     return json({ error: 'Sesión inválida' }, 401)
   }
 
-  // Solo el staff (super-admin/admin/gestor) puede enviar avisos globales
-  const { data: isStaff } = await userClient.rpc('is_staff')
-  if (!isStaff) {
-    return json({ error: 'No tienes permisos para enviar notificaciones' }, 403)
-  }
-
   let payload
   try {
     payload = await req.json()
   } catch {
     return json({ error: 'JSON inválido' }, 400)
+  }
+
+  // Permisos: el staff (super-admin/admin/gestor) puede enviar avisos globales
+  // o dirigidos. Un miembro normal SOLO puede enviar avisos dirigidos (con
+  // `roles` o `userId`), como avisar al staff de un nuevo reporte shiny. Sin
+  // esto, el push del reporte (enviado desde el navegador del miembro) moría
+  // aquí con un 403 y nunca llegaba a la bandeja del staff.
+  const { data: isStaff } = await userClient.rpc('is_staff')
+  const targeted =
+    !!payload.userId || (Array.isArray(payload.roles) && payload.roles.length > 0)
+  if (!isStaff && !targeted) {
+    return json({ error: 'No tienes permisos para enviar notificaciones' }, 403)
   }
 
   const type = String(payload.type || 'noticia')

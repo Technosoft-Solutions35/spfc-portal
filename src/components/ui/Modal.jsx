@@ -28,14 +28,14 @@ export default function Modal({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[90] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
           {/* Overlay */}
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             onClick={onClose}
           />
 
@@ -46,7 +46,7 @@ export default function Modal({
             exit={{ opacity: 0, scale: 0.95, y: 12 }}
             transition={{ type: 'spring', stiffness: 320, damping: 26 }}
             onClick={(e) => e.stopPropagation()}
-            className={`relative z-10 w-full ${maxWidth} max-h-[88vh] overflow-y-auto rounded-2xl border border-edge bg-elevated shadow-card`}
+            className={`relative z-10 my-auto w-full ${maxWidth} max-h-[88vh] overflow-y-auto rounded-2xl border border-edge bg-elevated shadow-card`}
           >
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-edge bg-elevated px-6 py-4">
               <h3 className="font-display text-lg font-bold text-text">{title}</h3>

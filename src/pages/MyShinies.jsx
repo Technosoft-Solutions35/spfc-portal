@@ -151,10 +151,9 @@ export default function MyShinies() {
             return (
               <motion.li
                 key={r.id}
-                layout
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex flex-wrap items-center gap-3 px-4 py-3"
+                className="flex items-center gap-3 px-4 py-3"
               >
                 <img
                   src={r.image_url}
@@ -164,6 +163,11 @@ export default function MyShinies() {
                 <div className="min-w-0 flex-1">
                   <p className="font-display font-bold text-text">{r.pokemon_name}</p>
                   <p className="text-xs text-soft">{formatDate(r.created_at)}</p>
+                  {r.status === 'rejected' && r.rejection_reason && (
+                    <p className="mt-0.5 text-xs font-medium text-primary">
+                      Motivo: {r.rejection_reason}
+                    </p>
+                  )}
                 </div>
                 <span className={`badge ${meta.class}`}>{meta.label}</span>
                 {pending && (
