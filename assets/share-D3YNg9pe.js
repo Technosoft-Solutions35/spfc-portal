@@ -1,1 +1,0 @@
-function a(n,i,o){return`${window.location.origin}${window.location.pathname}#${n}?${i}=${o}`}function t(){const n=window.location.hash.match(/\?([\w-]+)=([\w-]+)/);return n?{param:n[1],id:n[2]}:null}export{a as b,t as r};
