@@ -80,10 +80,20 @@ Deno.serve(async (req) => {
 
   const type = String(payload.type || 'noticia')
   const title = String(payload.title || 'Nuevo contenido')
+
+  // Etiqueta amigable por tipo, tanto para el título de la notificación como
+  // para el mensaje por defecto cuando no se pasa `message` personalizado.
+  const TYPE_LABELS = {
+    news: { label: 'Noticias', text: '¡Nuevas noticias! Ven a echarles un ojo.' },
+    events: { label: 'Eventos', text: '¡Nuevo evento! Ven a echarle un ojo.' },
+    tournaments: { label: 'Torneos', text: '¡Nuevo torneo! Ven a echarle un ojo.' },
+    guides: { label: 'Guías y Buildeos', text: '¡Nueva guía! Ven a echarle un ojo.' },
+  }
+  const friendly = TYPE_LABELS[type] || { label: type, text: '' }
+
   // Mensaje personalizado (avisos dirigidos) o texto generado por defecto
   const message =
-    payload.message ||
-    `Nuevo ${type}: ${title}${payload.username ? ` · ${payload.username}` : ''}`
+    payload.message || friendly.text || `Nuevo ${type}: ${title}`
 
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE)
 
@@ -107,7 +117,7 @@ Deno.serve(async (req) => {
 
   const results = { total: (subscriptions || []).length, sent: 0, failed: 0, errors: [] }
   const pushPayload = JSON.stringify({
-    title: 'SpFc/Gd · ' + type,
+    title: `SpFc/Gd · ${friendly.label}`,
     body: message,
     url: `/#/${type}`,
     tag: 'spfc-' + type,
