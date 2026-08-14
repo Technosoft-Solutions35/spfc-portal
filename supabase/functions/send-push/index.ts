@@ -14,23 +14,43 @@ const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY') || ''
 const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') || ''
 const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') || 'mailto:crawfordpokemmo@gmail.com'
 
+// CORS: la app vive en GitHub Pages (dominio distinto a la Edge Function),
+// así que el navegador exige cabeceras CORS en el preflight y en cada respuesta.
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, apikey, content-type',
+}
+
+function json(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+  })
+}
+
 Deno.serve(async (req) => {
+  // Preflight CORS: el navegador lo envía antes del POST (por Authorization)
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS_HEADERS })
+  }
+
   // Solo POST con cuerpo JSON
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 })
+    return json({ error: 'Method not allowed' }, 405)
   }
 
   // Faltan las claves VAPID configuradas
   if (!VAPID_PUBLIC || !VAPID_PRIVATE) {
-    return new Response(
+    return json(
       'Faltan las variables VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY en las Secrets de la Edge Function',
-      { status: 500 }
+      500
     )
   }
 
   const authHeader = req.headers.get('Authorization')
   if (!authHeader) {
-    return new Response('No autorizado', { status: 401 })
+    return json({ error: 'No autorizado' }, 401)
   }
 
   // Cliente con el token del usuario para comprobar su rol
@@ -42,20 +62,20 @@ Deno.serve(async (req) => {
 
   const { data: user } = await userClient.auth.getUser()
   if (!user?.user) {
-    return new Response('Sesión inválida', { status: 401 })
+    return json({ error: 'Sesión inválida' }, 401)
   }
 
   // Solo el staff (super-admin/admin/gestor) puede enviar avisos globales
   const { data: isStaff } = await userClient.rpc('is_staff')
   if (!isStaff) {
-    return new Response('No tienes permisos para enviar notificaciones', { status: 403 })
+    return json({ error: 'No tienes permisos para enviar notificaciones' }, 403)
   }
 
   let payload
   try {
     payload = await req.json()
   } catch {
-    return new Response('JSON inválido', { status: 400 })
+    return json({ error: 'JSON inválido' }, 400)
   }
 
   const type = String(payload.type || 'noticia')
@@ -82,7 +102,7 @@ Deno.serve(async (req) => {
   const { data: subscriptions, error } = await query
 
   if (error) {
-    return new Response('Error leyendo suscripciones: ' + error.message, { status: 500 })
+    return json({ error: 'Error leyendo suscripciones: ' + error.message }, 500)
   }
 
   const results = { sent: 0, failed: 0 }
@@ -111,8 +131,5 @@ Deno.serve(async (req) => {
     })
   )
 
-  return new Response(JSON.stringify(results), {
-    headers: { 'Content-Type': 'application/json' },
-    status: 200,
-  })
+  return json(results, 200)
 })
