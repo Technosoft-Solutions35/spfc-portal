@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
     return json({ error: 'Error leyendo suscripciones: ' + error.message }, 500)
   }
 
-  const results = { sent: 0, failed: 0 }
+  const results = { sent: 0, failed: 0, errors: [] }
   const pushPayload = JSON.stringify({
     title: 'SpFc/Gd · ' + type,
     body: message,
@@ -123,6 +123,12 @@ Deno.serve(async (req) => {
         results.sent++
       } catch (e) {
         results.failed++
+        // Guarda el código y mensaje del primer error para diagnosticar
+        if (results.errors.length < 3) {
+          results.errors.push(
+            `HTTP ${e?.statusCode || '?'}: ${(e?.message || '').slice(0, 80)}`
+          )
+        }
         // 404/410 = suscripción obsoleta: se limpia de la base
         if (e && (e.statusCode === 404 || e.statusCode === 410)) {
           await serviceClient.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
