@@ -33,10 +33,6 @@ export default function MembersManager() {
   const { isOnline } = usePresence()
   const canAssign = canAssignRoles(myRole)
 
-  const totalCount = members?.length ?? 0
-  const onlineCount = members ? members.filter((m) => isOnline(m.id)).length : 0
-  const offlineCount = Math.max(0, totalCount - onlineCount)
-
   const [members, setMembers] = useState(null)
   const [busy, setBusy] = useState(false)
   const [deleting, setDeleting] = useState(null)
@@ -45,6 +41,10 @@ export default function MembersManager() {
   const [editingId, setEditingId] = useState(null)
   const [addForm, setAddForm] = useState(EMPTY_ADD)
   const [editForm, setEditForm] = useState({})
+
+  const totalCount = members?.length ?? 0
+  const onlineCount = members ? members.filter((m) => isOnline(m.id)).length : 0
+  const offlineCount = Math.max(0, totalCount - onlineCount)
 
   const load = async () => {
     const { data } = await supabase
