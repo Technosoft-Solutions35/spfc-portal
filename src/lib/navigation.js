@@ -8,6 +8,7 @@ import {
   Trophy,
   Settings,
   User,
+  Users,
   Send,
   ClipboardCheck,
   Cake,
@@ -31,6 +32,8 @@ export const NAV_ITEMS = [
   { to: '/builds', label: 'Almacén de Builds', icon: Layers, load: () => import('../pages/Builds') },
   // DLC 10: comercio del clan (todos)
   { to: '/comercio', label: 'Comercio', icon: Handshake, load: () => import('../pages/Commerce') },
+  // DLC 15: directorio de miembros con búsqueda en vivo (todos)
+  { to: '/directorio', label: 'Miembros', icon: Users, load: () => import('../pages/MemberSearch') },
   { to: '/eventos', label: 'Eventos', icon: CalendarDays, section: 'events', load: () => import('../pages/Events') },
   // DLC 6: cumpleaños del clan (todos)
   { to: '/cumpleanos', label: 'Cumpleaños', icon: Cake, load: () => import('../pages/Birthdays') },

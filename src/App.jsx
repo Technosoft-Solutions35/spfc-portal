@@ -31,6 +31,7 @@ const ContentManagement = lazy(() => import('./pages/ContentManagement'))
 const Profile = lazy(() => import('./pages/Profile'))
 const MyShinies = lazy(() => import('./pages/MyShinies'))
 const ReviewShinies = lazy(() => import('./pages/ReviewShinies'))
+const MemberSearch = lazy(() => import('./pages/MemberSearch'))
 
 /**
  * Raíz de la aplicación: proveedores globales + rutas.
@@ -91,6 +92,9 @@ export default function App() {
 
                   {/* Panel de sorteos: lo ve todo el clan; gestión solo con permiso */}
                   <Route path="/sorteos" element={<Raffles />} />
+
+                  {/* DLC 15: directorio de miembros (todos) */}
+                  <Route path="/directorio" element={<MemberSearch />} />
 
                   {/* Gestión de contenido: quien tenga permiso de contenido o miembros */}
                   <Route
