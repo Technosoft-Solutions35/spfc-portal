@@ -2,7 +2,11 @@
 // Se encarga de RECIBIR las notificaciones push (aunque el navegador esté
 // cerrado) y mostrarlas, además de abrir el portal al tocarlas.
 
-self.addEventListener('install', () => {
+self.addEventListener('install', (event) => {
+  // Precachea la foto de perfil predeterminada: offline también se muestra.
+  event.waitUntil(
+    caches.open(CACHE_SHELL).then((cache) => cache.add(new URL('img/default-avatar.png', self.location)))
+  )
   self.skipWaiting()
 })
 
@@ -22,8 +26,8 @@ self.addEventListener('activate', (event) => {
 // visita se sirven desde caché sin tocar la red.
 // El index.html (navegación) → network-first con fallback a caché: siempre
 // contenido fresco, y si se pierde la red se muestra la última versión.
-const CACHE_ASSETS = 'spfc-assets-v9'
-const CACHE_SHELL = 'spfc-shell-v9'
+const CACHE_ASSETS = 'spfc-assets-v10'
+const CACHE_SHELL = 'spfc-shell-v10'
 
 self.addEventListener('fetch', (event) => {
   const request = event.request
@@ -36,6 +40,22 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.includes('/assets/') && url.pathname.match(/\.(js|css|woff2?)$/)) {
     event.respondWith(
       caches.open(CACHE_ASSETS).then((cache) =>
+        cache.match(request).then((cached) => {
+          if (cached) return cached
+          return fetch(request).then((res) => {
+            if (res.ok) cache.put(request, res.clone())
+            return res
+          })
+        })
+      )
+    )
+    return
+  }
+
+  // Foto de perfil predeterminada: cache-first (se precachea al instalar)
+  if (url.pathname.endsWith('/img/default-avatar.png')) {
+    event.respondWith(
+      caches.open(CACHE_SHELL).then((cache) =>
         cache.match(request).then((cached) => {
           if (cached) return cached
           return fetch(request).then((res) => {
