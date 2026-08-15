@@ -39,10 +39,10 @@ export const NAV_ITEMS = [
   { to: '/sorteos', label: 'Sorteos', icon: Trophy, load: () => import('../pages/Raffles') },
   // DLC 1: perfil propio (todos los miembros)
   { to: '/perfil', label: 'Mi perfil', icon: User, load: () => import('../pages/Profile') },
-  // DLC 2: reportes de shinies para todos; revisión solo staff
+  // DLC 2: reportes de shinies para todos; revisión con permiso
   { to: '/mis-shinies', label: 'Mis shinies', icon: Send, load: () => import('../pages/MyShinies') },
-  { to: '/revisar-shinies', label: 'Revisar shinies', icon: ClipboardCheck, roles: ['super-admin', 'admin', 'gestor'], reports: true, load: () => import('../pages/ReviewShinies') },
-  { to: '/gestion', label: 'Gestión', icon: Settings, roles: ['super-admin', 'admin', 'gestor'], load: () => import('../pages/ContentManagement') },
+  { to: '/revisar-shinies', label: 'Revisar shinies', icon: ClipboardCheck, permissions: ['shinies_review'], reports: true, load: () => import('../pages/ReviewShinies') },
+  { to: '/gestion', label: 'Gestión', icon: Settings, permissions: ['content', 'members'], load: () => import('../pages/ContentManagement') },
 ]
 
 // Precarga el chunk de la página destino (si aún no está cargado).

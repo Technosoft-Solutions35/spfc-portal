@@ -16,13 +16,15 @@ import NewContentDot from '../ui/NewContentDot'
  */
 export default function MobileHeader() {
   const [open, setOpen] = useState(false)
-  const { profile, logout } = useAuth()
+  const { profile, can, logout } = useAuth()
   const { hasNew, pendingReports } = useNewContent()
   const navigate = useNavigate()
 
-  const items = NAV_ITEMS.filter(
-    (item) => !item.roles || item.roles.includes(profile?.role)
-  )
+  const items = NAV_ITEMS.filter((item) => {
+    if (item.roles && !item.roles.includes(profile?.role)) return false
+    if (item.permissions && !item.permissions.some((p) => can(p))) return false
+    return true
+  })
 
   const handleLogout = async () => {
     setOpen(false)

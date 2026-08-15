@@ -18,7 +18,7 @@ import { AFFILIATIONS, BIO_MAX, GAME_ROLES, storagePathFromUrl } from '../lib/ut
  * El super-admin también puede cambiar su propia contraseña desde aquí.
  */
 export default function Profile() {
-  const { user, profile: authProfile, role, refreshProfile } = useAuth()
+  const { user, profile: authProfile, role, can, refreshProfile } = useAuth()
   const { toast } = useToast()
 
   const [profile, setProfile] = useState(null)
@@ -365,8 +365,8 @@ export default function Profile() {
           profile={profile}
           hall={hall}
           loadingHall={!hall}
-          canDeleteShinies={role === 'super-admin'}
-          onDeleteShiny={role === 'super-admin' ? deleteShiny : undefined}
+          canDeleteShinies={can('shinies_delete')}
+          onDeleteShiny={can('shinies_delete') ? deleteShiny : undefined}
         />
       )}
     </div>

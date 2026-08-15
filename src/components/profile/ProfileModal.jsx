@@ -12,7 +12,7 @@ import { storagePathFromUrl } from '../../lib/utils'
  * El super-admin puede eliminar de aquí los shinies aprobados por error.
  */
 export default function ProfileModal({ userId, onClose }) {
-  const { role } = useAuth()
+  const { can } = useAuth()
   const { toast } = useToast()
   const [profile, setProfile] = useState(null)
   const [hall, setHall] = useState(null)
@@ -57,8 +57,8 @@ export default function ProfileModal({ userId, onClose }) {
         profile={profile}
         hall={hall}
         loadingHall={!!userId && !hall}
-        canDeleteShinies={role === 'super-admin'}
-        onDeleteShiny={role === 'super-admin' ? deleteShiny : undefined}
+        canDeleteShinies={can('shinies_delete')}
+        onDeleteShiny={can('shinies_delete') ? deleteShiny : undefined}
       />
     </Modal>
   )

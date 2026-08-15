@@ -38,7 +38,7 @@ const serviceLabel = (slug) => SERVICES.find((s) => s.slug === slug)?.label ?? s
 const EMPTY_FORM = { service_type: 'venta', provider_name: '', description: '', image_url: '', documents: [] }
 
 export default function Commerce() {
-  const { user, profile } = useAuth()
+  const { user, profile, can } = useAuth()
   const { toast } = useToast()
 
   const [tab, setTab] = useState('ofertas') // 'ofertas' | 'mias'
@@ -142,12 +142,9 @@ export default function Commerce() {
     load()
   }
 
-  // Autor siempre; ajenas todo el staff (admin + gestor)
+  // Autor siempre; ajenas quien tenga permiso de Comercio
   const canModerate = (trade) =>
-    trade.author_id === user?.id ||
-    profile?.role === 'admin' ||
-    profile?.role === 'super-admin' ||
-    profile?.role === 'gestor'
+    trade.author_id === user?.id || can('trades')
 
   const cardBody = (t, onClick) => (
     <>

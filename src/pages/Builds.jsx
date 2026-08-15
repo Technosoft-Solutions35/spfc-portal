@@ -34,7 +34,7 @@ const TIERS = [
 const tierLabel = (slug) => TIERS.find((t) => t.slug === slug)?.label ?? slug
 
 export default function Builds() {
-  const { user, profile } = useAuth()
+  const { user, profile, can } = useAuth()
   const { toast } = useToast()
 
   const [builds, setBuilds] = useState(null)
@@ -118,10 +118,7 @@ export default function Builds() {
   }
 
   const canModerate = (build) =>
-    build.author_id === user?.id ||
-    profile?.role === 'admin' ||
-    profile?.role === 'gestor' ||
-    profile?.role === 'super-admin'
+    build.author_id === user?.id || can('builds')
 
   return (
     <div>

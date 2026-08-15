@@ -83,20 +83,20 @@ export default function App() {
                   <Route
                     path="/revisar-shinies"
                     element={
-                      <ProtectedRoute roles={['super-admin', 'admin', 'gestor']}>
+                      <ProtectedRoute anyPermission={['shinies_review']}>
                         <ReviewShinies />
                       </ProtectedRoute>
                     }
                   />
 
-                  {/* Panel de sorteos: lo ve todo el clan; gestión solo admin */}
+                  {/* Panel de sorteos: lo ve todo el clan; gestión solo con permiso */}
                   <Route path="/sorteos" element={<Raffles />} />
 
-                  {/* Gestión de contenido: admin, gestor y super-admin */}
+                  {/* Gestión de contenido: quien tenga permiso de contenido o miembros */}
                   <Route
                     path="/gestion"
                     element={
-                      <ProtectedRoute roles={['super-admin', 'admin', 'gestor']}>
+                      <ProtectedRoute anyPermission={['content', 'members']}>
                         <ContentManagement />
                       </ProtectedRoute>
                     }

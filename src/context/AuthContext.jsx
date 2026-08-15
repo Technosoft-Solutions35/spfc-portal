@@ -1,41 +1,63 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { ROLES } from '../lib/utils'
 
 const AuthContext = createContext(null)
 
 /**
  * Contexto global de autenticación.
- * Mantiene la sesión de Supabase y el perfil del usuario (con su rol),
- * refrescándolo cuando cambia la sesión.
+ * Mantiene la sesión de Supabase, el perfil del usuario (con su rol) y los
+ * permisos que tiene según la matriz role_permissions (DLC 14).
  */
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [permissions, setPermissions] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // Carga el perfil público del usuario logueado
-  const loadProfile = useCallback(async (userId) => {
-    if (!userId) {
-      setProfile(null)
+  // Carga los permisos que tiene el rol del usuario en la matriz
+  const loadPermissions = useCallback(async (role) => {
+    if (!role) {
+      setPermissions([])
       return
     }
     const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-    if (!error) setProfile(data)
+      .from('role_permissions')
+      .select('permission')
+      .eq('role', role)
+    if (!error) setPermissions((data || []).map((r) => r.permission))
   }, [])
+
+  // Carga el perfil público del usuario logueado
+  const loadProfile = useCallback(
+    async (userId) => {
+      if (!userId) {
+        setProfile(null)
+        setPermissions([])
+        return
+      }
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+      if (!error) {
+        setProfile(data)
+        await loadPermissions(data.role)
+      }
+    },
+    [loadPermissions]
+  )
 
   useEffect(() => {
     let active = true
 
     // Sesión inicial (ya persistida por Supabase en localStorage)
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (!active) return
       setSession(data.session)
       if (data.session?.user) {
-        loadProfile(data.session.user.id)
+        await loadProfile(data.session.user.id)
       }
       setLoading(false)
     })
@@ -60,6 +82,20 @@ export function AuthProvider({ children }) {
     await loadProfile(session?.user?.id)
   }, [session, loadProfile])
 
+  // Recarga los permisos del rol actual (tras guardar cambios en la matriz)
+  const refreshPermissions = useCallback(async () => {
+    await loadPermissions(profile?.role)
+  }, [profile, loadPermissions])
+
+  // ¿Tiene un permiso concreto de la matriz? El super-admin siempre tiene todo.
+  const can = useCallback(
+    (perm) => {
+      if (profile?.role === ROLES.SUPER_ADMIN) return true
+      return Array.isArray(permissions) && permissions.includes(perm)
+    },
+    [profile, permissions]
+  )
+
   const logout = useCallback(async () => {
     await supabase.auth.signOut()
   }, [])
@@ -68,9 +104,12 @@ export function AuthProvider({ children }) {
     session,
     user: session?.user ?? null,
     profile,
+    permissions,
     loading,
     refreshProfile,
+    refreshPermissions,
     logout,
+    can,
     // Rol del usuario logueado ('' si no hay sesión)
     role: profile?.role ?? '',
   }

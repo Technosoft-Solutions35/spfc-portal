@@ -14,7 +14,6 @@ import {
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/ui/Toast'
-import { canAccessRaffles } from '../lib/utils'
 import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
@@ -68,8 +67,8 @@ export function weightedDraw(tickets, numWinners = 3) {
  */
 export default function Raffles() {
   const { toast } = useToast()
-  const { role } = useAuth()
-  const isAdmin = canAccessRaffles(role)
+  const { can } = useAuth()
+  const isAdmin = can('raffles')
 
   const [input, setInput] = useState('')
   const [tickets, setTickets] = useState(null)

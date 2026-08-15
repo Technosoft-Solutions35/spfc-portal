@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react'
-import { BookOpen, CalendarDays, Newspaper, Settings, Swords, Users } from 'lucide-react'
+import { BookOpen, CalendarDays, Newspaper, Settings, ShieldCheck, Swords, Users } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { canAssignRoles, canManageAll } from '../lib/utils'
+import { canAssignRoles, ROLES } from '../lib/utils'
 import PageHeader from '../components/ui/PageHeader'
 import ContentManager from '../components/management/ContentManager'
 import MembersManager from '../components/management/MembersManager'
+import RolesManager from '../components/management/RolesManager'
 import { NEWS_CATEGORIES, GUIDE_CATEGORIES } from '../lib/utils'
 import { useCrud } from '../hooks/useCrud'
 
 const TABS = {
-  news: { label: 'Noticias', icon: Newspaper, roles: ['super-admin', 'admin', 'gestor'] },
-  events: { label: 'Eventos', icon: CalendarDays, roles: ['super-admin', 'admin', 'gestor'] },
-  tournaments: { label: 'Torneos', icon: Swords, roles: ['super-admin', 'admin', 'gestor'] },
-  guides: { label: 'Guías y Buildeos', icon: BookOpen, roles: ['super-admin', 'admin', 'gestor'] },
-  members: { label: 'Miembros y roles', icon: Users, roles: ['super-admin', 'admin', 'gestor'] },
+  news: { label: 'Noticias', icon: Newspaper, permission: 'content' },
+  events: { label: 'Eventos', icon: CalendarDays, permission: 'content' },
+  tournaments: { label: 'Torneos', icon: Swords, permission: 'content' },
+  guides: { label: 'Guías y Buildeos', icon: BookOpen, permission: 'content' },
+  members: { label: 'Miembros y roles', icon: Users, permission: 'members' },
+  permissions: { label: 'Roles y Permisos', icon: ShieldCheck, superAdminOnly: true },
 }
 
 const FIELD_CONFIGS = {
@@ -90,16 +92,19 @@ const FIELD_CONFIGS = {
 }
 
 /**
- * Página de Gestión: CRUD de contenido según el rol.
- * - admin y gestor: noticias, eventos, torneos, guías y miembros (mismos permisos).
- * - Los sorteos se gestionan aparte en /sorteos (solo admin/super-admin).
- * - Solo el super-admin puede otorgar/cambiar roles.
+ * Página de Gestión: CRUD de contenido según los permisos de la matriz.
+ * - Los sorteos se gestionan aparte en /sorteos (permiso "raffles").
+ * - El super-admin ve además la pestaña "Roles y Permisos" para editar la matriz.
+ * - Asignar/cambiar roles sigue siendo exclusivo del super-admin.
  */
 export default function ContentManagement() {
-  const { role } = useAuth()
+  const { role, can } = useAuth()
   const [tab, setTab] = useState('news')
 
-  const availableTabs = Object.entries(TABS).filter(([, t]) => t.roles.includes(role))
+  const isSuperAdmin = role === ROLES.SUPER_ADMIN
+  const availableTabs = Object.entries(TABS).filter(([, t]) =>
+    t.superAdminOnly ? isSuperAdmin : can(t.permission)
+  )
 
   // Si el rol actual no tiene acceso a la pestaña activa, vuelve a la primera disponible
   useEffect(() => {
@@ -108,7 +113,7 @@ export default function ContentManagement() {
     }
   }, [tab, availableTabs])
 
-  const isAdmin = canManageAll(role)
+  const canManageMembers = can('members')
 
   return (
     <div>
@@ -142,16 +147,18 @@ export default function ContentManagement() {
 
       {/* Contenido de la pestaña activa */}
       {tab === 'members' ? (
-        isAdmin ? (
+        canManageMembers ? (
           <MembersManager />
         ) : (
           <p className="text-sm text-soft">No tienes permisos para gestionar roles.</p>
         )
+      ) : tab === 'permissions' ? (
+        <RolesManager />
       ) : (
         <ActiveTab key={tab} tab={tab} />
       )}
 
-      {isAdmin && !canAssignRoles(role) && (
+      {canManageMembers && !canAssignRoles(role) && (
         <p className="mt-4 rounded-xl bg-primary/10 px-4 py-3 text-xs text-primary">
           Solo el <strong>super-admin</strong> puede otorgar o cambiar roles a los usuarios.
         </p>

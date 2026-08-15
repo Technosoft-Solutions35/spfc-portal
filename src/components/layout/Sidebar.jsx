@@ -12,14 +12,16 @@ import NewContentDot from '../ui/NewContentDot'
  * En móviles se sustituye por el menú hamburguesa (MobileHeader).
  */
 export default function Sidebar() {
-  const { profile, logout } = useAuth()
+  const { profile, can, logout } = useAuth()
   const { hasNew, pendingReports } = useNewContent()
   const navigate = useNavigate()
 
-  // Filtra los enlaces según el rol del usuario logueado
-  const items = NAV_ITEMS.filter(
-    (item) => !item.roles || item.roles.includes(profile?.role)
-  )
+  // Filtra los enlaces según el rol y los permisos del usuario logueado
+  const items = NAV_ITEMS.filter((item) => {
+    if (item.roles && !item.roles.includes(profile?.role)) return false
+    if (item.permissions && !item.permissions.some((p) => can(p))) return false
+    return true
+  })
 
   const handleLogout = async () => {
     await logout()

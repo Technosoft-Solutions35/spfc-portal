@@ -11,7 +11,7 @@ import Modal from '../components/ui/Modal'
 import PostActions from '../components/ui/PostActions'
 import RsvpBox from '../components/ui/RsvpBox'
 import CommentSection from '../components/ui/CommentSection'
-import { canManageAll, formatDate, sortTournaments } from '../lib/utils'
+import { formatDate, sortTournaments } from '../lib/utils'
 import { readDeepLink } from '../lib/share'
 import {
   buildBracket,
@@ -177,9 +177,9 @@ function BracketBoard({ rounds, bronze, editable, onSetWinner, onRemoveWinner, o
  * Gestión (generar llaves, marcar ganadores, finalizar): staff (admin + gestor).
  */
 export default function Brackets() {
-  const { profile } = useAuth()
+  const { can } = useAuth()
   const { toast } = useToast()
-  const isAdmin = canManageAll(profile?.role)
+  const isAdmin = can('brackets')
 
   const [tournaments, setTournaments] = useState(null)
   const [target, setTarget] = useState(null) // torneo del modal gestionar

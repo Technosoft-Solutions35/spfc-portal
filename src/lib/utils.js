@@ -11,23 +11,6 @@ export const ROLES = {
 // ¿Puede otorgar/cambiar roles a otros usuarios? (solo super-admin)
 export const canAssignRoles = (role) => role === ROLES.SUPER_ADMIN
 
-// ¿Puede gestionar contenido (super-admin + admin + gestor)?
-export const canManageContent = (role) =>
-  role === ROLES.SUPER_ADMIN || role === ROLES.ADMIN || role === ROLES.GESTOR
-
-// ¿Puede gestionar TODO el contenido (super-admin + admin + gestor)?
-// Desde el ajuste de permisos, gestor == admin en todo excepto sorteos.
-export const canManageAll = (role) =>
-  role === ROLES.SUPER_ADMIN || role === ROLES.ADMIN || role === ROLES.GESTOR
-
-// ¿Puede corregir contadores de Shiny Hunt (+ / -)?
-export const canManageShinies = (role) =>
-  role === ROLES.SUPER_ADMIN || role === ROLES.ADMIN || role === ROLES.GESTOR
-
-// ¿Tiene acceso al panel de sorteos? (super-admin + admin)
-export const canAccessRaffles = (role) =>
-  role === ROLES.SUPER_ADMIN || role === ROLES.ADMIN
-
 // Texto legible del rol para la UI
 export const ROLE_LABELS = {
   'super-admin': 'Super Administrador',
@@ -35,6 +18,20 @@ export const ROLE_LABELS = {
   gestor: 'Gestor',
   member: 'Miembro',
 }
+
+// Matriz de permisos editables (DLC 14): el super-admin los activa/desactiva
+// por rol desde Gestión → Roles y Permisos. El orden define las columnas.
+export const PERMISSIONS = [
+  { key: 'content', label: 'Contenido: noticias, eventos, torneos y guías' },
+  { key: 'members', label: 'Miembros: crear, editar y eliminar' },
+  { key: 'shinies_review', label: 'Revisar reportes de shinies' },
+  { key: 'shinies_delete', label: 'Eliminar shinies de los perfiles' },
+  { key: 'brackets', label: 'Gestionar llaves de torneos' },
+  { key: 'trades', label: 'Borrar ofertas de Comercio ajenas' },
+  { key: 'builds', label: 'Borrar builds ajenas' },
+  { key: 'raffles', label: 'Gestionar sorteos' },
+  { key: 'moderate', label: 'Borrar comentarios ajenos' },
+]
 
 // ── DLC 1: Datos personalizables del perfil ──
 // Afiliación de clan (solo estas dos opciones, como se definió)

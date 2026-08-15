@@ -16,7 +16,7 @@ import ProfileModal from '../profile/ProfileModal'
  * El staff (admin/gestor) puede borrar cualquier comentario.
  */
 export default function CommentSection({ parentType, parentId }) {
-  const { user, profile, role } = useAuth()
+  const { user, profile, can } = useAuth()
   const { toast } = useToast()
 
   const [comments, setComments] = useState(null)
@@ -26,7 +26,7 @@ export default function CommentSection({ parentType, parentId }) {
   const [editingText, setEditingText] = useState('')
   const [viewProfileId, setViewProfileId] = useState(null)
 
-  const isStaff = role === 'super-admin' || role === 'admin' || role === 'gestor'
+  const isStaff = can('moderate')
 
   const loadComments = async () => {
     const { data, error } = await supabase
