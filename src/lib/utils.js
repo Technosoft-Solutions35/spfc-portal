@@ -56,6 +56,17 @@ export const NEWS_CATEGORIES = [
   'Otras',
 ]
 
+// Categorías de guías (selección múltiple)
+export const GUIDE_CATEGORIES = [
+  'Farmeo NPCs',
+  'Farmeo Objetos',
+  'Farmeo Plantación',
+  'Crianza',
+  'Raids Legendarias',
+  'Raids Estacionarias/Evento',
+  'Eventos Estacionales',
+]
+
 // Fecha legible en español (ej: 11/08/2026 · 20:30)
 export function formatDate(value) {
   if (!value) return '—'

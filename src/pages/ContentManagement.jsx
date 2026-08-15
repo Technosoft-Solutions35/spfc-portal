@@ -5,7 +5,7 @@ import { canAssignRoles, canManageAll } from '../lib/utils'
 import PageHeader from '../components/ui/PageHeader'
 import ContentManager from '../components/management/ContentManager'
 import MembersManager from '../components/management/MembersManager'
-import { NEWS_CATEGORIES } from '../lib/utils'
+import { NEWS_CATEGORIES, GUIDE_CATEGORIES } from '../lib/utils'
 import { useCrud } from '../hooks/useCrud'
 
 const TABS = {
@@ -72,6 +72,7 @@ const FIELD_CONFIGS = {
     fields: [
       { key: 'title', label: 'Título de la guía', type: 'text' },
       { key: 'excerpt', label: 'Extracto corto', type: 'textarea' },
+      { key: 'categories', label: 'Categorías (selección múltiple)', type: 'categories', options: GUIDE_CATEGORIES },
       { key: 'tags', label: 'Etiquetas', type: 'tags' },
       { key: 'content', label: 'Contenido completo', type: 'textarea' },
       { key: 'documents', label: 'Documentos adjuntos (cualquier tipo)', type: 'documents' },

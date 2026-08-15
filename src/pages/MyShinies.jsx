@@ -153,25 +153,25 @@ export default function MyShinies() {
                 key={r.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex items-center gap-3 px-4 py-3"
+                className="flex items-center gap-2.5 px-3 py-3 sm:gap-3 sm:px-4"
               >
                 <img
                   src={r.image_url}
                   alt={r.pokemon_name}
-                  className="h-14 w-14 rounded-xl border border-edge object-cover"
+                  className="h-14 w-14 shrink-0 rounded-xl border border-edge object-cover"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="font-display font-bold text-text">{r.pokemon_name}</p>
-                  <p className="text-xs text-soft">{formatDate(r.created_at)}</p>
+                  <p className="truncate font-display font-bold text-text">{r.pokemon_name}</p>
+                  <p className="truncate text-xs text-soft">{formatDate(r.created_at)}</p>
                   {r.status === 'rejected' && r.rejection_reason && (
-                    <p className="mt-0.5 text-xs font-medium text-primary">
+                    <p className="mt-0.5 truncate text-xs font-medium text-primary">
                       Motivo: {r.rejection_reason}
                     </p>
                   )}
                 </div>
-                <span className={`badge ${meta.class}`}>{meta.label}</span>
+                <span className={`badge shrink-0 whitespace-nowrap ${meta.class}`}>{meta.label}</span>
                 {pending && (
-                  <div className="flex gap-1">
+                  <div className="flex shrink-0 gap-1">
                     <button
                       onClick={() => openEdit(r)}
                       title="Editar reporte"

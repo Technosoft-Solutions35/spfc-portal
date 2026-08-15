@@ -147,6 +147,15 @@ export default function Guides() {
                 </h3>
                 <p className="mt-1 line-clamp-2 text-sm text-soft">{g.excerpt}</p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
+                  {(g.categories || []).map((cat) => (
+                    <span
+                      key={cat}
+                      className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"
+                    >
+                      <Tag size={11} />
+                      {cat}
+                    </span>
+                  ))}
                   {(g.tags || []).map((tag) => (
                     <span
                       key={tag}
@@ -196,6 +205,15 @@ export default function Guides() {
               />
             )}
             <div className="mb-3 flex flex-wrap gap-1.5">
+              {(active.categories || []).map((cat) => (
+                <span
+                  key={cat}
+                  className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary"
+                >
+                  <Tag size={11} />
+                  {cat}
+                </span>
+              ))}
               {(active.tags || []).map((tag) => (
                 <span
                   key={tag}

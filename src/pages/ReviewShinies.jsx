@@ -192,24 +192,29 @@ export default function ReviewShinies() {
               key={r.id}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex items-center gap-3 px-4 py-3 transition hover:bg-background"
+              className="flex items-center gap-2.5 px-3 py-3 transition hover:bg-background sm:gap-3 sm:px-4"
             >
               <img
                 src={r.image_url}
                 alt={r.pokemon_name}
-                className="h-14 w-14 rounded-xl border border-edge object-cover"
+                className="h-14 w-14 shrink-0 rounded-xl border border-edge object-cover"
               />
               <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-2 font-display font-bold text-text">
-                  <Sparkles size={14} className="text-secondary" />
-                  {r.pokemon_name}
+                <p className="flex min-w-0 items-center gap-2 font-display font-bold text-text">
+                  <Sparkles size={14} className="shrink-0 text-secondary" />
+                  <span className="truncate">{r.pokemon_name}</span>
                 </p>
-                <p className="flex items-center gap-1.5 text-xs text-soft">
+                <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-soft">
                   <ProfileAvatar userId={r.author_id} name={r.author_id?.username} src={r.author_id?.avatar_url} size="sm" />
-                  {r.author_id?.username} · {formatDate(r.created_at)}
+                  <span className="truncate">
+                    {r.author_id?.username} · {formatDate(r.created_at)}
+                  </span>
                 </p>
               </div>
-              <button onClick={() => openReview(r)} className="btn-ghost">
+              <button
+                onClick={() => openReview(r)}
+                className="btn-ghost shrink-0 whitespace-nowrap !px-3 !py-2 text-xs sm:!px-5 sm:!py-2.5 sm:text-sm"
+              >
                 <Eye size={16} />
                 Ver reporte
               </button>
