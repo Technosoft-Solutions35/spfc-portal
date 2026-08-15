@@ -2,16 +2,20 @@
 -- Quita la entrada del Hall of Fame, deshace el +1 del contador del autor y
 -- borra la imagen de evidencia del Storage. Sirve para quitar shinies que
 -- fueron aprobados por error.
+--
+-- ⚠️ Como en DLC 11, el borrado de la imagen NO se hace desde SQL
+-- (`delete from storage.objects` lo bloquea Supabase con "Direct deletion from
+-- storage tables is not allowed. Use the Storage API instead."). La foto la
+-- elimina el cliente con la Storage API (política media_staff_delete).
 
 create or replace function public.delete_hall_of_fame_entry(p_id uuid)
 returns jsonb
 language plpgsql
 security definer
-set search_path = public, storage
+set search_path = public
 as $$
 declare
   v_entry public.hall_of_fame%rowtype;
-  v_path  text;
 begin
   if auth.uid() is null then
     raise exception 'Debes iniciar sesión';
@@ -30,14 +34,14 @@ begin
      set shinies = greatest(0, shinies - 1)
    where id = v_entry.user_id;
 
-  -- Borra la imagen de evidencia del Storage
-  v_path := regexp_replace(v_entry.image_url, '^.*/object/public/[^/]+/', '');
-  delete from storage.objects
-   where bucket_id = 'media' and name = v_path;
-
   delete from public.hall_of_fame where id = p_id;
 
-  return jsonb_build_object('ok', true, 'user_id', v_entry.user_id, 'pokemon', v_entry.pokemon_name);
+  return jsonb_build_object(
+    'ok', true,
+    'user_id', v_entry.user_id,
+    'pokemon', v_entry.pokemon_name,
+    'image_url', v_entry.image_url
+  );
 end;
 $$;
 

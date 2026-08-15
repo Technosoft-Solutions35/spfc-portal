@@ -4,6 +4,7 @@ import Modal from '../ui/Modal'
 import ProfileView from './ProfileView'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../ui/Toast'
+import { storagePathFromUrl } from '../../lib/utils'
 
 /**
  * Modal de perfil de TERCEROS (solo lectura + Colección Shiny).
@@ -43,6 +44,8 @@ export default function ProfileModal({ userId, onClose }) {
     if (!window.confirm(`¿Eliminar "${h.pokemon_name}" del perfil de ${profile?.username || 'este usuario'}? Se quitará 1 shiny de su contador.`)) return
     const { error } = await supabase.rpc('delete_hall_of_fame_entry', { p_id: h.id })
     if (error) return toast('No se pudo eliminar: ' + error.message, 'error')
+    const path = storagePathFromUrl(h.image_url)
+    if (path) await supabase.storage.from('media').remove([path]).catch(() => {})
     setHall((prev) => prev.filter((x) => x.id !== h.id))
     setProfile((p) => (p ? { ...p, shinies: Math.max(0, (p.shinies ?? 0) - 1) } : p))
     toast('Shiny eliminado del perfil', 'success')
