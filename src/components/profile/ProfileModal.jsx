@@ -2,12 +2,17 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import Modal from '../ui/Modal'
 import ProfileView from './ProfileView'
+import { useAuth } from '../../context/AuthContext'
+import { useToast } from '../ui/Toast'
 
 /**
  * Modal de perfil de TERCEROS (solo lectura + Colección Shiny).
  * Se abre al hacer clic en el nombre de un miembro en las tablas o listados.
+ * El super-admin puede eliminar de aquí los shinies aprobados por error.
  */
 export default function ProfileModal({ userId, onClose }) {
+  const { role } = useAuth()
+  const { toast } = useToast()
   const [profile, setProfile] = useState(null)
   const [hall, setHall] = useState(null)
 
@@ -17,7 +22,7 @@ export default function ProfileModal({ userId, onClose }) {
 
     supabase
       .from('profiles')
-      .select('id, username, email, avatar_url, title, role, shinies, ign, affiliation, game_roles, bio, created_at')
+      .select('id, username, avatar_url, title, role, shinies, ign, affiliation, game_roles, bio, created_at')
       .eq('id', userId)
       .single()
       .then(({ data }) => mounted && setProfile(data))
@@ -34,9 +39,24 @@ export default function ProfileModal({ userId, onClose }) {
     }
   }, [userId])
 
+  const deleteShiny = async (h) => {
+    if (!window.confirm(`¿Eliminar "${h.pokemon_name}" del perfil de ${profile?.username || 'este usuario'}? Se quitará 1 shiny de su contador.`)) return
+    const { error } = await supabase.rpc('delete_hall_of_fame_entry', { p_id: h.id })
+    if (error) return toast('No se pudo eliminar: ' + error.message, 'error')
+    setHall((prev) => prev.filter((x) => x.id !== h.id))
+    setProfile((p) => (p ? { ...p, shinies: Math.max(0, (p.shinies ?? 0) - 1) } : p))
+    toast('Shiny eliminado del perfil', 'success')
+  }
+
   return (
     <Modal open={!!userId} onClose={onClose} title={profile?.username || 'Perfil'} maxWidth="max-w-2xl">
-      <ProfileView profile={profile} hall={hall} loadingHall={!!userId && !hall} />
+      <ProfileView
+        profile={profile}
+        hall={hall}
+        loadingHall={!!userId && !hall}
+        canDeleteShinies={role === 'super-admin'}
+        onDeleteShiny={role === 'super-admin' ? deleteShiny : undefined}
+      />
     </Modal>
   )
 }

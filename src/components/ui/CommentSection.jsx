@@ -26,7 +26,7 @@ export default function CommentSection({ parentType, parentId }) {
   const [editingText, setEditingText] = useState('')
   const [viewProfileId, setViewProfileId] = useState(null)
 
-  const isStaff = role === 'admin' || role === 'gestor'
+  const isStaff = role === 'super-admin' || role === 'admin' || role === 'gestor'
 
   const loadComments = async () => {
     const { data, error } = await supabase

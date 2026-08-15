@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ExternalLink, Newspaper, Share2, Tag, Youtube } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -24,6 +24,7 @@ export default function News() {
   const { toast } = useToast()
   const [news, setNews] = useState(null)
   const [active, setActive] = useState(null)
+  const deepHandled = useRef(false)
 
   const load = useCallback(() => {
     return supabase
@@ -33,8 +34,10 @@ export default function News() {
       .then(({ data }) => {
         setNews(data || [])
         // Enlace directo: si se llegó con ?news=<id> (en el hash), se abre esa noticia
+        // solo la primera vez; si no, cada refresco en vivo reabriría el modal.
         const dl = readDeepLink()
-        if (dl?.param === 'news') {
+        if (dl?.param === 'news' && !deepHandled.current) {
+          deepHandled.current = true
           const found = (data || []).find((n) => n.id === dl.id)
           if (found) setActive(found)
         }

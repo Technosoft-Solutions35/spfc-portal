@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { BookOpen, Download, FileText, Paperclip, Tag, Youtube } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -37,6 +37,7 @@ export default function Guides() {
   const [guides, setGuides] = useState(null)
   const [active, setActive] = useState(null)
   const [downloading, setDownloading] = useState(null)
+  const deepHandled = useRef(false)
 
   // Descarga el documento sin abrirlo (fetch → blob → enlace con download).
   // No usamos el atributo download del <a> directo porque los archivos están
@@ -72,8 +73,10 @@ export default function Guides() {
       .then(({ data }) => {
         setGuides(data || [])
         // Enlace directo: si se llegó con ?guide=<id> (en el hash), se abre esa guía
+        // solo la primera vez; si no, cada refresco en vivo reabriría el modal.
         const dl = readDeepLink()
-        if (dl?.param === 'guide') {
+        if (dl?.param === 'guide' && !deepHandled.current) {
+          deepHandled.current = true
           const found = (data || []).find((g) => g.id === dl.id)
           if (found) setActive(found)
         }

@@ -6,13 +6,14 @@
 // Secrets necesarios en Supabase → Edge Functions → Manage → Secrets:
 //   VAPID_PUBLIC_KEY  (pública, también va en el frontend)
 //   VAPID_PRIVATE_KEY (privada — NUNCA se sube al repositorio)
+//   VAPID_SUBJECT     (mailto genérico, sin datos personales)
 // ─────────────────────────────────────────────────────────────────────────────
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4'
 import webpush from 'npm:web-push@3.6.7'
 
 const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY') || ''
 const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') || ''
-const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') || 'mailto:crawfordpokemmo@gmail.com'
+const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') || 'mailto:no-reply@spfc.gd'
 
 // CORS: la app vive en GitHub Pages (dominio distinto a la Edge Function),
 // así que el navegador exige cabeceras CORS en el preflight y en cada respuesta.

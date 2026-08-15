@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Pencil, User } from 'lucide-react'
+import { Check, KeyRound, Lock, Pencil, User } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/ui/Toast'
@@ -15,15 +15,19 @@ import { AFFILIATIONS, BIO_MAX, GAME_ROLES } from '../lib/utils'
  * Modo lectura: igual que el perfil de terceros. Al pulsar el lápiz se abren
  * los campos editables (avatar, IGN, afiliación, roles de juego y bio).
  * El email y el username de acceso son fijos (gestionados por Supabase).
+ * El super-admin también puede cambiar su propia contraseña desde aquí.
  */
 export default function Profile() {
-  const { profile: authProfile, refreshProfile } = useAuth()
+  const { user, profile: authProfile, role, refreshProfile } = useAuth()
   const { toast } = useToast()
 
   const [profile, setProfile] = useState(null)
   const [hall, setHall] = useState(null)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' })
+  const [changing, setChanging] = useState(false)
 
   const [form, setForm] = useState({
     avatar_url: '',
@@ -105,6 +109,39 @@ export default function Profile() {
     }
     toast('Perfil actualizado', 'success')
     setEditing(false)
+    refreshProfile?.()
+  }
+
+  // Cambio de contraseña (solo super-admin). Verifica la contraseña actual
+  // re-autenticando con ella y después aplica la nueva en Supabase Auth.
+  const changePassword = async (e) => {
+    e.preventDefault()
+    if (pwForm.next.length < 6) return toast('La nueva contraseña debe tener al menos 6 caracteres.', 'error')
+    if (pwForm.next !== pwForm.confirm) return toast('Las contraseñas nuevas no coinciden.', 'error')
+    if (!pwForm.current) return toast('Introduce tu contraseña actual.', 'error')
+    setChanging(true)
+    const { error: verifyErr } = await supabase.auth.signInWithPassword({
+      email: user?.email || '',
+      password: pwForm.current,
+    })
+    if (verifyErr) {
+      setChanging(false)
+      return toast('La contraseña actual es incorrecta.', 'error')
+    }
+    const { error: updErr } = await supabase.auth.updateUser({ password: pwForm.next })
+    setChanging(false)
+    if (updErr) return toast('No se pudo cambiar la contraseña: ' + updErr.message, 'error')
+    toast('Contraseña actualizada. Úsala en tu próximo inicio de sesión.', 'success')
+    setPwForm({ current: '', next: '', confirm: '' })
+  }
+
+  // Elimina un shiny aprobado por error (solo super-admin) del perfil mostrado
+  const deleteShiny = async (h) => {
+    if (!window.confirm(`¿Eliminar "${h.pokemon_name}" de este perfil? Se quitará 1 shiny del contador.`)) return
+    const { error } = await supabase.rpc('delete_hall_of_fame_entry', { p_id: h.id })
+    if (error) return toast('No se pudo eliminar: ' + error.message, 'error')
+    setHall((prev) => prev.filter((x) => x.id !== h.id))
+    toast('Shiny eliminado del perfil', 'success')
     refreshProfile?.()
   }
 
@@ -262,7 +299,73 @@ export default function Profile() {
           </div>
         </motion.div>
       ) : (
-        <ProfileView profile={profile} hall={hall} loadingHall={!hall} />
+        <ProfileView
+          profile={profile}
+          hall={hall}
+          loadingHall={!hall}
+          canDeleteShinies={role === 'super-admin'}
+          onDeleteShiny={role === 'super-admin' ? deleteShiny : undefined}
+        />
+      )}
+
+      {/* Seguridad: solo el super-admin puede cambiar su propia contraseña */}
+      {role === 'super-admin' && (
+        <div className="mt-8 rounded-2xl border border-edge bg-elevated p-5">
+          <h3 className="flex items-center gap-2 font-display font-bold text-text">
+            <KeyRound size={18} className="text-primary" />
+            Seguridad · Cambiar contraseña
+          </h3>
+          <p className="mt-1 text-xs text-soft">
+            Tu contraseña nunca se muestra en el código. Cámbiala aquí siempre que quieras.
+          </p>
+          <form onSubmit={changePassword} className="mt-4 space-y-4">
+            <div>
+              <label className="label" htmlFor="pw-current">Contraseña actual</label>
+              <input
+                id="pw-current"
+                type="password"
+                required
+                autoComplete="current-password"
+                className="input"
+                value={pwForm.current}
+                onChange={(e) => setPwForm((f) => ({ ...f, current: e.target.value }))}
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="label" htmlFor="pw-next">Nueva contraseña</label>
+                <input
+                  id="pw-next"
+                  type="password"
+                  required
+                  autoComplete="new-password"
+                  minLength={6}
+                  className="input"
+                  placeholder="Mínimo 6 caracteres"
+                  value={pwForm.next}
+                  onChange={(e) => setPwForm((f) => ({ ...f, next: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="label" htmlFor="pw-confirm">Repite la nueva contraseña</label>
+                <input
+                  id="pw-confirm"
+                  type="password"
+                  required
+                  autoComplete="new-password"
+                  minLength={6}
+                  className="input"
+                  value={pwForm.confirm}
+                  onChange={(e) => setPwForm((f) => ({ ...f, confirm: e.target.value }))}
+                />
+              </div>
+            </div>
+            <button type="submit" disabled={changing} className="btn-primary">
+              <Lock size={16} />
+              {changing ? 'Actualizando…' : 'Cambiar contraseña'}
+            </button>
+          </form>
+        </div>
       )}
     </div>
   )

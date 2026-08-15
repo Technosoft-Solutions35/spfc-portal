@@ -303,7 +303,7 @@ export default function Builds() {
             <ImageInput
               value={form.image_url}
               onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
-              folder={`builds/${user?.id}`}
+              folder={`${user?.id}/builds`}
             />
           </div>
 

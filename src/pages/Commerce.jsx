@@ -415,7 +415,7 @@ export default function Commerce() {
             <ImageInput
               value={form.image_url}
               onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
-              folder={`trades/${user?.id}`}
+              folder={`${user?.id}/trades`}
             />
           </div>
 

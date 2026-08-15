@@ -128,13 +128,17 @@ export default function ContentManager({
 
   const openEdit = (item) => {
     setEditing(item)
-    // Conversión de fechas ISO a datetime-local para el input
+    // Conversión de fechas ISO a datetime-local para el input.
+    // Se usa el componente local (getHours/getMinutes...) para que el
+    // calendario muestre la misma hora local que se guardó.
     const prepared = { ...item }
     for (const f of fields) {
       if (f.type === 'date' && prepared[f.key]) {
-        prepared[f.key] = new Date(prepared[f.key])
-          .toISOString()
-          .slice(0, 16)
+        const d = new Date(prepared[f.key])
+        const pad = (n) => String(n).padStart(2, '0')
+        prepared[f.key] =
+          `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+          `T${pad(d.getHours())}:${pad(d.getMinutes())}`
       }
     }
     setForm(prepared)

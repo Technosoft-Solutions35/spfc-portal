@@ -67,7 +67,7 @@
 
 ---
 
-## Nuevas ideas (Raymon, 2.ª tanda)
+## Nuevas ideas (2.ª tanda)
 
 ### 13. Almacén de Builds (teampaste)
 - Subsecciones por **tier**: Over Used (OU), Under Used (UU), Never Used (NU), Doubles VGC, Little Cup (LC) y Monotype.

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CalendarDays, Sparkles, Trophy, X, ZoomIn } from 'lucide-react'
+import { CalendarDays, Sparkles, Trash2, Trophy, X, ZoomIn } from 'lucide-react'
 import Avatar, { RoleBadge } from '../ui/Avatar'
 import { formatShortDate, formatBirthDay, GAME_ROLES, AFFILIATIONS } from '../../lib/utils'
 import EmptyState from '../ui/EmptyState'
@@ -17,7 +17,13 @@ const ROLE_ICONS = {
  * Vista de perfil (leer): datos públicos de juego + Colección Shiny.
  * La usan el perfil propio (página) y el de terceros (modal).
  */
-export default function ProfileView({ profile, hall, loadingHall = false }) {
+export default function ProfileView({
+  profile,
+  hall,
+  loadingHall = false,
+  canDeleteShinies = false,
+  onDeleteShiny,
+}) {
   const [zoomed, setZoomed] = useState(null)
 
   if (!profile) return <Spinner label="Cargando perfil..." />
@@ -100,11 +106,18 @@ export default function ProfileView({ profile, hall, loadingHall = false }) {
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {hall.map((h) => (
-              <button
+              <div
                 key={h.id}
-                type="button"
                 onClick={() => setZoomed(h)}
-                className="group overflow-hidden rounded-xl border border-edge bg-background text-left transition hover:border-secondary/40"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    setZoomed(h)
+                  }
+                }}
+                className="group cursor-pointer overflow-hidden rounded-xl border border-edge bg-background text-left transition hover:border-secondary/40"
               >
                 <div className="relative aspect-square">
                   <img
@@ -116,12 +129,26 @@ export default function ProfileView({ profile, hall, loadingHall = false }) {
                   <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition group-hover:opacity-100">
                     <ZoomIn size={15} />
                   </span>
+                  {canDeleteShinies && onDeleteShiny && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onDeleteShiny(h)
+                      }}
+                      title="Eliminar shiny aprobado por error"
+                      aria-label={`Eliminar ${h.pokemon_name} del perfil`}
+                      className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-white shadow-md transition hover:brightness-110"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  )}
                 </div>
                 <div className="px-3 py-2">
                   <p className="truncate font-display font-bold text-text">{h.pokemon_name}</p>
                   <p className="text-[10px] text-soft">{formatShortDate(h.created_at)}</p>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         )}

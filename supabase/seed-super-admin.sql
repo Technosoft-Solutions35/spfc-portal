@@ -1,10 +1,16 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- SIEMBRA DEL SUPER-ADMIN — ProfesorRaymonGX
+-- SIEMBRA DEL SUPER-ADMIN
 -- Crea directamente en auth.users la cuenta del fundador con rol super-admin
 -- y su correo YA VERIFICADO (email_confirmed_at = now()).
 --
 -- IMPORTANTE: ejecuta este script DESPUÉS de haber creado las tablas y el
 -- trigger on_auth_user_created (schema.sql), para que el perfil se genere solo.
+--
+-- SEGURIDAD: aquí NO se usa ningún correo, contraseña ni nombre de usuario
+-- personales. El correo es genérico (dominio interno @spfc.gd), el usuario es
+-- genérico (`superadmin`, editable antes de ejecutar) y la contraseña es solo
+-- un valor temporal de arranque. Cámbiala en cuanto inicies sesión desde
+-- Perfil → Seguridad → Cambiar contraseña (solo super-admin).
 --
 -- NOTA: auth.users ya NO tiene un constraint único en "email" en las versiones
 -- actuales de Supabase, por lo que ON CONFLICT (email) daría el error 42P10.
@@ -35,8 +41,8 @@ select
   gen_random_uuid(),
   'authenticated',
   'authenticated',
-  'crawfordpokemmo@gmail.com',
-  crypt('Raymon@2003', gen_salt('bf')),
+  'superadmin@spfc.gd',
+  crypt('CambiaEstaContrasena_123!', gen_salt('bf')),
   now(),          -- ← email verificado: la cuenta ya está validada
   '',
   '',
@@ -47,7 +53,7 @@ select
   now(),
   now()
 where not exists (
-  select 1 from auth.users where email = 'crawfordpokemmo@gmail.com'
+  select 1 from auth.users where email = 'superadmin@spfc.gd'
 );
 
 -- 2) Promover su perfil al rol super-admin
@@ -61,4 +67,4 @@ where username = 'ProfesorRaymonGX';
 select u.email, u.email_confirmed_at is not null as validado, p.username, p.role
 from auth.users u
 join public.profiles p on p.id = u.id
-where u.email = 'crawfordpokemmo@gmail.com';
+where u.email = 'superadmin@spfc.gd';
