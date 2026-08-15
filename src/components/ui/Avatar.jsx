@@ -1,7 +1,11 @@
+import { useState } from 'react'
 import { Crown, Shield, ShieldCheck } from 'lucide-react'
 
-// Avatar con la inicial del usuario; usa avatar_url si existe.
-// `className` (opcional) sustituye al tamaño por defecto si se pasa.
+// Foto de perfil predeterminada para quienes no hayan subido una propia.
+const DEFAULT_AVATAR = `${import.meta.env.BASE_URL}img/default-avatar.png`
+
+// Avatar del miembro: usa avatar_url si existe; si no, muestra la foto
+// predeterminada. Si la imagen falla (red/offline), cae a la inicial.
 export default function Avatar({ name = '', src, size = 'md', className = '' }) {
   const sizes = {
     sm: 'h-8 w-8 text-xs',
@@ -11,22 +15,25 @@ export default function Avatar({ name = '', src, size = 'md', className = '' }) 
   }
   const sizeClass = className || sizes[size]
   const initial = (name || '?').trim().charAt(0).toUpperCase()
+  const [broken, setBroken] = useState(false)
 
-  if (src) {
+  if (broken) {
     return (
-      <img
-        src={src}
-        alt={name}
-        className={`${sizeClass} rounded-full object-cover ring-2 ring-primary/30`}
-      />
+      <div
+        className={`${sizeClass} flex items-center justify-center rounded-full bg-primary/15 font-bold text-primary ring-2 ring-primary/20`}
+      >
+        {initial}
+      </div>
     )
   }
+
   return (
-    <div
-      className={`${sizeClass} flex items-center justify-center rounded-full bg-primary/15 font-bold text-primary ring-2 ring-primary/20`}
-    >
-      {initial}
-    </div>
+    <img
+      src={src || DEFAULT_AVATAR}
+      alt={name || 'Avatar'}
+      onError={() => setBroken(true)}
+      className={`${sizeClass} rounded-full object-cover ring-2 ring-primary/30`}
+    />
   )
 }
 
