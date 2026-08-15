@@ -297,6 +297,66 @@ export default function Profile() {
               Cancelar
             </button>
           </div>
+
+          {/* Seguridad: solo el super-admin puede cambiar su propia contraseña */}
+          {role === 'super-admin' && (
+            <div className="mt-8 rounded-2xl border border-edge bg-elevated p-5">
+              <h3 className="flex items-center gap-2 font-display font-bold text-text">
+                <KeyRound size={18} className="text-primary" />
+                Seguridad · Cambiar contraseña
+              </h3>
+              <p className="mt-1 text-xs text-soft">
+                Tu contraseña nunca se muestra en el código. Cámbiala aquí siempre que quieras.
+              </p>
+              <form onSubmit={changePassword} className="mt-4 space-y-4">
+                <div>
+                  <label className="label" htmlFor="pw-current">Contraseña actual</label>
+                  <input
+                    id="pw-current"
+                    type="password"
+                    required
+                    autoComplete="current-password"
+                    className="input"
+                    value={pwForm.current}
+                    onChange={(e) => setPwForm((f) => ({ ...f, current: e.target.value }))}
+                  />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="label" htmlFor="pw-next">Nueva contraseña</label>
+                    <input
+                      id="pw-next"
+                      type="password"
+                      required
+                      autoComplete="new-password"
+                      minLength={6}
+                      className="input"
+                      placeholder="Mínimo 6 caracteres"
+                      value={pwForm.next}
+                      onChange={(e) => setPwForm((f) => ({ ...f, next: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="label" htmlFor="pw-confirm">Repite la nueva contraseña</label>
+                    <input
+                      id="pw-confirm"
+                      type="password"
+                      required
+                      autoComplete="new-password"
+                      minLength={6}
+                      className="input"
+                      value={pwForm.confirm}
+                      onChange={(e) => setPwForm((f) => ({ ...f, confirm: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <button type="submit" disabled={changing} className="btn-primary">
+                  <Lock size={16} />
+                  {changing ? 'Actualizando…' : 'Cambiar contraseña'}
+                </button>
+              </form>
+            </div>
+          )}
         </motion.div>
       ) : (
         <ProfileView
@@ -306,66 +366,6 @@ export default function Profile() {
           canDeleteShinies={role === 'super-admin'}
           onDeleteShiny={role === 'super-admin' ? deleteShiny : undefined}
         />
-      )}
-
-      {/* Seguridad: solo el super-admin puede cambiar su propia contraseña */}
-      {role === 'super-admin' && (
-        <div className="mt-8 rounded-2xl border border-edge bg-elevated p-5">
-          <h3 className="flex items-center gap-2 font-display font-bold text-text">
-            <KeyRound size={18} className="text-primary" />
-            Seguridad · Cambiar contraseña
-          </h3>
-          <p className="mt-1 text-xs text-soft">
-            Tu contraseña nunca se muestra en el código. Cámbiala aquí siempre que quieras.
-          </p>
-          <form onSubmit={changePassword} className="mt-4 space-y-4">
-            <div>
-              <label className="label" htmlFor="pw-current">Contraseña actual</label>
-              <input
-                id="pw-current"
-                type="password"
-                required
-                autoComplete="current-password"
-                className="input"
-                value={pwForm.current}
-                onChange={(e) => setPwForm((f) => ({ ...f, current: e.target.value }))}
-              />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="label" htmlFor="pw-next">Nueva contraseña</label>
-                <input
-                  id="pw-next"
-                  type="password"
-                  required
-                  autoComplete="new-password"
-                  minLength={6}
-                  className="input"
-                  placeholder="Mínimo 6 caracteres"
-                  value={pwForm.next}
-                  onChange={(e) => setPwForm((f) => ({ ...f, next: e.target.value }))}
-                />
-              </div>
-              <div>
-                <label className="label" htmlFor="pw-confirm">Repite la nueva contraseña</label>
-                <input
-                  id="pw-confirm"
-                  type="password"
-                  required
-                  autoComplete="new-password"
-                  minLength={6}
-                  className="input"
-                  value={pwForm.confirm}
-                  onChange={(e) => setPwForm((f) => ({ ...f, confirm: e.target.value }))}
-                />
-              </div>
-            </div>
-            <button type="submit" disabled={changing} className="btn-primary">
-              <Lock size={16} />
-              {changing ? 'Actualizando…' : 'Cambiar contraseña'}
-            </button>
-          </form>
-        </div>
       )}
     </div>
   )
