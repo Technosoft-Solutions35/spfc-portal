@@ -112,6 +112,10 @@ export default function Guides() {
         icon={BookOpen}
       />
 
+      <p className="mb-2 rounded-lg bg-secondary/10 px-3 py-1.5 text-center text-xs text-secondary font-semibold">
+        App v16 · Guías v2 · Categorías fijas: Complementarios, Farmeos Especiales
+      </p>
+
       {/* Filtro por categoría */}
       {!guides && <Spinner label="Cargando guías..." />}
       {guides && allCategories.length > 0 && (
