@@ -114,7 +114,7 @@ export default function Guides() {
 
       {/* Filtro por categoría */}
       {!guides && <Spinner label="Cargando guías..." />}
-      {guides && guides.length > 0 && allCategories.length > 0 && (
+      {guides && allCategories.length > 0 && (
         <div className="mb-6 flex flex-wrap gap-2">
           <button
             type="button"
