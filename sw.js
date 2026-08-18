@@ -26,8 +26,8 @@ self.addEventListener('activate', (event) => {
 // visita se sirven desde caché sin tocar la red.
 // El index.html (navegación) → network-first con fallback a caché: siempre
 // contenido fresco, y si se pierde la red se muestra la última versión.
-const CACHE_ASSETS = 'spfc-assets-v14'
-const CACHE_SHELL = 'spfc-shell-v14'
+const CACHE_ASSETS = 'spfc-assets-v15'
+const CACHE_SHELL = 'spfc-shell-v15'
 
 self.addEventListener('fetch', (event) => {
   const request = event.request
@@ -68,10 +68,15 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Navegación (index.html): network-first con fallback a caché
+  // Navegación (index.html): SIEMPRE de red, nunca caché.
+  // Se añade un parámetro con la versión del shell para que el navegador
+  // nunca reutilice un index.html obsoleto de su caché interno.
   if (request.mode === 'navigate') {
+    const bustUrl = new URL(request.url)
+    bustUrl.searchParams.set('_v', CACHE_SHELL)
+    const bustReq = new Request(bustUrl.toString(), { method: 'GET', redirect: 'follow' })
     event.respondWith(
-      fetch(request)
+      fetch(bustReq)
         .then((res) => {
           if (res.ok) {
             const copy = res.clone()
