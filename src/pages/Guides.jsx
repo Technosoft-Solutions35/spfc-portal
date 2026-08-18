@@ -112,9 +112,10 @@ export default function Guides() {
         icon={BookOpen}
       />
 
-      <p className="mb-2 rounded-lg bg-secondary/10 px-3 py-1.5 text-center text-xs text-secondary font-semibold">
-        App v16 · Guías v2 · Categorías fijas: Complementarios, Farmeos Especiales
-      </p>
+      {/* Debug: estado del filtro */}
+      <div className="mb-4 rounded-lg border border-dashed border-red-400 bg-red-50 p-3 text-xs text-red-700 space-y-1">
+        <p><strong>DEBUG v17:</strong> guides={guides === null ? 'null' : Array.isArray(guides) ? `Array(${guides.length})` : typeof guides} · allCategories={JSON.stringify(allCategories)} · catFilter={catFilter || 'null'}</p>
+      </div>
 
       {/* Filtro por categoría */}
       {!guides && <Spinner label="Cargando guías..." />}
