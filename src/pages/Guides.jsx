@@ -33,6 +33,9 @@ export function youtubeThumbUrl(url = '') {
 /**
  * Guías y buildeos del clan. Las guías se abren en un modal con su contenido.
  */
+// Categorías siempre disponibles en el filtro, independientemente de si ya hay guías con ellas.
+const FIXED_CATEGORIES = ['Complementarios', 'Farmeos Especiales']
+
 export default function Guides() {
   const [guides, setGuides] = useState(null)
   const [active, setActive] = useState(null)
@@ -40,9 +43,9 @@ export default function Guides() {
   const [catFilter, setCatFilter] = useState(null)
   const deepHandled = useRef(false)
 
-  // Todas las categorías únicas de las guías cargadas
+  // Categorías únicas: fijas primero + las que aparezcan en las guías
   const allCategories = guides
-    ? [...new Set(guides.flatMap((g) => g.categories || []))].sort()
+    ? [...new Set([...FIXED_CATEGORIES, ...guides.flatMap((g) => g.categories || [])])].sort()
     : []
 
   // Descarga el documento sin abrirlo (fetch → blob → enlace con download).
