@@ -14,7 +14,7 @@ const TABS = {
   events: { label: 'Eventos', icon: CalendarDays, permission: 'content' },
   tournaments: { label: 'Torneos', icon: Swords, permission: 'content' },
   guides: { label: 'Guías y Buildeos', icon: BookOpen, permission: 'content' },
-  mods: { label: 'MODs', icon: Box, permission: 'content' },
+  mods: { label: 'Biblioteca de MODs', icon: Box, permission: 'content' },
   members: { label: 'Miembros y roles', icon: Users, permission: 'members' },
   permissions: { label: 'Roles y Permisos', icon: ShieldCheck, superAdminOnly: true },
 }
