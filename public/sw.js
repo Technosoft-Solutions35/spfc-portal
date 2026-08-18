@@ -26,8 +26,8 @@ self.addEventListener('activate', (event) => {
 // visita se sirven desde caché sin tocar la red.
 // El index.html (navegación) → network-first con fallback a caché: siempre
 // contenido fresco, y si se pierde la red se muestra la última versión.
-const CACHE_ASSETS = 'spfc-assets-v19'
-const CACHE_SHELL = 'spfc-shell-v19'
+const CACHE_ASSETS = 'spfc-assets-v20'
+const CACHE_SHELL = 'spfc-shell-v20'
 
 self.addEventListener('fetch', (event) => {
   const request = event.request

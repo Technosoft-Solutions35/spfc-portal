@@ -15,6 +15,7 @@ import {
   Layers,
   Handshake,
   Network,
+  Box,
 } from 'lucide-react'
 
 // Definición única de navegación (sidebar y menú móvil comparten esta lista).
@@ -34,6 +35,8 @@ export const NAV_ITEMS = [
   { to: '/comercio', label: 'Comercio', icon: Handshake, load: () => import('../pages/Commerce') },
   // DLC 15: directorio de miembros con búsqueda en vivo (todos)
   { to: '/directorio', label: 'Miembros', icon: Users, load: () => import('../pages/MemberSearch') },
+  // DLC 16: biblioteca de mods (todos)
+  { to: '/mods', label: 'MODs', icon: Box, load: () => import('../pages/Mods') },
   { to: '/eventos', label: 'Eventos', icon: CalendarDays, section: 'events', load: () => import('../pages/Events') },
   // DLC 6: cumpleaños del clan (todos)
   { to: '/cumpleanos', label: 'Cumpleaños', icon: Cake, load: () => import('../pages/Birthdays') },

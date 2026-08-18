@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { BookOpen, CalendarDays, Newspaper, Settings, ShieldCheck, Swords, Users } from 'lucide-react'
+import { BookOpen, Box, CalendarDays, Newspaper, Settings, ShieldCheck, Swords, Users } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { canAssignRoles, ROLES } from '../lib/utils'
 import PageHeader from '../components/ui/PageHeader'
 import ContentManager from '../components/management/ContentManager'
 import MembersManager from '../components/management/MembersManager'
 import RolesManager from '../components/management/RolesManager'
-import { NEWS_CATEGORIES, GUIDE_CATEGORIES } from '../lib/utils'
+import { NEWS_CATEGORIES, GUIDE_CATEGORIES, MOD_CATEGORIES } from '../lib/utils'
 import { useCrud } from '../hooks/useCrud'
 
 const TABS = {
@@ -14,6 +14,7 @@ const TABS = {
   events: { label: 'Eventos', icon: CalendarDays, permission: 'content' },
   tournaments: { label: 'Torneos', icon: Swords, permission: 'content' },
   guides: { label: 'Guías y Buildeos', icon: BookOpen, permission: 'content' },
+  mods: { label: 'MODs', icon: Box, permission: 'content' },
   members: { label: 'Miembros y roles', icon: Users, permission: 'members' },
   permissions: { label: 'Roles y Permisos', icon: ShieldCheck, superAdminOnly: true },
 }
@@ -88,6 +89,21 @@ const FIELD_CONFIGS = {
     ],
     columns: ['title'],
     emptyHint: 'Comparte la primera guía o buildeo con el clan.',
+  },
+  mods: {
+    table: 'mods',
+    orderBy: { column: 'created_at', ascending: false },
+    fields: [
+      { key: 'title', label: 'Nombre del MOD', type: 'text', placeholder: 'Nombre del MOD o theme' },
+      { key: 'excerpt', label: 'Extracto corto', type: 'textarea', placeholder: 'Descripción breve del MOD' },
+      { key: 'categories', label: 'Categorías (selección múltiple)', type: 'categories', options: MOD_CATEGORIES },
+      { key: 'tags', label: 'Etiquetas', type: 'tags' },
+      { key: 'content', label: 'Descripción completa', type: 'textarea', placeholder: 'Instrucciones de uso, compatibilidad, etc.' },
+      { key: 'image_url', label: 'Imagen de portada', type: 'image', allowUrl: false },
+      { key: 'download_url', label: 'Enlace de descarga', type: 'url', placeholder: 'https://www.mediafire.com/...' },
+    ],
+    columns: ['title'],
+    emptyHint: 'Sube el primer MOD a la biblioteca del clan.',
   },
 }
 

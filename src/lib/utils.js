@@ -66,6 +66,15 @@ export const GUIDE_CATEGORIES = [
   'Eventos Estacionales',
 ]
 
+// Categorías de mods
+export const MOD_CATEGORIES = [
+  'Sprites',
+  'Funcionalidades',
+  'Themes',
+  'Música',
+  'Otros',
+]
+
 // Fecha legible en español (ej: 11/08/2026 · 20:30)
 export function formatDate(value) {
   if (!value) return '—'

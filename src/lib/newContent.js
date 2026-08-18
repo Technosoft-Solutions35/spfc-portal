@@ -14,6 +14,7 @@ export const SECTION_TABLES = {
   events: 'events',
   tournaments: 'tournaments',
   guides: 'guides',
+  mods: 'mods',
 }
 
 function getSeen() {
@@ -102,6 +103,7 @@ export function useNewContent() {
     events: false,
     tournaments: false,
     guides: false,
+    mods: false,
   })
   const [pendingReports, setPendingReports] = useState(false)
 
