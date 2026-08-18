@@ -37,7 +37,13 @@ export default function Guides() {
   const [guides, setGuides] = useState(null)
   const [active, setActive] = useState(null)
   const [downloading, setDownloading] = useState(null)
+  const [catFilter, setCatFilter] = useState(null)
   const deepHandled = useRef(false)
+
+  // Todas las categorías únicas de las guías cargadas
+  const allCategories = guides
+    ? [...new Set(guides.flatMap((g) => g.categories || []))].sort()
+    : []
 
   // Descarga el documento sin abrirlo (fetch → blob → enlace con download).
   // No usamos el atributo download del <a> directo porque los archivos están
@@ -91,6 +97,10 @@ export default function Guides() {
   // Refresco en vivo cuando el staff publica una guía nueva
   useLiveSection('guides', load)
 
+  const filtered = catFilter
+    ? guides?.filter((g) => (g.categories || []).includes(catFilter)) ?? []
+    : guides
+
   return (
     <div>
       <PageHeader
@@ -99,17 +109,53 @@ export default function Guides() {
         icon={BookOpen}
       />
 
+      {/* Filtro por categoría */}
+      {!guides && <Spinner label="Cargando guías..." />}
+      {guides && guides.length > 0 && allCategories.length > 0 && (
+        <div className="mb-6 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setCatFilter(null)}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+              !catFilter
+                ? 'bg-primary text-white shadow'
+                : 'border border-edge bg-surface text-soft hover:border-primary/40 hover:text-text'
+            }`}
+          >
+            Todas
+          </button>
+          {allCategories.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setCatFilter(cat === catFilter ? null : cat)}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                catFilter === cat
+                  ? 'bg-primary text-white shadow'
+                  : 'border border-edge bg-surface text-soft hover:border-primary/40 hover:text-text'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
+
       {!guides ? (
-        <Spinner label="Cargando guías..." />
-      ) : guides.length === 0 ? (
-        <EmptyState
-          title="Aún no hay guías"
-          hint="El staff compartirá aquí buildeos y guías para el clan."
-          icon={BookOpen}
-        />
+        null
+      ) : filtered.length === 0 ? (
+        catFilter ? (
+          <EmptyState title="Sin resultados" hint={`No hay guías en la categoría «${catFilter}».`} icon={Tag} />
+        ) : (
+          <EmptyState
+            title="Aún no hay guías"
+            hint="El staff compartirá aquí buildeos y guías para el clan."
+            icon={BookOpen}
+          />
+        )
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {guides.map((g, i) => {
+          {filtered.map((g, i) => {
             const cover =
               g.image_url ||
               youtubeThumbUrl(g.video_url) ||
