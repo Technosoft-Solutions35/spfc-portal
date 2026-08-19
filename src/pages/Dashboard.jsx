@@ -3,6 +3,8 @@ import { motion } from 'framer-motion'
 import { LayoutDashboard, Sparkles, Swords, Trophy, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../components/ui/Toast'
+import { subscribeContentCreated } from '../lib/notifications'
 import NewsBanner from '../components/NewsBanner'
 import ForumNewsBanner from '../components/ForumNewsBanner'
 import BirthdayBanner from '../components/ui/BirthdayBanner'
@@ -15,6 +17,16 @@ import { RoleBadge } from '../components/ui/Avatar'
  */
 export default function Dashboard() {
   const { profile } = useAuth()
+  const { toast } = useToast()
+
+  useEffect(() => {
+    const unsub = subscribeContentCreated((payload) => {
+      if (payload.type === 'forum-news' && payload.title) {
+        toast(`📢 ${payload.title}`, 'info')
+      }
+    })
+    return unsub
+  }, [])
 
   return (
     <div>
@@ -115,8 +127,8 @@ function StatsBar() {
       label: 'Próximo torneo',
       value: stats.nextTournament ? stats.nextTournament.title : 'Ninguno',
       sub: stats.nextTournament ? new Date(stats.nextTournament.start_date).toLocaleDateString('es', { day: 'numeric', month: 'short' }) : null,
-      color: 'text-red',
-      bg: 'bg-red/10',
+      color: 'text-primary',
+      bg: 'bg-primary/10',
     },
     {
       icon: Trophy,
