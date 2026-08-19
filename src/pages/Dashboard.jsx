@@ -72,19 +72,19 @@ function StatsBar() {
       weekAgo.setDate(weekAgo.getDate() - 7)
 
       const [
-        { count: shiniesWeek },
+        shinyResult,
         { count: totalMembers },
         { data: nextTournament },
         { data: topHunter },
       ] = await Promise.all([
-        supabase.from('shiny_reports').select('id', { count: 'exact', head: true }).gte('created_at', weekAgo.toISOString()),
+        supabase.from('shiny_reports').select('id').gte('created_at', weekAgo.toISOString().slice(0, 10)),
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('tournaments').select('title, start_date').gte('start_date', now.toISOString()).order('start_date', { ascending: true }).limit(1).maybeSingle(),
         supabase.from('profiles').select('username, shinies').order('shinies', { ascending: false }).limit(1).maybeSingle(),
       ])
 
       setStats({
-        shiniesWeek: shiniesWeek || 0,
+        shiniesWeek: (shinyResult.data || []).length,
         totalMembers: totalMembers || 0,
         nextTournament: nextTournament || null,
         topHunter: topHunter || null,

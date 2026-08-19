@@ -54,6 +54,30 @@ export default function Birthdays() {
       .select('id, title, start_date, status')
       .order('start_date', { ascending: true })
       .then(({ data }) => setTournaments(data || []))
+
+    // Realtime: escuchar cambios en eventos y torneos
+    const reloadEvents = () => {
+      supabase
+        .from('events')
+        .select('id, title, date, location')
+        .order('date', { ascending: true })
+        .then(({ data }) => setEvents(data || []))
+    }
+    const reloadTournaments = () => {
+      supabase
+        .from('tournaments')
+        .select('id, title, start_date, status')
+        .order('start_date', { ascending: true })
+        .then(({ data }) => setTournaments(data || []))
+    }
+
+    const channel = supabase
+      .channel('calendar-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, reloadEvents)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tournaments' }, reloadTournaments)
+      .subscribe()
+
+    return () => supabase.removeChannel(channel)
   }, [])
 
   // Agrupa cumpleaños por "mes-día"
@@ -169,7 +193,7 @@ export default function Birthdays() {
               </span>
             ))}
             {todayTournaments.map((t) => (
-              <span key={`t-${t.id}`} className="flex items-center gap-1 rounded-full border border-red/50 bg-red/10 px-2.5 py-1 text-xs font-semibold text-red">
+              <span key={`t-${t.id}`} className="flex items-center gap-1 rounded-full border border-primary/50 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
                 ⚔️ {t.title}
               </span>
             ))}
@@ -181,7 +205,7 @@ export default function Birthdays() {
       <div className="mb-4 flex flex-wrap items-center gap-4 text-xs font-semibold text-soft">
         <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-secondary" /> Cumpleaños</span>
         <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-success" /> Eventos</span>
-        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-red" /> Torneos</span>
+        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-primary" /> Torneos</span>
       </div>
 
       {/* Selector de mes y año */}
@@ -274,7 +298,7 @@ export default function Birthdays() {
 
                   {/* Torneos */}
                   {trns.slice(0, 1).map((t) => (
-                    <span key={`t-${t.id}`} className="truncate rounded-md bg-red/10 px-1 py-0.5 text-[10px] font-semibold text-red" title={`⚔️ ${t.title}`}>
+                    <span key={`t-${t.id}`} className="truncate rounded-md bg-primary/10 px-1 py-0.5 text-[10px] font-semibold text-primary" title={`⚔️ ${t.title}`}>
                       ⚔️ {t.title}
                     </span>
                   ))}
