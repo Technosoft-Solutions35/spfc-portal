@@ -113,23 +113,26 @@ function RecentTournaments() {
   )
 }
 
-// ── Próximos eventos ──────────────────────────────────────────────
+// ── Próximos eventos + torneos ────────────────────────────────────
 function UpcomingEvents() {
   const [items, setItems] = useState(null)
 
   useEffect(() => {
-    supabase
-      .from('events')
-      .select('*')
-      .gte('date', new Date().toISOString())
-      .order('date', { ascending: true })
-      .limit(3)
-      .then(({ data }) => setItems(data || []))
+    const now = new Date().toISOString()
+    Promise.all([
+      supabase.from('events').select('id, title, date, location').gte('date', now).order('date', { ascending: true }),
+      supabase.from('tournaments').select('id, title, start_date, status').gte('start_date', now).order('start_date', { ascending: true }),
+    ]).then(([ev, tr]) => {
+      const events = (ev.data || []).map((e) => ({ ...e, _date: e.date, _type: 'event' }))
+      const tournaments = (tr.data || []).map((t) => ({ ...t, _date: t.start_date, _type: 'tournament' }))
+      const merged = [...events, ...tournaments].sort((a, b) => new Date(a._date) - new Date(b._date)).slice(0, 3)
+      setItems(merged)
+    })
   }, [])
 
   if (!items) return <p className="text-sm text-soft">Cargando...</p>
   if (items.length === 0)
-    return <EmptyState title="Sin eventos próximos" hint="No hay eventos agendados todavía." icon={CalendarDays} />
+    return <EmptyState title="Sin eventos próximos" hint="No hay eventos ni torneos agendados todavía." icon={CalendarDays} />
 
   return (
     <ul className="space-y-3">
@@ -142,11 +145,20 @@ function UpcomingEvents() {
           className="rounded-xl bg-background p-3"
         >
           <div className="flex items-start justify-between gap-2">
-            <p className="min-w-0 truncate text-sm font-semibold text-text">{e.title}</p>
-            <EventCountdown date={e.date} />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <p className="min-w-0 truncate text-sm font-semibold text-text">{e.title}</p>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                  e._type === 'tournament' ? 'bg-primary/15 text-primary' : 'bg-success/15 text-success'
+                }`}>
+                  {e._type === 'tournament' ? 'Torneo' : 'Evento'}
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs text-soft">{formatDate(e._date)} · hora local</p>
+              {e.location && <p className="mt-0.5 text-xs text-soft">📍 {e.location}</p>}
+            </div>
+            <EventCountdown date={e._date} />
           </div>
-          <p className="mt-0.5 text-xs text-soft">{formatDate(e.date)} · hora local</p>
-          {e.location && <p className="mt-0.5 text-xs text-soft">📍 {e.location}</p>}
         </motion.li>
       ))}
     </ul>
