@@ -8,6 +8,7 @@ import EmptyState from '../components/ui/EmptyState'
 
 const FORUM_URL = 'https://forums.pokemmo.com/index.php?/forum/1-updates-announcements/'
 const RSS_PROXY = `${supabase.supabaseUrl}/functions/v1/fetch-rss`
+const ANON_KEY = supabase.supabaseKey
 const CACHE_KEY = 'pokemmo-forum-rss'
 const CACHE_TTL = 30 * 60 * 1000 // 30 minutos
 
@@ -40,7 +41,9 @@ export default function PokeMMOForum() {
       } catch { /* ignorar */ }
 
       try {
-        const res = await fetch(RSS_PROXY)
+        const res = await fetch(RSS_PROXY, {
+          headers: { apikey: ANON_KEY },
+        })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = await res.json()
         if (data.error) throw new Error(data.error)
