@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 // Cliente único de Supabase para toda la SPA.
 // Las credenciales se cargan desde las variables de entorno (ver .env.example).
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+export const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
   // No lanzamos error para que el frontend pueda renderizarse en modo desarrollo

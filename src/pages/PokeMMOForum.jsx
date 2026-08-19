@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ExternalLink, Globe, MessageSquare, Newspaper } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { supabase, supabaseAnonKey } from '../lib/supabase'
 import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 
 const FORUM_URL = 'https://forums.pokemmo.com/index.php?/forum/1-updates-announcements/'
 const RSS_PROXY = `${supabase.supabaseUrl}/functions/v1/fetch-rss`
-const ANON_KEY = supabase.supabaseKey
+const ANON_KEY = supabaseAnonKey
 const CACHE_KEY = 'pokemmo-forum-rss'
 const CACHE_TTL = 30 * 60 * 1000 // 30 minutos
 
