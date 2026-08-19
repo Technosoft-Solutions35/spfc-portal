@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Cake, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight, Swords, Trophy } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { parseDateOnly } from '../lib/utils'
 import PageHeader from '../components/ui/PageHeader'
@@ -10,10 +10,11 @@ import ProfileAvatar from '../components/ui/ProfileAvatar'
 import { useToast } from '../components/ui/Toast'
 
 /**
- * DLC 6 — Cumpleaños del clan.
- * Calendario mes a mes (hasta 2050). Se alimenta solo del birth_date de cada
- * perfil: cuando un miembro actualiza su fecha de nacimiento, aquí aparece
- * automáticamente en su día, todos los años. Nadie lo edita a mano.
+ * Calendario del Team — cumpleaños + eventos + torneos.
+ * Muestra un calendario mes a mes con:
+ *   🟣 Cumpleaños de miembros (violet)
+ *   🟢 Eventos próximos (verde)
+ *   🔴 Torneos (rojo)
  */
 
 const MONTHS = [
@@ -30,6 +31,8 @@ export default function Birthdays() {
   const today = new Date()
   const { toast } = useToast()
   const [members, setMembers] = useState(null)
+  const [events, setEvents] = useState(null)
+  const [tournaments, setTournaments] = useState(null)
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
 
@@ -39,10 +42,22 @@ export default function Birthdays() {
       .select('id, username, avatar_url, role, birth_date')
       .not('birth_date', 'is', null)
       .then(({ data }) => setMembers(data || []))
+
+    supabase
+      .from('events')
+      .select('id, title, date, location')
+      .order('date', { ascending: true })
+      .then(({ data }) => setEvents(data || []))
+
+    supabase
+      .from('tournaments')
+      .select('id, title, start_date, status')
+      .order('start_date', { ascending: true })
+      .then(({ data }) => setTournaments(data || []))
   }, [])
 
-  // Agrupa por "mes-día" para colocarlos en la casilla correcta de cualquier año
-  const byKey = useMemo(() => {
+  // Agrupa cumpleaños por "mes-día"
+  const birthdaysByKey = useMemo(() => {
     const map = {}
     ;(members || []).forEach((m) => {
       const d = parseDateOnly(m.birth_date)
@@ -53,8 +68,36 @@ export default function Birthdays() {
     return map
   }, [members])
 
+  // Agrupa eventos por "mes-día" (del mes actual year)
+  const eventsByKey = useMemo(() => {
+    const map = {}
+    ;(events || []).forEach((e) => {
+      const d = new Date(e.date)
+      if (d.getFullYear() === year) {
+        const key = `${d.getMonth()}-${d.getDate()}`
+        if (!map[key]) map[key] = []
+        map[key].push(e)
+      }
+    })
+    return map
+  }, [events, year])
+
+  // Agrupa torneos por "mes-día"
+  const tournamentsByKey = useMemo(() => {
+    const map = {}
+    ;(tournaments || []).forEach((t) => {
+      const d = new Date(t.start_date)
+      if (d.getFullYear() === year) {
+        const key = `${d.getMonth()}-${d.getDate()}`
+        if (!map[key]) map[key] = []
+        map[key].push(t)
+      }
+    })
+    return map
+  }, [tournaments, year])
+
   const firstWeekday = new Date(year, month, 1).getDay()
-  const offset = (firstWeekday + 6) % 7 // la semana empieza en lunes
+  const offset = (firstWeekday + 6) % 7
   const daysInMonth = new Date(year, month + 1, 0).getDate()
 
   const cells = [
@@ -82,48 +125,64 @@ export default function Birthdays() {
 
   const todayKey = `${today.getMonth()}-${today.getDate()}`
   const isCurrentMonth = month === today.getMonth() && year === today.getFullYear()
-  const todayBirthdays = isCurrentMonth ? byKey[todayKey] || [] : []
+  const todayBirthdays = isCurrentMonth ? birthdaysByKey[todayKey] || [] : []
+  const todayEvents = isCurrentMonth ? eventsByKey[todayKey] || [] : []
+  const todayTournaments = isCurrentMonth ? tournamentsByKey[todayKey] || [] : []
+  const todayItems = [...todayBirthdays, ...todayEvents, ...todayTournaments]
+
+  const loading = members === null || events === null || tournaments === null
 
   return (
     <div>
       <PageHeader
-        title="Cumpleaños"
-        subtitle="Calendario de cumpleaños del clan. Cada miembro aparece en su día, todos los años."
-        icon={Cake}
+        title="Calendario del Team"
+        subtitle="Cumpleaños, eventos y torneos del clan en un solo calendario."
+        icon={CalendarDays}
       />
 
-      {/* Cumpleaños de hoy */}
-      {isCurrentMonth && todayBirthdays.length > 0 && (
+      {/* Resumen de hoy */}
+      {isCurrentMonth && todayItems.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-5 flex flex-wrap items-center gap-2 rounded-2xl border border-secondary/40 bg-secondary/10 p-4"
+          className="mb-5 flex flex-wrap items-center gap-2 rounded-2xl border border-primary/40 bg-primary/10 p-4"
         >
-          <Cake size={18} className="text-secondary" />
+          <CalendarDays size={18} className="text-primary" />
           <span className="text-sm font-bold text-text">
-            🎂 ¡Hoy cumplen años!
+            📅 Hoy hay {todayItems.length} cosa{todayItems.length > 1 ? 's' : ''}:
           </span>
           <span className="flex flex-wrap gap-1.5">
             {todayBirthdays.map((m) => (
               <button
-                key={m.id}
+                key={`b-${m.id}`}
                 type="button"
                 onClick={() => toast(`🎂 Cumple ${m.username}`, 'success')}
-                className="flex items-center gap-1.5 rounded-full border border-edge bg-elevated py-1 pl-1 pr-2.5 text-xs font-semibold text-text transition hover:border-primary/50 hover:text-primary"
+                className="flex items-center gap-1.5 rounded-full border border-secondary/50 bg-secondary/10 py-1 pl-1 pr-2.5 text-xs font-semibold text-secondary transition hover:bg-secondary/20"
               >
-                <ProfileAvatar
-                  userId={m.id}
-                  name={m.username}
-                  src={m.avatar_url}
-                  className="h-5 w-5 text-[9px]"
-                  interactive={false}
-                />
-                {m.username}
+                <ProfileAvatar userId={m.id} name={m.username} src={m.avatar_url} className="h-5 w-5 text-[9px]" interactive={false} />
+                🎂 {m.username}
               </button>
+            ))}
+            {todayEvents.map((e) => (
+              <span key={`e-${e.id}`} className="flex items-center gap-1 rounded-full border border-success/50 bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">
+                🎉 {e.title}
+              </span>
+            ))}
+            {todayTournaments.map((t) => (
+              <span key={`t-${t.id}`} className="flex items-center gap-1 rounded-full border border-red/50 bg-red/10 px-2.5 py-1 text-xs font-semibold text-red">
+                ⚔️ {t.title}
+              </span>
             ))}
           </span>
         </motion.div>
       )}
+
+      {/* Leyenda */}
+      <div className="mb-4 flex flex-wrap items-center gap-4 text-xs font-semibold text-soft">
+        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-secondary" /> Cumpleaños</span>
+        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-success" /> Eventos</span>
+        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-red" /> Torneos</span>
+      </div>
 
       {/* Selector de mes y año */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -140,101 +199,88 @@ export default function Birthdays() {
         </div>
 
         <div className="flex gap-2">
-          <select
-            className="input w-auto"
-            value={month}
-            onChange={(e) => setMonth(Number(e.target.value))}
-            aria-label="Mes"
-          >
+          <select className="input w-auto" value={month} onChange={(e) => setMonth(Number(e.target.value))} aria-label="Mes">
             {MONTHS.map((m, i) => (
-              <option key={m} value={i}>
-                {m}
-              </option>
+              <option key={m} value={i}>{m}</option>
             ))}
           </select>
-          <select
-            className="input w-auto"
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
-            aria-label="Año"
-          >
-            {Array.from({ length: MAX_YEAR - MIN_YEAR + 1 }, (_, i) => MIN_YEAR + i).map(
-              (y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ),
-            )}
+          <select className="input w-auto" value={year} onChange={(e) => setYear(Number(e.target.value))} aria-label="Año">
+            {Array.from({ length: MAX_YEAR - MIN_YEAR + 1 }, (_, i) => MIN_YEAR + i).map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
           </select>
         </div>
       </div>
 
-      {!members ? (
+      {loading ? (
         <Spinner label="Cargando calendario..." />
-      ) : members.length === 0 ? (
+      ) : members.length === 0 && events.length === 0 && tournaments.length === 0 ? (
         <EmptyState
-          title="Aún no hay cumpleaños registrados"
-          hint="Cada miembro puede poner su fecha de nacimiento en Mi perfil → editar."
-          icon={Cake}
+          title="Aún no hay datos"
+          hint="Los cumpleaños aparecen cuando los miembros ponen su fecha de nacimiento en Mi perfil. Los eventos y torneos se crean desde Gestión."
+          icon={CalendarDays}
         />
       ) : (
         <>
-          {/* Cabecera de días */}
           <div className="grid grid-cols-7 gap-1.5">
             {WEEKDAYS.map((d) => (
-              <div key={d} className="pb-1 text-center text-[11px] font-bold uppercase tracking-wide text-soft">
-                {d}
-              </div>
+              <div key={d} className="pb-1 text-center text-[11px] font-bold uppercase tracking-wide text-soft">{d}</div>
             ))}
           </div>
 
-          {/* Celdas del mes */}
           <div className="grid grid-cols-7 gap-1.5">
             {cells.map((day, i) => {
               if (day === null) return <div key={`empty-${i}`} />
               const key = `${month}-${day}`
-              const birthdays = byKey[key] || []
+              const bdays = birthdaysByKey[key] || []
+              const evts = eventsByKey[key] || []
+              const trns = tournamentsByKey[key] || []
+              const total = bdays.length + evts.length + trns.length
               const isToday = isCurrentMonth && day === today.getDate()
+
               return (
                 <div
                   key={`${month}-${day}`}
-                  className={`flex min-h-[64px] flex-col gap-1 rounded-xl border p-1.5 sm:min-h-[76px] ${
+                  className={`flex min-h-[64px] flex-col gap-0.5 rounded-xl border p-1.5 sm:min-h-[76px] ${
                     isToday
-                      ? 'border-secondary/60 bg-secondary/10'
-                      : birthdays.length > 0
+                      ? 'border-primary/60 bg-primary/10'
+                      : total > 0
                         ? 'border-edge bg-background/60'
                         : 'border-edge/40'
                   }`}
                 >
-                  <span
-                    className={`text-[11px] font-bold ${
-                      isToday ? 'text-secondary' : 'text-soft'
-                    }`}
-                  >
-                    {day}
-                  </span>
-                  {birthdays.slice(0, 3).map((m) => (
+                  <span className={`text-[11px] font-bold ${isToday ? 'text-primary' : 'text-soft'}`}>{day}</span>
+
+                  {/* Cumpleaños */}
+                  {bdays.slice(0, 2).map((m) => (
                     <button
-                      key={m.id}
+                      key={`b-${m.id}`}
                       type="button"
                       onClick={() => toast(`🎂 Cumple ${m.username}`, 'success')}
-                      title={`${m.username} · ${formatMonthDay(m.birth_date)}`}
-                      className="flex w-full items-center gap-1 rounded-md bg-elevated px-1 py-0.5 text-left text-[10px] font-semibold text-text transition hover:bg-primary/10 hover:text-primary"
+                      title={`🎂 ${m.username}`}
+                      className="flex w-full items-center gap-1 rounded-md bg-secondary/10 px-1 py-0.5 text-left text-[10px] font-semibold text-secondary transition hover:bg-secondary/20"
                     >
-                      <ProfileAvatar
-                        userId={m.id}
-                        name={m.username}
-                        src={m.avatar_url}
-                        className="h-3.5 w-3.5 shrink-0 text-[7px]"
-                        interactive={false}
-                      />
+                      <ProfileAvatar userId={m.id} name={m.username} src={m.avatar_url} className="h-3 w-3 shrink-0 text-[6px]" interactive={false} />
                       <span className="truncate">{m.username}</span>
                     </button>
                   ))}
-                  {birthdays.length > 3 && (
-                    <span className="px-1 text-[9px] font-semibold text-soft">
-                      +{birthdays.length - 3} más
+
+                  {/* Eventos */}
+                  {evts.slice(0, 2).map((e) => (
+                    <span key={`e-${e.id}`} className="truncate rounded-md bg-success/10 px-1 py-0.5 text-[10px] font-semibold text-success" title={`🎉 ${e.title}`}>
+                      🎉 {e.title}
                     </span>
+                  ))}
+
+                  {/* Torneos */}
+                  {trns.slice(0, 1).map((t) => (
+                    <span key={`t-${t.id}`} className="truncate rounded-md bg-red/10 px-1 py-0.5 text-[10px] font-semibold text-red" title={`⚔️ ${t.title}`}>
+                      ⚔️ {t.title}
+                    </span>
+                  ))}
+
+                  {total > 5 && (
+                    <span className="px-1 text-[9px] font-semibold text-soft">+{total - 5} más</span>
                   )}
                 </div>
               )
@@ -244,11 +290,4 @@ export default function Birthdays() {
       )}
     </div>
   )
-}
-
-function formatMonthDay(value) {
-  return parseDateOnly(value).toLocaleDateString('es-ES', {
-    day: 'numeric',
-    month: 'long',
-  })
 }

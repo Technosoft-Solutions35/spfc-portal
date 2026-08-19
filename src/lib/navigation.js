@@ -41,8 +41,8 @@ export const NAV_ITEMS = [
   // Noticias del foro PokeMMO vía RSS (todos)
   { to: '/pokemmo-forum', label: 'Foro PokeMMO', icon: Globe, load: () => import('../pages/PokeMMOForum') },
   { to: '/eventos', label: 'Eventos', icon: CalendarDays, section: 'events', load: () => import('../pages/Events') },
-  // DLC 6: cumpleaños del clan (todos)
-  { to: '/cumpleanos', label: 'Cumpleaños', icon: Cake, load: () => import('../pages/Birthdays') },
+  // Calendario del Team: cumpleaños + eventos/torneos (todos)
+  { to: '/cumpleanos', label: 'Calendario del Team', icon: CalendarDays, load: () => import('../pages/Birthdays') },
   // Secciones reservadas al staff / admin (se filtran según el rol)
   // Sorteos lo ve todo el clan; la gestión de tickets es solo admin.
   { to: '/sorteos', label: 'Sorteos', icon: Trophy, load: () => import('../pages/Raffles') },
