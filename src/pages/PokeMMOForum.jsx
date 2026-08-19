@@ -6,7 +6,7 @@ import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 
-const FORUM_URL = 'https://forums.pokemmo.com/index.php?/forum/1-updates-announcements/'
+const FORUM_URL = 'https://forums.pokemmo.com'
 const RSS_PROXY = `${supabase.supabaseUrl}/functions/v1/fetch-rss`
 const ANON_KEY = supabaseAnonKey
 const CACHE_KEY = 'pokemmo-forum-rss'
