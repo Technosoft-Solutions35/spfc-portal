@@ -33,6 +33,7 @@ const MyShinies = lazy(() => import('./pages/MyShinies'))
 const ReviewShinies = lazy(() => import('./pages/ReviewShinies'))
 const MemberSearch = lazy(() => import('./pages/MemberSearch'))
 const Mods = lazy(() => import('./pages/Mods'))
+const PokeMMOForum = lazy(() => import('./pages/PokeMMOForum'))
 
 /**
  * Raíz de la aplicación: proveedores globales + rutas.
@@ -99,6 +100,9 @@ export default function App() {
 
                   {/* DLC 16: biblioteca de mods (todos) */}
                   <Route path="/mods" element={<Mods />} />
+
+                  {/* Noticias del foro PokeMMO vía RSS (todos) */}
+                  <Route path="/pokemmo-forum" element={<PokeMMOForum />} />
 
                   {/* Gestión de contenido: quien tenga permiso de contenido o miembros */}
                   <Route
