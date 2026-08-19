@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { ExternalLink, Globe, MessageSquare, Newspaper } from 'lucide-react'
+import { ExternalLink, Globe, Heart, MessageSquare, Newspaper, Share2 } from 'lucide-react'
 import { supabase, supabaseAnonKey } from '../lib/supabase'
+import { useLike } from '../hooks/useLike'
+import { useToast } from '../components/ui/Toast'
 import PageHeader from '../components/ui/PageHeader'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
@@ -23,6 +25,90 @@ function timeAgo(iso) {
   const days = Math.floor(hrs / 24)
   if (days < 30) return `Hace ${days}d`
   return new Date(iso).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function ForumNewsItem({ item }) {
+  const { toast } = useToast()
+  const { count, liked, toggle } = useLike('pokemmo-forum', item.link)
+
+  const handleShare = (e) => {
+    e.stopPropagation()
+    if (navigator.share) {
+      navigator.share({ title: item.title, text: item.title, url: item.link }).catch(() => {})
+      return
+    }
+    navigator.clipboard
+      ?.writeText(item.link)
+      .then(() => toast('Enlace copiado al portapapeles', 'success'))
+      .catch(() => toast('No se pudo copiar el enlace', 'error'))
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-start gap-4 rounded-xl border border-edge bg-elevated p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-card"
+    >
+      {item.image && (
+        <img
+          src={item.image}
+          alt=""
+          className="h-16 w-16 flex-shrink-0 rounded-lg object-cover"
+        />
+      )}
+      <div className="min-w-0 flex-1">
+        <a
+          href={item.link}
+          target="_blank"
+          rel="noreferrer"
+          className="line-clamp-2 font-display font-bold text-text transition hover:text-primary"
+        >
+          {item.title}
+        </a>
+        {item.description && (
+          <p className="mt-1 line-clamp-2 text-sm text-soft">
+            {item.description}
+          </p>
+        )}
+        <div className="mt-2 flex items-center gap-2">
+          <p className="text-[11px] text-soft">
+            {timeAgo(item.pubDate)}
+          </p>
+          <span className="text-soft">·</span>
+          <a
+            href={item.link}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary transition hover:underline"
+          >
+            Ver en foro
+            <ExternalLink size={11} />
+          </a>
+        </div>
+        <div className="mt-2 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); toggle() }}
+            title={liked ? 'Quitar me gusta' : 'Me gusta'}
+            aria-pressed={liked}
+            className="inline-flex items-center gap-1.5 rounded-full border border-edge bg-background px-3 py-1.5 text-xs font-semibold text-soft transition hover:border-primary/40 hover:text-primary"
+          >
+            <Heart size={13} className={liked ? 'fill-current text-primary' : ''} />
+            <span className="tabular-nums">{count}</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleShare}
+            title="Compartir"
+            className="inline-flex items-center gap-1.5 rounded-full border border-edge bg-background px-3 py-1.5 text-xs font-semibold text-soft transition hover:border-primary/40 hover:text-primary"
+          >
+            <Share2 size={13} />
+            Compartir
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  )
 }
 
 export default function PokeMMOForum() {
@@ -103,38 +189,7 @@ export default function PokeMMOForum() {
       {items && items.length > 0 && (
         <div className="space-y-3">
           {items.map((item, i) => (
-            <motion.a
-              key={item.link || i}
-              href={item.link}
-              target="_blank"
-              rel="noreferrer"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.03 }}
-              className="flex items-start gap-4 rounded-xl border border-edge bg-elevated p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-card"
-            >
-              {item.image && (
-                <img
-                  src={item.image}
-                  alt=""
-                  className="h-16 w-16 flex-shrink-0 rounded-lg object-cover"
-                />
-              )}
-              <div className="min-w-0 flex-1">
-                <h3 className="line-clamp-2 font-display font-bold text-text transition group-hover:text-primary">
-                  {item.title}
-                </h3>
-                {item.description && (
-                  <p className="mt-1 line-clamp-2 text-sm text-soft">
-                    {item.description}
-                  </p>
-                )}
-                <p className="mt-2 text-[11px] text-soft">
-                  {timeAgo(item.pubDate)}
-                </p>
-              </div>
-              <ExternalLink size={16} className="mt-1 flex-shrink-0 text-soft" />
-            </motion.a>
+            <ForumNewsItem key={item.link || i} item={item} />
           ))}
         </div>
       )}
