@@ -1,18 +1,24 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useMaintenance } from '../context/MaintenanceContext'
 import Spinner from './ui/Spinner'
 
 /**
  * Guarda de rutas: exige sesión iniciada y, opcionalmente, un rol o uno de
  * varios permisos de la matriz (DLC 14).
- * Uso: <ProtectedRoute roles={['admin']}><Raffles /></ProtectedRoute>
- *      <ProtectedRoute anyPermission={['content', 'members']}><ContentManagement /></ProtectedRoute>
+ * Cuando el modo mantenimiento está activo, solo admin/super-admin pasan.
  */
 export default function ProtectedRoute({ roles, anyPermission, children }) {
-  const { session, role, can, loading } = useAuth()
+  const { session, role, can, loading: authLoading } = useAuth()
+  const { maintenance, loading: maintLoading } = useMaintenance()
   const location = useLocation()
 
-  if (loading) return <Spinner full label="Comprobando sesión..." />
+  if (authLoading || maintLoading) return <Spinner full label="Comprobando sesión..." />
+
+  // Modo mantenimiento: solo admin y super-admin pasan
+  if (maintenance && (!session || (role !== 'admin' && role !== 'super-admin'))) {
+    return <Navigate to="/mantenimiento" replace />
+  }
 
   if (!session) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />

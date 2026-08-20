@@ -3,6 +3,7 @@ import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { PresenceProvider } from './context/PresenceContext'
 import { ThemeProvider } from './context/ThemeContext'
+import { MaintenanceProvider } from './context/MaintenanceContext'
 import { ToastProvider } from './components/ui/Toast'
 import ProtectedRoute from './components/ProtectedRoute'
 import MainLayout from './components/layout/MainLayout'
@@ -16,6 +17,7 @@ const Register = lazy(() => import('./pages/Register'))
 const Verify = lazy(() => import('./pages/Verify'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
+const MaintenancePage = lazy(() => import('./pages/MaintenancePage'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const News = lazy(() => import('./pages/News'))
 const ShinyHunt = lazy(() => import('./pages/ShinyHunt'))
@@ -45,80 +47,85 @@ export default function App() {
     <ThemeProvider>
       <ToastProvider>
         <AuthProvider>
-          <PresenceProvider>
-            <HashRouter>
-            <ThemeToggle />
+          <MaintenanceProvider>
+            <PresenceProvider>
+              <HashRouter>
+              <ThemeToggle />
 
-            <Suspense fallback={<Spinner full label="Cargando..." />}>
-              <Routes>
-                {/* ── Autenticación ── */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/registro" element={<Register />} />
-                <Route path="/verificar" element={<Verify />} />
-                <Route path="/recuperar" element={<ForgotPassword />} />
-                <Route path="/restablecer" element={<ResetPassword />} />
+              <Suspense fallback={<Spinner full label="Cargando..." />}>
+                <Routes>
+                  {/* ── Autenticación ── */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/registro" element={<Register />} />
+                  <Route path="/verificar" element={<Verify />} />
+                  <Route path="/recuperar" element={<ForgotPassword />} />
+                  <Route path="/restablecer" element={<ResetPassword />} />
 
-                {/* ── Portal (sesión requerida) ── */}
-                <Route
-                  element={
-                    <ProtectedRoute>
-                      <MainLayout />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/noticias" element={<News />} />
-                  <Route path="/shiny-hunt" element={<ShinyHunt />} />
-                  <Route path="/eventos-torneos" element={<EventosTorneos />} />
-                  <Route path="/guias" element={<Guides />} />
-                  <Route path="/cumpleanos" element={<Birthdays />} />
-                  <Route path="/builds" element={<Builds />} />
-                  <Route path="/comercio" element={<Commerce />} />
-                  <Route path="/brackets" element={<Brackets />} />
+                  {/* ── Mantenimiento (pública) ── */}
+                  <Route path="/mantenimiento" element={<MaintenancePage />} />
 
-                  {/* DLC 1: perfil propio */}
-                  <Route path="/perfil" element={<Profile />} />
-
-                  {/* DLC 2: reportes de shinies (miembro) y revisión (staff) */}
-                  <Route path="/mis-shinies" element={<MyShinies />} />
+                  {/* ── Portal (sesión requerida) ── */}
                   <Route
-                    path="/revisar-shinies"
                     element={
-                      <ProtectedRoute anyPermission={['shinies_review']}>
-                        <ReviewShinies />
+                      <ProtectedRoute>
+                        <MainLayout />
                       </ProtectedRoute>
                     }
-                  />
+                  >
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/noticias" element={<News />} />
+                    <Route path="/shiny-hunt" element={<ShinyHunt />} />
+                    <Route path="/eventos-torneos" element={<EventosTorneos />} />
+                    <Route path="/guias" element={<Guides />} />
+                    <Route path="/cumpleanos" element={<Birthdays />} />
+                    <Route path="/builds" element={<Builds />} />
+                    <Route path="/comercio" element={<Commerce />} />
+                    <Route path="/brackets" element={<Brackets />} />
 
-                  {/* Panel de sorteos: lo ve todo el clan; gestión solo con permiso */}
-                  <Route path="/sorteos" element={<Raffles />} />
+                    {/* DLC 1: perfil propio */}
+                    <Route path="/perfil" element={<Profile />} />
 
-                  {/* DLC 15: directorio de miembros (todos) */}
-                  <Route path="/directorio" element={<MemberSearch />} />
+                    {/* DLC 2: reportes de shinies (miembro) y revisión (staff) */}
+                    <Route path="/mis-shinies" element={<MyShinies />} />
+                    <Route
+                      path="/revisar-shinies"
+                      element={
+                        <ProtectedRoute anyPermission={['shinies_review']}>
+                          <ReviewShinies />
+                        </ProtectedRoute>
+                      }
+                    />
 
-                  {/* DLC 16: biblioteca de mods (todos) */}
-                  <Route path="/mods" element={<Mods />} />
+                    {/* Panel de sorteos: lo ve todo el clan; gestión solo con permiso */}
+                    <Route path="/sorteos" element={<Raffles />} />
 
-                  {/* Noticias del foro PokeMMO vía RSS (todos) */}
-                  <Route path="/pokemmo-forum" element={<PokeMMOForum />} />
+                    {/* DLC 15: directorio de miembros (todos) */}
+                    <Route path="/directorio" element={<MemberSearch />} />
 
-                  {/* Gestión de contenido: quien tenga permiso de contenido o miembros */}
-                  <Route
-                    path="/gestion"
-                    element={
-                      <ProtectedRoute anyPermission={['content', 'members']}>
-                        <ContentManagement />
-                      </ProtectedRoute>
-                    }
-                  />
-                </Route>
+                    {/* DLC 16: biblioteca de mods (todos) */}
+                    <Route path="/mods" element={<Mods />} />
 
-                {/* Fallback */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
-            </HashRouter>
-          </PresenceProvider>
+                    {/* Noticias del foro PokeMMO vía RSS (todos) */}
+                    <Route path="/pokemmo-forum" element={<PokeMMOForum />} />
+
+                    {/* Gestión de contenido: quien tenga permiso de contenido o miembros */}
+                    <Route
+                      path="/gestion"
+                      element={
+                        <ProtectedRoute anyPermission={['content', 'members']}>
+                          <ContentManagement />
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Route>
+
+                  {/* Fallback */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
+              </HashRouter>
+            </PresenceProvider>
+          </MaintenanceProvider>
         </AuthProvider>
       </ToastProvider>
     </ThemeProvider>

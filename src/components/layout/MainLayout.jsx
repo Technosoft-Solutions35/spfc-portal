@@ -6,20 +6,22 @@ import Sidebar from './Sidebar'
 import MobileHeader from './MobileHeader'
 import ContentNotifier from './ContentNotifier'
 import FooterLinks from './FooterLinks'
+import MaintenanceBanner from '../MaintenanceBanner'
+import { useMaintenance } from '../../context/MaintenanceContext'
+import { useAuth } from '../../context/AuthContext'
 
 /**
  * Layout principal del portal (solo usuarios logueados).
  * Desktop: sidebar fija + tarjeta central flotante sobre el fondo temático.
  * Móvil: cabecera con hamburguesa + contenido a ancho completo.
- *
- * Transición entre secciones: monta la página al instante (sin animación de
- * salida, que provocaba pantallas en blanco con navegación rápida) con una
- * entrada muy corta. Al cambiar de ruta se sube al tope para no arrastrar el
- * scroll de la sección anterior.
  */
 export default function MainLayout() {
   const location = useLocation()
   const reducedMotion = useReducedMotion()
+  const { maintenance } = useMaintenance()
+  const { role } = useAuth()
+
+  const showBanner = maintenance && (role === 'admin' || role === 'super-admin')
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
@@ -29,6 +31,7 @@ export default function MainLayout() {
     <div className="min-h-screen">
       <Background />
       <ContentNotifier />
+      {showBanner && <MaintenanceBanner />}
 
       <div className="flex">
         <Sidebar />
