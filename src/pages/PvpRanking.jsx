@@ -86,25 +86,28 @@ export default function PvpRanking() {
                       isMe ? 'bg-primary/5' : 'hover:bg-background'
                     }`}
                   >
-                    {/* Fila principal: posición + nombre */}
-                    <div className="flex items-center gap-2.5">
-                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-extrabold sm:h-9 sm:w-9 ${getMedalClass(i)}`}>
+                    {/* Posición */}
+                    <span className={`hidden sm:flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-extrabold ${getMedalClass(i)}`}>
+                      {i === 0 ? <Crown size={16} className="h-3.5 w-3.5" /> : i + 1}
+                    </span>
+
+                    {/* Jugador */}
+                    <div className="flex items-center gap-2">
+                      <span className={`flex sm:hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-extrabold ${getMedalClass(i)}`}>
                         {i === 0 ? <Crown size={16} className="h-3.5 w-3.5" /> : i + 1}
                       </span>
-                      <div className="min-w-0 flex-1">
-                        <button
-                          type="button"
-                          onClick={() => setViewingId(r.user_id)}
-                          className="flex items-center gap-2 truncate font-semibold text-text transition hover:text-primary"
-                        >
-                          {r.username}
-                          {isMe && (
-                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                              TÚ
-                            </span>
-                          )}
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setViewingId(r.user_id)}
+                        className="flex items-center gap-2 truncate font-semibold text-text transition hover:text-primary"
+                      >
+                        {r.username}
+                        {isMe && (
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                            TÚ
+                          </span>
+                        )}
+                      </button>
                       <RoleBadge role={r.role} />
                     </div>
 
