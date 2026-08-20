@@ -9,11 +9,14 @@ import Spinner from './ui/Spinner'
  * Cuando el modo mantenimiento está activo, solo admin/super-admin pasan.
  */
 export default function ProtectedRoute({ roles, anyPermission, children }) {
-  const { session, role, can, loading: authLoading } = useAuth()
+  const { session, role, can, loading: authLoading, profileLoading } = useAuth()
   const { maintenance, loading: maintLoading } = useMaintenance()
   const location = useLocation()
 
   if (authLoading || maintLoading) return <Spinner full label="Comprobando sesión..." />
+
+  // Si hay sesión pero el profile aún carga, esperamos antes de decidir
+  if (session && profileLoading) return <Spinner full label="Cargando perfil..." />
 
   // Modo mantenimiento: solo admin y super-admin pasan
   if (maintenance && (!session || (role !== 'admin' && role !== 'super-admin'))) {

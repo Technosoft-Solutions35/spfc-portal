@@ -14,6 +14,7 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
   const [permissions, setPermissions] = useState([])
   const [loading, setLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(false)
 
   // Carga los permisos que tiene el rol del usuario en la matriz
   const loadPermissions = useCallback(async (role) => {
@@ -36,6 +37,7 @@ export function AuthProvider({ children }) {
         setPermissions([])
         return
       }
+      setProfileLoading(true)
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -45,6 +47,7 @@ export function AuthProvider({ children }) {
         setProfile(data)
         await loadPermissions(data.role)
       }
+      setProfileLoading(false)
     },
     [loadPermissions]
   )
@@ -106,6 +109,7 @@ export function AuthProvider({ children }) {
     profile,
     permissions,
     loading,
+    profileLoading,
     refreshProfile,
     refreshPermissions,
     logout,
