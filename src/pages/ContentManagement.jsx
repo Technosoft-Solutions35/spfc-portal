@@ -128,8 +128,8 @@ const FIELD_CONFIGS = {
  * - Asignar/cambiar roles sigue siendo exclusivo del super-admin.
  */
 export default function ContentManagement() {
-  const { role, can } = useAuth()
-  const [tab, setTab] = useState('news')
+  const { role, can, profileLoading } = useAuth()
+  const [tab, setTab] = useState(() => sessionStorage.getItem('cm-tab') || 'news')
 
   const isSuperAdmin = role === ROLES.SUPER_ADMIN
   const availableTabs = Object.entries(TABS).filter(([, t]) =>
@@ -137,11 +137,18 @@ export default function ContentManagement() {
   )
 
   // Si el rol actual no tiene acceso a la pestaña activa, vuelve a la primera disponible
+  // (pero solo si ya cargó el profile, para no resetear prematuramente)
   useEffect(() => {
-    if (!availableTabs.some(([key]) => key === tab)) {
+    if (profileLoading) return
+    if (availableTabs.length > 0 && !availableTabs.some(([key]) => key === tab)) {
       setTab(availableTabs[0]?.[0] || 'news')
     }
-  }, [tab, availableTabs])
+  }, [tab, availableTabs, profileLoading])
+
+  // Guardar pestaña activa en sessionStorage para que sobreviva recargas
+  useEffect(() => {
+    sessionStorage.setItem('cm-tab', tab)
+  }, [tab])
 
   const canManageMembers = can('members')
 
