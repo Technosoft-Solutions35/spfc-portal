@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { ROLES } from '../lib/utils'
 
@@ -15,6 +15,10 @@ export function AuthProvider({ children }) {
   const [permissions, setPermissions] = useState([])
   const [loading, setLoading] = useState(true)
   const [profileLoading, setProfileLoading] = useState(false)
+  // Tracks whether the profile has been loaded at least once.
+  // After the first load, subsequent calls skip the loading spinner to avoid
+  // the full-page flash that users reported when switching/minimizing tabs.
+  const profileLoadedRef = useRef(false)
 
   // Carga los permisos que tiene el rol del usuario en la matriz
   const loadPermissions = useCallback(async (role) => {
@@ -29,15 +33,18 @@ export function AuthProvider({ children }) {
     if (!error) setPermissions((data || []).map((r) => r.permission))
   }, [])
 
-  // Carga el perfil público del usuario logueado
+  // Carga el perfil público del usuario logueado.
+  // En la primera llamada muestra spinner (profileLoading = true).
+  // En llamadas posteriores (refreshes de auth) actualiza en silencio sin spinner.
   const loadProfile = useCallback(
     async (userId) => {
       if (!userId) {
         setProfile(null)
         setPermissions([])
+        profileLoadedRef.current = false
         return
       }
-      setProfileLoading(true)
+      if (!profileLoadedRef.current) setProfileLoading(true)
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -47,6 +54,7 @@ export function AuthProvider({ children }) {
         setProfile(data)
         await loadPermissions(data.role)
       }
+      profileLoadedRef.current = true
       setProfileLoading(false)
     },
     [loadPermissions]
@@ -65,10 +73,10 @@ export function AuthProvider({ children }) {
       setLoading(false)
     })
 
-    // Reacciona a login / logout / refresh de token
-    // Solo recarga el profile en SIGNED_IN/SIGNED_OUT/USER_UPDATED,
-    // NO en TOKEN_REFRESHED (que se dispara al volver de pestaña en background
-    // y causaba que ProtectedRoute mostrara un spinner → la página "recargaba").
+    // Reacciona a login / logout / refresh de token.
+    // Se filtra TOKEN_REFRESHED para no disparar loadProfile innecesariamente.
+    // Además, loadProfile ya no muestra spinner en llamadas posteriores
+    // (profileLoadedRef), así que otros eventos reconexión no causan flash.
     const { data: listener } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
         if (!active) return
