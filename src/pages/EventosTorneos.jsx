@@ -19,12 +19,21 @@ import PostActions from '../components/ui/PostActions'
 import { readDeepLink } from '../lib/share'
 
 const TYPE_ICON = { PvP: Swords, 'PvE/Mixtos': Shield }
-const TYPE_COLOR = { PvP: 'primary', 'PvE/Mixtos': 'secondary' }
 
-function tierColor(tier) {
-  if (PVP_TIERS.includes(tier)) return 'primary'
-  if (PVE_TIERS.includes(tier)) return 'secondary'
-  return 'soft'
+function typeBadgeClass(type) {
+  if (type === 'PvE/Mixtos') return 'bg-secondary/90'
+  return 'bg-primary/90'
+}
+
+function typeBadgeClassLight(type) {
+  if (type === 'PvE/Mixtos') return 'bg-secondary/10 text-secondary'
+  return 'bg-primary/10 text-primary'
+}
+
+function tierBadgeClass(tier) {
+  if (PVP_TIERS.includes(tier)) return 'bg-primary/10 text-primary'
+  if (PVE_TIERS.includes(tier)) return 'bg-secondary/10 text-secondary'
+  return 'bg-soft/10 text-soft'
 }
 
 /**
@@ -188,7 +197,6 @@ export default function EventosTorneos() {
 function EventCard({ e, i, onClick }) {
   const status = EVENT_STATUS[e.status] || EVENT_STATUS.open
   const TypeIcon = TYPE_ICON[e.event_type] || CalendarDays
-  const tc = TYPE_COLOR[e.event_type] || 'primary'
 
   const img = e.images?.[0] || e.image_url
 
@@ -208,10 +216,10 @@ function EventCard({ e, i, onClick }) {
       <div
         className="relative h-36 w-full bg-cover bg-center transition group-hover:scale-[1.03]"
         style={{
-          backgroundImage: `url(${img || `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200"><rect width="400" height="200" fill="%231A1D24"/><rect width="400" height="200" fill="url(%23g)"/><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%23${tc === 'primary' ? 'EF4444' : 'F97316'}" stop-opacity="0.4"/><stop offset="1" stop-color="%2306B6D4" stop-opacity="0.25"/></linearGradient></defs></svg>`})`,
+          backgroundImage: `url(${img || `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200"><rect width="400" height="200" fill="%231A1D24"/><rect width="400" height="200" fill="url(%23g)"/><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%23${e.event_type === 'PvE/Mixtos' ? 'F97316' : 'EF4444'}" stop-opacity="0.4"/><stop offset="1" stop-color="%2306B6D4" stop-opacity="0.25"/></linearGradient></defs></svg>`})`,
         }}
       >
-        <span className={`absolute top-2 left-2 flex items-center gap-1 rounded-lg bg-${tc}/90 px-2 py-1 text-[11px] font-bold text-white shadow-lg`}>
+        <span className={`absolute top-2 left-2 flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold text-white shadow-lg ${typeBadgeClass(e.event_type)}`}>
           <TypeIcon size={12} />
           {e.event_type}
         </span>
@@ -230,7 +238,7 @@ function EventCard({ e, i, onClick }) {
             {formatDate(e.date)}
           </span>
           {e.tier && (
-            <span className={`rounded-full bg-${tierColor(e.tier)}/10 px-2 py-0.5 text-[10px] font-semibold text-${tierColor(e.tier)}`}>
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${tierBadgeClass(e.tier)}`}>
               {e.tier}
             </span>
           )}
@@ -257,7 +265,6 @@ function EventCard({ e, i, onClick }) {
 function EventDetail({ e, rulesExpanded, onToggleRules }) {
   const status = EVENT_STATUS[e.status] || EVENT_STATUS.open
   const TypeIcon = TYPE_ICON[e.event_type] || CalendarDays
-  const tc = TYPE_COLOR[e.event_type] || 'primary'
   const allImages = e.images?.length ? e.images : (e.image_url ? [e.image_url] : [])
   const [imgIdx, setImgIdx] = useState(0)
 
@@ -294,12 +301,12 @@ function EventDetail({ e, rulesExpanded, onToggleRules }) {
 
       {/* Badges */}
       <div className="flex flex-wrap gap-2">
-        <span className={`inline-flex items-center gap-1.5 rounded-full bg-${tc}/10 px-2.5 py-1 text-xs font-bold text-${tc}`}>
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${typeBadgeClassLight(e.event_type)}`}>
           <TypeIcon size={13} />
           {e.event_type}
         </span>
         {e.tier && (
-          <span className={`inline-flex items-center gap-1.5 rounded-full bg-${tierColor(e.tier)}/10 px-2.5 py-1 text-xs font-bold text-${tierColor(e.tier)}`}>
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${tierBadgeClass(e.tier)}`}>
             <Tag size={13} />
             {e.tier}
           </span>
