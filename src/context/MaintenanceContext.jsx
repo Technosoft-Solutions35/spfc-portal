@@ -41,11 +41,16 @@ export function MaintenanceProvider({ children }) {
       // Enviar notificación push a todos los suscritos
       const msgOn = 'El portal está en mantenimiento. Solo el staff puede acceder. Al concluir, serás notificado por esta misma vía.'
       const msgOff = '¡El mantenimiento ha concluido! Ya puedes utilizar el Portal Web SpFc/Gd normalmente.'
-      sendPushNotification({
+      const pushResult = await sendPushNotification({
         type: 'maintenance',
         title: next ? 'Modo Mantenimiento Activado' : 'Mantenimiento Concluido',
         message: next ? msgOn : msgOff,
-      }).catch(() => {})
+      }).catch((e) => ({ ok: false, reason: e?.message || 'catch' }))
+      if (!pushResult?.ok) {
+        console.warn('[Maintenance] Push falló:', pushResult)
+      } else {
+        console.log('[Maintenance] Push enviado:', pushResult)
+      }
     }
     return { ok: !error, error }
   }, [maintenance])

@@ -26,8 +26,8 @@ self.addEventListener('activate', (event) => {
 // visita se sirven desde caché sin tocar la red.
 // El index.html (navegación) → network-first con fallback a caché: siempre
 // contenido fresco, y si se pierde la red se muestra la última versión.
-const CACHE_ASSETS = 'spfc-assets-v21'
-const CACHE_SHELL = 'spfc-shell-v21'
+const CACHE_ASSETS = 'spfc-assets-v22'
+const CACHE_SHELL = 'spfc-shell-v22'
 
 self.addEventListener('fetch', (event) => {
   const request = event.request
@@ -68,25 +68,25 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Navegación (index.html): SIEMPRE de red, nunca caché.
-  // Se añade un parámetro con la versión del shell para que el navegador
-  // nunca reutilice un index.html obsoleto de su caché interno.
+  // Navegación (index.html): cache-first con actualización en background.
+  // Sirve la versión cacheada al instante (sin recargar la página) y
+  // actualiza la caché en background para que la próxima visita tenga
+  // contenido fresco. Esto evita que el SW recargue la SPA al volver
+  // de pestaña en background o al cambiar de pestaña.
   if (request.mode === 'navigate') {
-    const bustUrl = new URL(request.url)
-    bustUrl.searchParams.set('_v', CACHE_SHELL)
-    const bustReq = new Request(bustUrl.toString(), { method: 'GET', redirect: 'follow' })
     event.respondWith(
-      fetch(bustReq)
-        .then((res) => {
-          if (res.ok) {
-            const copy = res.clone()
-            caches.open(CACHE_SHELL).then((cache) => cache.put(request, copy))
-          }
-          return res
+      caches.open(CACHE_SHELL).then((cache) =>
+        cache.match(request).then((cached) => {
+          const networkFetch = fetch(request)
+            .then((res) => {
+              if (res.ok) cache.put(request, res.clone())
+              return res
+            })
+            .catch(() => null)
+          // Si hay caché, devuélvelo al instante; si no, espera la red
+          return cached || networkFetch
         })
-        .catch(() =>
-          caches.open(CACHE_SHELL).then((cache) => cache.match(request).then((cached) => cached || caches.match('/')))
-        )
+      )
     )
   }
 })
