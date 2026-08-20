@@ -3,6 +3,7 @@ import {
   Newspaper,
   Sparkles,
   Swords,
+  Shield,
   BookOpen,
   CalendarDays,
   Trophy,
@@ -26,6 +27,7 @@ export const NAV_ITEMS = [
   { to: '/', label: 'Inicio', icon: Home, end: true, load: () => import('../pages/Dashboard') },
   { to: '/noticias', label: 'Noticias', icon: Newspaper, section: 'news', load: () => import('../pages/News') },
   { to: '/shiny-hunt', label: 'Shiny Hunt', icon: Sparkles, load: () => import('../pages/ShinyHunt') },
+  { to: '/pvp-ranking', label: 'Ranking PvP', icon: Shield, load: () => import('../pages/PvpRanking') },
   { to: '/eventos-torneos', label: 'Eventos / Torneos', icon: Swords, section: 'events', load: () => import('../pages/EventosTorneos') },
   // DLC 8: llaves de torneo e historial de campeones (todos)
   { to: '/brackets', label: 'Brackets', icon: Network, load: () => import('../pages/Brackets') },

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BookOpen, Box, CalendarDays, Newspaper, Settings, ShieldCheck, Swords, Users, Wrench } from 'lucide-react'
+import { BookOpen, Box, CalendarDays, Newspaper, Settings, Shield, ShieldCheck, Swords, Users, Wrench } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useMaintenance } from '../context/MaintenanceContext'
 import { useToast } from '../components/ui/Toast'
@@ -8,6 +8,7 @@ import PageHeader from '../components/ui/PageHeader'
 import ContentManager from '../components/management/ContentManager'
 import MembersManager from '../components/management/MembersManager'
 import RolesManager from '../components/management/RolesManager'
+import PvpRankingsManager from '../components/management/PvpRankingsManager'
 import { NEWS_CATEGORIES, GUIDE_CATEGORIES, MOD_CATEGORIES } from '../lib/utils'
 import { useCrud } from '../hooks/useCrud'
 import { MaintenanceInlineBanner } from '../components/MaintenanceBanner'
@@ -17,6 +18,7 @@ const TABS = {
   'eventos-torneos': { label: 'Eventos / Torneos', icon: CalendarDays, permission: 'content' },
   guides: { label: 'Guías y Buildeos', icon: BookOpen, permission: 'content' },
   mods: { label: 'Biblioteca de MODs', icon: Box, permission: 'content' },
+  'pvp-ranking': { label: 'Ranking PvP', icon: Shield, permission: 'content' },
   members: { label: 'Miembros y roles', icon: Users, permission: 'members' },
   permissions: { label: 'Roles y Permisos', icon: ShieldCheck, superAdminOnly: true },
   'admin-tools': { label: 'Herramientas Avanzadas', icon: Wrench, superAdminOnly: true },
@@ -193,6 +195,8 @@ export default function ContentManagement() {
         <RolesManager />
       ) : tab === 'admin-tools' ? (
         <AdminToolsPanel />
+      ) : tab === 'pvp-ranking' ? (
+        <PvpRankingsManager />
       ) : (
         <ActiveTab key={tab} tab={tab} />
       )}

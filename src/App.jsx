@@ -21,6 +21,7 @@ const MaintenancePage = lazy(() => import('./pages/MaintenancePage'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const News = lazy(() => import('./pages/News'))
 const ShinyHunt = lazy(() => import('./pages/ShinyHunt'))
+const PvpRanking = lazy(() => import('./pages/PvpRanking'))
 const EventosTorneos = lazy(() => import('./pages/EventosTorneos'))
 const Guides = lazy(() => import('./pages/Guides'))
 const Birthdays = lazy(() => import('./pages/Birthdays'))
@@ -75,6 +76,7 @@ export default function App() {
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/noticias" element={<News />} />
                     <Route path="/shiny-hunt" element={<ShinyHunt />} />
+                    <Route path="/pvp-ranking" element={<PvpRanking />} />
                     <Route path="/eventos-torneos" element={<EventosTorneos />} />
                     <Route path="/guias" element={<Guides />} />
                     <Route path="/cumpleanos" element={<Birthdays />} />
