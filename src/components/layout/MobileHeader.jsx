@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { LogOut, Menu, X } from 'lucide-react'
+import { LogOut, Menu, Moon, X, Sun } from 'lucide-react'
 import { NAV_ITEMS, prefetchPage } from '../../lib/navigation'
 import { useNewContent } from '../../lib/newContent'
 import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
 import Avatar, { RoleBadge } from '../ui/Avatar'
 import NewContentDot from '../ui/NewContentDot'
 
@@ -18,6 +19,7 @@ export default function MobileHeader() {
   const [open, setOpen] = useState(false)
   const { profile, can, logout } = useAuth()
   const { hasNew, pendingReports } = useNewContent()
+  const { theme, toggle: toggleTheme } = useTheme()
   const navigate = useNavigate()
 
   const items = NAV_ITEMS.filter((item) => {
@@ -46,13 +48,22 @@ export default function MobileHeader() {
             SpFc<span className="text-primary">/Gd</span>
           </span>
         </div>
-        <button
-          onClick={() => setOpen(true)}
-          aria-label="Abrir menú"
-          className="rounded-xl border border-edge bg-elevated p-2.5 text-text"
-        >
-          <Menu size={22} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
+            className="rounded-xl border border-edge bg-elevated p-2.5 text-text"
+          >
+            {theme === 'dark' ? <Sun size={20} className="text-secondary" /> : <Moon size={20} className="text-primary" />}
+          </button>
+          <button
+            onClick={() => setOpen(true)}
+            aria-label="Abrir menú"
+            className="rounded-xl border border-edge bg-elevated p-2.5 text-text"
+          >
+            <Menu size={22} />
+          </button>
+        </div>
       </header>
 
       {/* Drawer móvil */}

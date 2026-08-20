@@ -279,6 +279,7 @@ function EventDetail({ e, rulesExpanded, onToggleRules }) {
             src={allImages[imgIdx]}
             alt={e.title}
             className="w-full rounded-xl object-contain"
+            style={{ maxHeight: '50vh' }}
           />
           {allImages.length > 1 && (
             <div className="mt-2 flex gap-2 overflow-x-auto">
