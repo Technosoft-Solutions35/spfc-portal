@@ -82,33 +82,41 @@ export default function PvpRanking() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: Math.min(i * 0.03, 0.4) }}
-                    className={`flex flex-col gap-1 px-3 py-2.5 transition sm:grid sm:grid-cols-[2.5rem_1fr_4.5rem_4.5rem_4.5rem_5rem] sm:items-center sm:gap-2 sm:px-4 sm:py-3 ${
+                    className={`px-3 py-3 transition sm:grid sm:grid-cols-[2.5rem_1fr_4.5rem_4.5rem_4.5rem_5rem] sm:items-center sm:gap-2 sm:px-4 sm:py-3 ${
                       isMe ? 'bg-primary/5' : 'hover:bg-background'
                     }`}
                   >
-                    {/* Posición */}
-                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-extrabold ${getMedalClass(i)}`}>
-                      {i === 0 ? <Crown size={16} className="h-3.5 w-3.5" /> : i + 1}
-                    </span>
-
-                    {/* Jugador */}
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setViewingId(r.user_id)}
-                        className="flex items-center gap-2 truncate font-semibold text-text transition hover:text-primary"
-                      >
-                        {r.username}
-                        {isMe && (
-                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                            TÚ
-                          </span>
-                        )}
-                      </button>
+                    {/* Fila principal: posición + nombre */}
+                    <div className="flex items-center gap-2.5">
+                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-extrabold sm:h-9 sm:w-9 ${getMedalClass(i)}`}>
+                        {i === 0 ? <Crown size={16} className="h-3.5 w-3.5" /> : i + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <button
+                          type="button"
+                          onClick={() => setViewingId(r.user_id)}
+                          className="flex items-center gap-2 truncate font-semibold text-text transition hover:text-primary"
+                        >
+                          {r.username}
+                          {isMe && (
+                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                              TÚ
+                            </span>
+                          )}
+                        </button>
+                      </div>
                       <RoleBadge role={r.role} />
                     </div>
 
-                    {/* Stats en desktop */}
+                    {/* Stats: tabla compacta en móvil, columna en desktop */}
+                    <div className="mt-2 grid grid-cols-4 gap-1.5 sm:mt-0 sm:hidden">
+                      <StatCell label="W" value={r.victories} color="success" />
+                      <StatCell label="L" value={r.defeats} color="soft" />
+                      <StatCell label="Total" value={r.total_battles} color="text" />
+                      <StatCell label="WR" value={`${r.winrate}%`} color="secondary" />
+                    </div>
+
+                    {/* Stats desktop: columnas sueltas */}
                     <span className="hidden text-center font-display text-sm font-bold text-success sm:block">
                       {r.victories}
                     </span>
@@ -121,14 +129,6 @@ export default function PvpRanking() {
                     <span className="hidden text-center font-display text-sm font-bold text-secondary sm:block">
                       {r.winrate}%
                     </span>
-
-                    {/* Stats en móvil (debajo del nombre) */}
-                    <div className="flex gap-3 text-xs font-semibold sm:hidden">
-                      <span className="text-success">✅ {r.victories}W</span>
-                      <span className="text-soft">❌ {r.defeats}L</span>
-                      <span className="text-text">Σ {r.total_battles}</span>
-                      <span className="text-secondary">{r.winrate}%</span>
-                    </div>
                   </motion.li>
                 )
               })}
@@ -138,6 +138,21 @@ export default function PvpRanking() {
       </div>
 
       <ProfileModal userId={viewingId} onClose={() => setViewingId(null)} />
+    </div>
+  )
+}
+
+function StatCell({ label, value, color }) {
+  const colorMap = {
+    success: 'bg-success/10 text-success',
+    soft: 'bg-soft/10 text-soft',
+    text: 'bg-background text-text',
+    secondary: 'bg-secondary/10 text-secondary',
+  }
+  return (
+    <div className={`flex flex-col items-center rounded-lg px-2 py-1.5 ${colorMap[color] || colorMap.text}`}>
+      <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">{label}</span>
+      <span className="font-display text-sm font-extrabold">{value}</span>
     </div>
   )
 }
