@@ -1,11 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { sendPushNotification } from '../lib/push'
 
 const MaintenanceContext = createContext(null)
 
 /**
  * Proveedor del modo mantenimiento. Consulta `site_settings` en la BD
  * y mantiene el estado en tiempo real para que toda la app reaccione.
+ * Al alternar, envía notificación push a todos los suscritos.
  */
 export function MaintenanceProvider({ children }) {
   const [maintenance, setMaintenance] = useState(null) // null = cargando, true/false = estado
@@ -34,7 +36,17 @@ export function MaintenanceProvider({ children }) {
       .from('site_settings')
       .update({ value: next, updated_at: new Date().toISOString() })
       .eq('key', 'maintenance_mode')
-    if (!error) setMaintenance(next)
+    if (!error) {
+      setMaintenance(next)
+      // Enviar notificación push a todos los suscritos
+      const msgOn = 'El portal está en mantenimiento. Solo el staff puede acceder. Al concluir, serás notificado por esta misma vía.'
+      const msgOff = '¡El mantenimiento ha concluido! Ya puedes utilizar el Portal Web SpFc/Gd normalmente.'
+      sendPushNotification({
+        type: 'maintenance',
+        title: next ? 'Modo Mantenimiento Activado' : 'Mantenimiento Concluido',
+        message: next ? msgOn : msgOff,
+      }).catch(() => {})
+    }
     return { ok: !error, error }
   }, [maintenance])
 

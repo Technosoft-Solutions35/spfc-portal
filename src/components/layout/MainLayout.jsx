@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import { motion, useReducedMotion } from 'framer-motion'
 import { Outlet, useLocation } from 'react-router-dom'
 import Background from './Background'
 import Sidebar from './Sidebar'
@@ -9,6 +8,7 @@ import FooterLinks from './FooterLinks'
 import MaintenanceBanner from '../MaintenanceBanner'
 import { useMaintenance } from '../../context/MaintenanceContext'
 import { useAuth } from '../../context/AuthContext'
+import { NAV_ITEMS } from '../../lib/navigation'
 
 /**
  * Layout principal del portal (solo usuarios logueados).
@@ -17,7 +17,6 @@ import { useAuth } from '../../context/AuthContext'
  */
 export default function MainLayout() {
   const location = useLocation()
-  const reducedMotion = useReducedMotion()
   const { maintenance } = useMaintenance()
   const { role } = useAuth()
 
@@ -26,6 +25,12 @@ export default function MainLayout() {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [location.pathname])
+
+  // Prefetch de todos los chunks de rutas al montar el layout.
+  // Así cuando el usuario navega, el chunk ya está en caché y la transición es instantánea.
+  useEffect(() => {
+    NAV_ITEMS.forEach((item) => item.load?.())
+  }, [])
 
   return (
     <div className="min-h-screen">
@@ -41,15 +46,9 @@ export default function MainLayout() {
           <MobileHeader />
 
           <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:py-10">
-            <motion.div
-              key={location.pathname}
-              initial={reducedMotion ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.12, ease: 'easeOut' }}
-              className="app-card min-h-[70vh] p-5 sm:p-8"
-            >
+            <div className="app-card min-h-[70vh] p-5 sm:p-8">
               <Outlet />
-            </motion.div>
+            </div>
           </div>
 
           <FooterLinks />

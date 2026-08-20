@@ -96,6 +96,7 @@ Deno.serve(async (req) => {
     tournaments: { label: 'Torneos', text: '¡Nuevo torneo! Ven a echarle un ojo.' },
     guides: { label: 'Guías y Buildeos', text: '¡Nueva guía! Ven a echarle un ojo.' },
     reporte: { label: 'Shiny', text: '¡Nuevo reporte shiny! Ven a revisarlo.' },
+    maintenance: { label: 'Mantenimiento', text: 'Aviso de mantenimiento del portal.' },
   }
   const friendly = TYPE_LABELS[type] || { label: type, text: '' }
 
@@ -133,6 +134,7 @@ Deno.serve(async (req) => {
 
   const TYPE_URL = {
     reporte: '/#/revisar-shinies',
+    maintenance: '/#/mantenimiento',
   }
   const results = { total: (subscriptions || []).length, sent: 0, failed: 0, errors: [] }
   const pushPayload = JSON.stringify({

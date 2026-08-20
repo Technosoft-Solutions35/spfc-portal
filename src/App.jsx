@@ -52,7 +52,7 @@ export default function App() {
               <HashRouter>
               <ThemeToggle />
 
-              <Suspense fallback={<Spinner full label="Cargando..." />}>
+              <Suspense fallback={<div className="app-card mx-auto mt-10 flex min-h-[70vh] max-w-6xl items-center justify-center p-5 sm:p-8"><Spinner label="Cargando..." /></div>}>
                 <Routes>
                   {/* ── Autenticación ── */}
                   <Route path="/login" element={<Login />} />
