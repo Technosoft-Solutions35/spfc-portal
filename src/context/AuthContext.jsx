@@ -66,10 +66,14 @@ export function AuthProvider({ children }) {
     })
 
     // Reacciona a login / logout / refresh de token
+    // Solo recarga el profile en SIGNED_IN/SIGNED_OUT/USER_UPDATED,
+    // NO en TOKEN_REFRESHED (que se dispara al volver de pestaña en background
+    // y causaba que ProtectedRoute mostrara un spinner → la página "recargaba").
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => {
+      (event, newSession) => {
         if (!active) return
         setSession(newSession)
+        if (event === 'TOKEN_REFRESHED') return
         loadProfile(newSession?.user?.id)
       }
     )
