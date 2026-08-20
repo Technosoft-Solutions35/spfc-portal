@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BookOpen, Box, CalendarDays, Newspaper, Settings, ShieldCheck, Swords, Users } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { canAssignRoles, ROLES } from '../lib/utils'
+import { canAssignRoles, ROLES, PVP_TIERS, PVE_TIERS } from '../lib/utils'
 import PageHeader from '../components/ui/PageHeader'
 import ContentManager from '../components/management/ContentManager'
 import MembersManager from '../components/management/MembersManager'
@@ -11,8 +11,7 @@ import { useCrud } from '../hooks/useCrud'
 
 const TABS = {
   news: { label: 'Noticias', icon: Newspaper, permission: 'content' },
-  events: { label: 'Eventos', icon: CalendarDays, permission: 'content' },
-  tournaments: { label: 'Torneos', icon: Swords, permission: 'content' },
+  'eventos-torneos': { label: 'Eventos / Torneos', icon: CalendarDays, permission: 'content' },
   guides: { label: 'Guías y Buildeos', icon: BookOpen, permission: 'content' },
   mods: { label: 'Biblioteca de MODs', icon: Box, permission: 'content' },
   members: { label: 'Miembros y roles', icon: Users, permission: 'members' },
@@ -34,40 +33,51 @@ const FIELD_CONFIGS = {
     columns: ['title'],
     emptyHint: 'Publica la primera noticia del clan.',
   },
-  events: {
+  'eventos-torneos': {
     table: 'events',
     orderBy: { column: 'date', ascending: true },
     fields: [
-      { key: 'title', label: 'Título del evento', type: 'text' },
-      { key: 'description', label: 'Descripción', type: 'textarea' },
-      { key: 'date', label: 'Fecha y hora', type: 'date' },
-      { key: 'location', label: 'Lugar (in-game)', type: 'text', placeholder: 'Isla Cinabio, PokeMMO' },
-      { key: 'image_url', label: 'Imagen', type: 'image' },
+      { key: 'title', label: 'Nombre del evento', type: 'text', placeholder: 'Torneo OU, ShinyHunt grupal...' },
+      { key: 'description', label: 'Descripción', type: 'textarea', placeholder: 'Describe el evento o torneo...' },
+      {
+        key: 'event_type',
+        label: 'Tipo',
+        type: 'select',
+        options: [
+          { value: 'PvP', label: 'PvP' },
+          { value: 'PvE/Mixtos', label: 'PvE / Mixtos' },
+        ],
+      },
+      {
+        key: 'tier',
+        label: 'Tier / Formato',
+        type: 'dependent-select',
+        parentKey: 'event_type',
+        parentPlaceholder: 'Primero elige el tipo',
+        optionsByParent: {
+          PvP: PVP_TIERS,
+          'PvE/Mixtos': PVE_TIERS,
+        },
+      },
+      { key: 'prize_count', label: 'Cantidad de premios', type: 'number', placeholder: '3' },
+      { key: 'prizes', label: 'Premios por lugar', type: 'dynamic-prizes', countKey: 'prize_count' },
+      { key: 'moderator', label: 'Moderador', type: 'text', placeholder: 'Nombre del moderador' },
+      { key: 'date', label: 'Fecha de inicio y hora', type: 'date' },
+      {
+        key: 'status',
+        label: 'Estado',
+        type: 'select',
+        options: [
+          { value: 'open', label: 'Inscripciones abiertas' },
+          { value: 'in_progress', label: 'En curso' },
+          { value: 'finished', label: 'Finalizado' },
+        ],
+      },
+      { key: 'rules', label: 'Reglas', type: 'textarea', placeholder: 'Reglas del evento...' },
+      { key: 'images', label: 'Imágenes (1 o más)', type: 'multi-image', allowUrl: true },
     ],
     columns: ['title'],
-    emptyHint: 'Crea el primer evento del clan.',
-  },
-  tournaments: {
-    table: 'tournaments',
-    orderBy: { column: 'start_date', ascending: true },
-    fields: [
-      { key: 'title', label: 'Nombre del torneo', type: 'text' },
-      { key: 'description', label: 'Descripción', type: 'textarea' },
-      { key: 'tier', label: 'Categoría / Tier', type: 'text', placeholder: 'OU · Singles' },
-      { key: 'format', label: 'Formato', type: 'text', placeholder: 'Bo3 · Doble eliminación' },
-      { key: 'max_participants', label: 'Límite de participantes (opcional)', type: 'number', placeholder: '16' },
-      { key: 'prize', label: 'Premio', type: 'text', placeholder: '100k PokeYen + medalla' },
-      { key: 'start_date', label: 'Fecha de inicio', type: 'date' },
-      { key: 'status', label: 'Estado', type: 'select', options: [
-        { value: 'open', label: 'Inscripciones abiertas' },
-        { value: 'in_progress', label: 'En curso' },
-        { value: 'finished', label: 'Finalizado' },
-      ] },
-      { key: 'rules', label: 'Reglas', type: 'textarea', placeholder: 'Reglas del torneo...' },
-      { key: 'image_url', label: 'Imagen', type: 'image' },
-    ],
-    columns: ['title'],
-    emptyHint: 'Organiza el primer torneo del clan.',
+    emptyHint: 'Crea el primer evento o torneo del clan.',
   },
   guides: {
     table: 'guides',

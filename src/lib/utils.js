@@ -53,6 +53,29 @@ export const NEWS_CATEGORIES = [
   'Otras',
 ]
 
+// ── Eventos/Torneos unificados ──
+export const EVENT_TYPES = ['PvP', 'PvE/Mixtos']
+
+export const PVP_TIERS = [
+  'OU', 'UU', 'NU', 'VGC', 'Monotype', 'UT', 'Regional', 'Little Cup', 'Metronomo',
+]
+
+export const PVE_TIERS = [
+  'ShinyHunt', 'Fulminantes', 'Carreras', 'Cacería', 'Escondidas', 'Otro',
+]
+
+export const EVENT_STATUS = {
+  open: { label: 'Inscripciones abiertas', class: 'bg-success/15 text-success' },
+  in_progress: { label: 'En curso', class: 'bg-secondary/15 text-secondary' },
+  finished: { label: 'Finalizado', class: 'bg-edge text-soft' },
+}
+
+// ¿Este evento puede tener brackets?
+export function canHaveBrackets(event) {
+  if (!event) return false
+  return event.bracket_ready || (event.event_type === 'PvE/Mixtos' && event.tier === 'Fulminantes')
+}
+
 // Categorías de guías (selección múltiple)
 export const GUIDE_CATEGORIES = [
   'Farmeo NPCs',

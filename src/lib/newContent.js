@@ -12,7 +12,6 @@ const STORAGE_KEY = 'spfc_seen_sections'
 export const SECTION_TABLES = {
   news: 'news',
   events: 'events',
-  tournaments: 'tournaments',
   guides: 'guides',
   mods: 'mods',
 }

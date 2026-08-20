@@ -19,9 +19,8 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const News = lazy(() => import('./pages/News'))
 const ShinyHunt = lazy(() => import('./pages/ShinyHunt'))
-const Tournaments = lazy(() => import('./pages/Tournaments'))
+const EventosTorneos = lazy(() => import('./pages/EventosTorneos'))
 const Guides = lazy(() => import('./pages/Guides'))
-const Events = lazy(() => import('./pages/Events'))
 const Birthdays = lazy(() => import('./pages/Birthdays'))
 const Builds = lazy(() => import('./pages/Builds'))
 const Commerce = lazy(() => import('./pages/Commerce'))
@@ -70,9 +69,8 @@ export default function App() {
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/noticias" element={<News />} />
                   <Route path="/shiny-hunt" element={<ShinyHunt />} />
-                  <Route path="/torneos" element={<Tournaments />} />
+                  <Route path="/eventos-torneos" element={<EventosTorneos />} />
                   <Route path="/guias" element={<Guides />} />
-                  <Route path="/eventos" element={<Events />} />
                   <Route path="/cumpleanos" element={<Birthdays />} />
                   <Route path="/builds" element={<Builds />} />
                   <Route path="/comercio" element={<Commerce />} />

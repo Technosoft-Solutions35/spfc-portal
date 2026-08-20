@@ -26,7 +26,7 @@ export const NAV_ITEMS = [
   { to: '/', label: 'Inicio', icon: Home, end: true, load: () => import('../pages/Dashboard') },
   { to: '/noticias', label: 'Noticias', icon: Newspaper, section: 'news', load: () => import('../pages/News') },
   { to: '/shiny-hunt', label: 'Shiny Hunt', icon: Sparkles, load: () => import('../pages/ShinyHunt') },
-  { to: '/torneos', label: 'Torneos', icon: Swords, section: 'tournaments', load: () => import('../pages/Tournaments') },
+  { to: '/eventos-torneos', label: 'Eventos / Torneos', icon: Swords, section: 'events', load: () => import('../pages/EventosTorneos') },
   // DLC 8: llaves de torneo e historial de campeones (todos)
   { to: '/brackets', label: 'Brackets', icon: Network, load: () => import('../pages/Brackets') },
   { to: '/guias', label: 'Guías y Buildeos', icon: BookOpen, section: 'guides', load: () => import('../pages/Guides') },
@@ -40,7 +40,6 @@ export const NAV_ITEMS = [
   { to: '/mods', label: 'Biblioteca de MODs', icon: Box, load: () => import('../pages/Mods') },
   // Noticias del foro PokeMMO vía RSS (todos)
   { to: '/pokemmo-forum', label: 'Foro PokeMMO', icon: Globe, load: () => import('../pages/PokeMMOForum') },
-  { to: '/eventos', label: 'Eventos', icon: CalendarDays, section: 'events', load: () => import('../pages/Events') },
   // Calendario del Team: cumpleaños + eventos/torneos (todos)
   { to: '/cumpleanos', label: 'Calendario del Team', icon: CalendarDays, load: () => import('../pages/Birthdays') },
   // Secciones reservadas al staff / admin (se filtran según el rol)

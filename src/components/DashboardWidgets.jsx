@@ -4,37 +4,29 @@ import {
   ArrowRight,
   CalendarDays,
   Sparkles,
-  Swords,
   Trophy,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { formatDate, formatShortDate } from '../lib/utils'
+import { formatDate, formatShortDate, EVENT_STATUS } from '../lib/utils'
 import { useAuth } from '../context/AuthContext'
 import EmptyState from './ui/EmptyState'
 import EventCountdown from './ui/EventCountdown'
 
 /**
- * Grid de vista rápida por categorías del Dashboard:
- * torneos recientes, eventos de la semana y Top 3 de cazadores shiny.
+ * Grid de vista rápida del Dashboard:
+ * eventos de la semana + Top 3 de cazadores shiny.
  */
 export default function DashboardWidgets() {
   const { role } = useAuth()
 
   return (
-    <div className="grid gap-5 md:grid-cols-3">
-      <Widget
-        title="Torneos recientes"
-        icon={Swords}
-        iconClass="text-primary bg-primary/10"
-        to="/torneos"
-        content={<RecentTournaments role={role} />}
-      />
+    <div className="grid gap-5 md:grid-cols-2">
       <Widget
         title="Eventos de la semana"
         icon={CalendarDays}
         iconClass="text-secondary bg-secondary/10"
-        to="/eventos"
+        to="/eventos-torneos"
         content={<UpcomingEvents role={role} />}
       />
       <Widget
@@ -71,96 +63,52 @@ function Widget({ title, icon: Icon, iconClass, to, content }) {
   )
 }
 
-// ── Torneos recientes ─────────────────────────────────────────────
-function RecentTournaments() {
+// ── Próximos eventos ──────────────────────────────────────────────
+function UpcomingEvents() {
   const [items, setItems] = useState(null)
 
   useEffect(() => {
+    const now = new Date().toISOString()
     supabase
-      .from('tournaments')
-      .select('*')
-      .order('created_at', { ascending: false })
+      .from('events')
+      .select('id, title, date, event_type, status')
+      .gte('date', now)
+      .order('date', { ascending: true })
       .limit(3)
       .then(({ data }) => setItems(data || []))
   }, [])
 
   if (!items) return <p className="text-sm text-soft">Cargando...</p>
   if (items.length === 0)
-    return <EmptyState title="Sin torneos" hint="El staff publicará torneos próximamente." icon={Swords} />
+    return <EmptyState title="Sin eventos próximos" hint="No hay eventos agendados todavía." icon={CalendarDays} />
 
   return (
     <ul className="space-y-3">
-      {items.map((t, i) => (
-        <motion.li
-          key={t.id}
-          initial={{ opacity: 0, x: -8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: i * 0.06 }}
-          className="flex items-center gap-3 rounded-xl bg-background p-3"
-        >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 font-bold text-primary">
-            <Trophy size={16} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-text">{t.title}</p>
-            <p className="text-xs text-soft">
-              {formatShortDate(t.start_date)} · {t.status}
-            </p>
-          </div>
-        </motion.li>
-      ))}
-    </ul>
-  )
-}
-
-// ── Próximos eventos + torneos ────────────────────────────────────
-function UpcomingEvents() {
-  const [items, setItems] = useState(null)
-
-  useEffect(() => {
-    const now = new Date().toISOString()
-    Promise.all([
-      supabase.from('events').select('id, title, date, location').gte('date', now).order('date', { ascending: true }),
-      supabase.from('tournaments').select('id, title, start_date, status').gte('start_date', now).order('start_date', { ascending: true }),
-    ]).then(([ev, tr]) => {
-      const events = (ev.data || []).map((e) => ({ ...e, _date: e.date, _type: 'event' }))
-      const tournaments = (tr.data || []).map((t) => ({ ...t, _date: t.start_date, _type: 'tournament' }))
-      const merged = [...events, ...tournaments].sort((a, b) => new Date(a._date) - new Date(b._date)).slice(0, 3)
-      setItems(merged)
-    })
-  }, [])
-
-  if (!items) return <p className="text-sm text-soft">Cargando...</p>
-  if (items.length === 0)
-    return <EmptyState title="Sin eventos próximos" hint="No hay eventos ni torneos agendados todavía." icon={CalendarDays} />
-
-  return (
-    <ul className="space-y-3">
-      {items.map((e, i) => (
-        <motion.li
-          key={e.id}
-          initial={{ opacity: 0, x: -8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: i * 0.06 }}
-          className="rounded-xl bg-background p-3"
-        >
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <p className="min-w-0 truncate text-sm font-semibold text-text">{e.title}</p>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                  e._type === 'tournament' ? 'bg-primary/15 text-primary' : 'bg-success/15 text-success'
-                }`}>
-                  {e._type === 'tournament' ? 'Torneo' : 'Evento'}
-                </span>
+      {items.map((e, i) => {
+        const status = EVENT_STATUS[e.status] || EVENT_STATUS.open
+        return (
+          <motion.li
+            key={e.id}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.06 }}
+            className="rounded-xl bg-background p-3"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="min-w-0 truncate text-sm font-semibold text-text">{e.title}</p>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${status.class}`}>
+                    {status.label}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs text-soft">{formatDate(e.date)} · {e.event_type}</p>
               </div>
-              <p className="mt-0.5 text-xs text-soft">{formatDate(e._date)} · hora local</p>
-              {e.location && <p className="mt-0.5 text-xs text-soft">📍 {e.location}</p>}
+              <EventCountdown date={e.date} />
             </div>
-            <EventCountdown date={e._date} />
-          </div>
-        </motion.li>
-      ))}
+          </motion.li>
+        )
+      })}
     </ul>
   )
 }

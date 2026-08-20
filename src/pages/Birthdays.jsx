@@ -32,7 +32,6 @@ export default function Birthdays() {
   const { toast } = useToast()
   const [members, setMembers] = useState(null)
   const [events, setEvents] = useState(null)
-  const [tournaments, setTournaments] = useState(null)
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
 
@@ -45,36 +44,21 @@ export default function Birthdays() {
 
     supabase
       .from('events')
-      .select('id, title, date, location')
+      .select('id, title, date, location, event_type, status')
       .order('date', { ascending: true })
       .then(({ data }) => setEvents(data || []))
 
-    supabase
-      .from('tournaments')
-      .select('id, title, start_date, status')
-      .order('start_date', { ascending: true })
-      .then(({ data }) => setTournaments(data || []))
-
-    // Realtime: escuchar cambios en eventos y torneos
     const reloadEvents = () => {
       supabase
         .from('events')
-        .select('id, title, date, location')
+        .select('id, title, date, location, event_type, status')
         .order('date', { ascending: true })
         .then(({ data }) => setEvents(data || []))
-    }
-    const reloadTournaments = () => {
-      supabase
-        .from('tournaments')
-        .select('id, title, start_date, status')
-        .order('start_date', { ascending: true })
-        .then(({ data }) => setTournaments(data || []))
     }
 
     const channel = supabase
       .channel('calendar-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, reloadEvents)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tournaments' }, reloadTournaments)
       .subscribe()
 
     return () => supabase.removeChannel(channel)
@@ -95,7 +79,7 @@ export default function Birthdays() {
   // Agrupa eventos por "mes-día" (del mes actual year)
   const eventsByKey = useMemo(() => {
     const map = {}
-    ;(events || []).forEach((e) => {
+    ;(events || []).filter((e) => e.event_type !== 'PvP' && e.tier !== 'Fulminantes').forEach((e) => {
       const d = new Date(e.date)
       if (d.getFullYear() === year) {
         const key = `${d.getMonth()}-${d.getDate()}`
@@ -106,11 +90,11 @@ export default function Birthdays() {
     return map
   }, [events, year])
 
-  // Agrupa torneos por "mes-día"
+  // Agrupa torneos (PvP + Fulminantes) por "mes-día"
   const tournamentsByKey = useMemo(() => {
     const map = {}
-    ;(tournaments || []).forEach((t) => {
-      const d = new Date(t.start_date)
+    ;(events || []).filter((e) => e.event_type === 'PvP' || e.tier === 'Fulminantes').forEach((t) => {
+      const d = new Date(t.date)
       if (d.getFullYear() === year) {
         const key = `${d.getMonth()}-${d.getDate()}`
         if (!map[key]) map[key] = []
@@ -118,7 +102,7 @@ export default function Birthdays() {
       }
     })
     return map
-  }, [tournaments, year])
+  }, [events, year])
 
   const firstWeekday = new Date(year, month, 1).getDay()
   const offset = (firstWeekday + 6) % 7
@@ -154,7 +138,7 @@ export default function Birthdays() {
   const todayTournaments = isCurrentMonth ? tournamentsByKey[todayKey] || [] : []
   const todayItems = [...todayBirthdays, ...todayEvents, ...todayTournaments]
 
-  const loading = members === null || events === null || tournaments === null
+  const loading = members === null || events === null
 
   return (
     <div>
@@ -238,7 +222,7 @@ export default function Birthdays() {
 
       {loading ? (
         <Spinner label="Cargando calendario..." />
-      ) : members.length === 0 && events.length === 0 && tournaments.length === 0 ? (
+      ) : members.length === 0 && events.length === 0 ? (
         <EmptyState
           title="Aún no hay datos"
           hint="Los cumpleaños aparecen cuando los miembros ponen su fecha de nacimiento en Mi perfil. Los eventos y torneos se crean desde Gestión."

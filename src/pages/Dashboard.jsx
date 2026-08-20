@@ -91,7 +91,7 @@ function StatsBar() {
       ] = await Promise.all([
         supabase.from('shiny_reports').select('id').gte('created_at', weekAgo.toISOString().slice(0, 10)),
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        supabase.from('tournaments').select('title, start_date').gte('start_date', now.toISOString()).order('start_date', { ascending: true }).limit(1).maybeSingle(),
+        supabase.from('events').select('title, date').gte('date', now.toISOString()).order('date', { ascending: true }).limit(1).maybeSingle(),
         supabase.from('profiles').select('username, shinies').order('shinies', { ascending: false }).limit(1).maybeSingle(),
       ])
 
@@ -126,7 +126,7 @@ function StatsBar() {
       icon: Swords,
       label: 'Próximo torneo',
       value: stats.nextTournament ? stats.nextTournament.title : 'Ninguno',
-      sub: stats.nextTournament ? new Date(stats.nextTournament.start_date).toLocaleDateString('es', { day: 'numeric', month: 'short' }) : null,
+      sub: stats.nextTournament ? new Date(stats.nextTournament.date).toLocaleDateString('es', { day: 'numeric', month: 'short' }) : null,
       color: 'text-primary',
       bg: 'bg-primary/10',
     },

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Trash2, X } from 'lucide-react'
 import { formatShortDate } from '../../lib/utils'
 import { useToast } from '../ui/Toast'
 import Modal from '../ui/Modal'
@@ -88,14 +88,122 @@ const FIELD = {
   documents: (f, v, set) => (
     <DocumentsInput value={v || []} onChange={(docs) => set({ [f.key]: docs })} />
   ),
+  'dependent-select': (f, v, set, allValues) => {
+    const parentVal = allValues?.[f.parentKey] || ''
+    const options = parentVal ? (f.optionsByParent?.[parentVal] || []) : []
+    return (
+      <select
+        className="input"
+        value={v || ''}
+        onChange={(e) => set({ [f.key]: e.target.value })}
+        disabled={!parentVal}
+      >
+        <option value="">{parentVal ? 'Seleccionar...' : f.parentPlaceholder || 'Primero elige el tipo'}</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>{opt}</option>
+        ))}
+      </select>
+    )
+  },
+  'dynamic-prizes': (f, v, set, allValues) => {
+    const count = allValues?.[f.countKey] || 0
+    const prizes = v || []
+    const setCount = (n) => {
+      const newPrizes = Array.from({ length: n }, (_, i) => prizes[i] || { position: i + 1, prize: '' })
+      set({ [f.countKey]: n, [f.key]: newPrizes })
+    }
+    const updatePrize = (idx, val) => {
+      const newPrizes = [...prizes]
+      newPrizes[idx] = { ...newPrizes[idx], prize: val }
+      set({ [f.key]: newPrizes })
+    }
+    return (
+      <div className="space-y-3">
+        <div>
+          <label className="label">Cantidad de premios</label>
+          <input
+            type="number"
+            className="input"
+            min={0}
+            max={10}
+            value={count}
+            onChange={(e) => setCount(Math.max(0, Math.min(10, Number(e.target.value))))}
+          />
+        </div>
+        {count > 0 && (
+          <div className="space-y-2">
+            {Array.from({ length: count }, (_, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white ${
+                  i === 0 ? 'bg-secondary' : i === 1 ? 'bg-soft' : 'bg-edge text-text'
+                }`}>
+                  {i + 1}
+                </span>
+                <input
+                  type="text"
+                  className="input flex-1"
+                  placeholder={`Premio lugar ${i + 1}`}
+                  value={prizes[i]?.prize || ''}
+                  onChange={(e) => updatePrize(i, e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  },
+  'multi-image': (f, v, set) => {
+    const images = v || []
+    const addImage = (url) => {
+      if (url && !images.includes(url)) {
+        set({ [f.key]: [...images, url] })
+      }
+    }
+    const removeImage = (idx) => {
+      set({ [f.key]: images.filter((_, i) => i !== idx) })
+    }
+    return (
+      <div className="space-y-3">
+        <ImageInput value="" onChange={addImage} allowUrl={f.allowUrl !== false} />
+        {images.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {images.map((url, idx) => (
+              <div key={idx} className="group relative h-16 w-16 overflow-hidden rounded-lg border border-edge">
+                <img src={url} alt="" className="h-full w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeImage(idx)}
+                  className="absolute top-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-white opacity-0 transition group-hover:opacity-100"
+                >
+                  <X size={10} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  },
 }
 
 function Field({ f, value, onChange }) {
   const set = (patch) => onChange({ ...value, ...patch })
+  const renderFn = FIELD[f.type]
+  if (!renderFn) return null
+  // Los field types que necesitan todos los valores del form reciben allValues
+  if (['dependent-select', 'dynamic-prizes'].includes(f.type)) {
+    return (
+      <div>
+        <label className="label">{f.label}</label>
+        {renderFn(f, value?.[f.key], set, value)}
+      </div>
+    )
+  }
   return (
     <div>
       <label className="label">{f.label}</label>
-      {FIELD[f.type](f, value?.[f.key], set)}
+      {renderFn(f, value?.[f.key], set)}
     </div>
   )
 }

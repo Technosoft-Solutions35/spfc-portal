@@ -11,7 +11,7 @@ import Modal from '../components/ui/Modal'
 import PostActions from '../components/ui/PostActions'
 import RsvpBox from '../components/ui/RsvpBox'
 import CommentSection from '../components/ui/CommentSection'
-import { formatDate, sortTournaments } from '../lib/utils'
+import { formatDate, sortTournaments, canHaveBrackets } from '../lib/utils'
 import { readDeepLink } from '../lib/share'
 import {
   buildBracket,
@@ -202,14 +202,15 @@ export default function Brackets() {
     })
 
   const loadTournaments = async () => {
-    const { data } = await supabase.from('tournaments').select('*')
-    setTournaments(sortTournaments(data || []))
+    const { data } = await supabase.from('events').select('*')
+    const bracketEvents = (data || []).filter((e) => canHaveBrackets(e))
+    setTournaments(sortTournaments(bracketEvents))
     // Enlace directo: ?brackets=<id> abre las llaves de ese torneo (solo la primera vez)
     if (!deepHandled.current) {
       deepHandled.current = true
       const dl = readDeepLink()
       if (dl?.param === 'brackets') {
-        const found = (data || []).find((t) => t.id === dl.id)
+        const found = bracketEvents.find((t) => t.id === dl.id)
         if (found) setViewTarget(found)
       }
     }
@@ -219,7 +220,7 @@ export default function Brackets() {
     loadTournaments()
     const channel = supabase
       .channel('brackets-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tournaments' }, () => loadTournaments())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => loadTournaments())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bracket_matches' }, () => {
         // Mientras se gestionan las llaves NO se recarga con realtime: el
         // estado se actualiza en optimista y cada cambio se persiste; la
@@ -343,7 +344,7 @@ export default function Brackets() {
       return
     }
     await supabase
-      .from('tournaments')
+      .from('events')
       .update({ bracket_ready: true, champion_name: '', second_name: '', third_name: '', status: 'in_progress' })
       .eq('id', target.id)
     setTarget((t) => ({
@@ -412,7 +413,7 @@ export default function Brackets() {
     if (!canFinalize) return
     setBusy(true)
     const { error } = await supabase
-      .from('tournaments')
+      .from('events')
       .update({
         status: 'finished',
         champion_name: champion.champion,
@@ -464,7 +465,7 @@ export default function Brackets() {
               </span>
             </span>
             <span className="mt-0.5 block truncate text-xs text-soft">
-              {[t.tier, t.format].filter(Boolean).join(' · ') || t.prize || formatDate(t.start_date)}
+              {[t.tier, t.event_type].filter(Boolean).join(' · ') || formatDate(t.date)}
             </span>
           </span>
           <span className={`shrink-0 text-soft transition-transform ${open ? 'rotate-180' : ''}`}>
@@ -490,39 +491,33 @@ export default function Brackets() {
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-text">{t.description}</p>
 
             <dl className="grid grid-cols-2 gap-2 text-xs">
-              {(t.tier || t.format) && (
+              {t.tier && (
                 <div className="col-span-2 flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
                   <GitBranch size={13} className="text-primary" />
-                  <span className="text-soft">Campos</span>
-                  <span className="ml-auto truncate font-semibold text-text">
-                    {[t.tier, t.format].filter(Boolean).join(' · ')}
-                  </span>
+                  <span className="text-soft">Tier</span>
+                  <span className="ml-auto truncate font-semibold text-text">{t.tier}</span>
                 </div>
               )}
-              <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
-                <Trophy size={13} className="text-secondary" />
-                <span className="text-soft">Premio</span>
-                <span className="ml-auto truncate font-semibold text-text">{t.prize || '—'}</span>
-              </div>
+              {t.prizes?.length > 0 && (
+                <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
+                  <Trophy size={13} className="text-secondary" />
+                  <span className="text-soft">Premios</span>
+                  <span className="ml-auto truncate font-semibold text-text">{t.prizes.length} lugar{t.prizes.length > 1 ? 'es' : ''}</span>
+                </div>
+              )}
               <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
                 <CalendarDays size={13} className="text-primary" />
                 <span className="text-soft">Inicio</span>
-                <span className="ml-auto font-semibold text-text">{formatDate(t.start_date)}</span>
+                <span className="ml-auto font-semibold text-text">{formatDate(t.date)}</span>
               </div>
-              {t.max_participants && (
-                <div className="col-span-2 flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-2">
-                  <span className="text-soft">Límite</span>
-                  <span className="ml-auto font-semibold text-text">{t.max_participants} cupos</span>
-                </div>
-              )}
             </dl>
 
             <div className="flex flex-wrap items-center gap-2">
               <PostActions
-                parentType="tournament"
+                parentType="event"
                 parentId={t.id}
-                shareRoute="/torneos"
-                shareParam="tournament"
+                shareRoute="/eventos-torneos"
+                shareParam="event"
                 shareText={t.title}
               />
               {t.bracket_ready && (
