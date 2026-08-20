@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { CalendarDays, Sparkles, Trash2, Trophy, X, ZoomIn } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { CalendarDays, Shield, Sparkles, Trash2, Trophy, X, ZoomIn } from 'lucide-react'
+import { supabase } from '../../lib/supabase'
 import Avatar, { RoleBadge } from '../ui/Avatar'
 import { formatShortDate, formatBirthDay, GAME_ROLES, AFFILIATIONS } from '../../lib/utils'
 import EmptyState from '../ui/EmptyState'
@@ -25,6 +26,17 @@ export default function ProfileView({
   onDeleteShiny,
 }) {
   const [zoomed, setZoomed] = useState(null)
+  const [pvp, setPvp] = useState(null)
+
+  useEffect(() => {
+    if (!profile?.id) return
+    supabase
+      .from('pvp_rankings_full')
+      .select('victories, defeats, total_battles, winrate')
+      .eq('user_id', profile.id)
+      .maybeSingle()
+      .then(({ data }) => { if (data) setPvp(data) })
+  }, [profile?.id])
 
   if (!profile) return <Spinner label="Cargando perfil..." />
 
@@ -61,6 +73,12 @@ export default function ProfileView({
               <Sparkles size={12} />
               {profile.shinies ?? 0} shinies
             </span>
+            {pvp && pvp.total_battles > 0 && (
+              <span className="badge bg-primary/10 text-primary">
+                <Shield size={12} />
+                {pvp.victories}W / {pvp.defeats}L · {pvp.winrate}%
+              </span>
+            )}
             <span className="badge bg-edge text-soft">
               <CalendarDays size={12} />
               {formatShortDate(profile.created_at)}
