@@ -6,6 +6,7 @@ import { useToast } from '../ui/Toast'
 import Spinner from '../ui/Spinner'
 import EmptyState from '../ui/EmptyState'
 import Modal from '../ui/Modal'
+import DeletionPasswordModal from '../ui/DeletionPasswordModal'
 import { RoleBadge } from '../ui/Avatar'
 import ProfileAvatar from '../ui/ProfileAvatar'
 import { canAssignRoles, generateMemberEmail, ROLES } from '../../lib/utils'
@@ -41,6 +42,8 @@ export default function MembersManager() {
   const [editingId, setEditingId] = useState(null)
   const [addForm, setAddForm] = useState(EMPTY_ADD)
   const [editForm, setEditForm] = useState({})
+  const [deletePending, setDeletePending] = useState(null)
+  const [deletePwdOpen, setDeletePwdOpen] = useState(false)
 
   const totalCount = members?.length ?? 0
   const onlineCount = members ? members.filter((m) => isOnline(m.id)).length : 0
@@ -119,21 +122,26 @@ export default function MembersManager() {
     load()
   }
 
-  const confirmDelete = async (m) => {
-    if (
-      !window.confirm(
-        `¿Eliminar a "${m.username}"? Perderá el acceso al portal y no se podrá deshacer.`
-      )
-    )
-      return
-    setDeleting(m.id)
-    const { error } = await supabase.rpc('admin_delete_user', { p_user_id: m.id })
+  const confirmDelete = (m) => {
+    setDeletePending(m)
+    setDeletePwdOpen(true)
+  }
+
+  const handleDeleteWithPassword = async (password) => {
+    const { data, error } = await supabase.rpc('verify_deletion_password', { p_password: password })
+    if (error) throw new Error('Error al verificar contraseña')
+    if (!data) throw new Error('Contraseña incorrecta')
+
+    setDeleting(deletePending.id)
+    const { error: delError } = await supabase.rpc('admin_delete_user', { p_user_id: deletePending.id })
     setDeleting(null)
-    if (error) {
-      toast('No se pudo eliminar: ' + error.message, 'error')
+    if (delError) {
+      toast('No se pudo eliminar: ' + delError.message, 'error')
       return
     }
     toast('Miembro eliminado', 'info')
+    setDeletePwdOpen(false)
+    setDeletePending(null)
     load()
   }
 
@@ -370,6 +378,12 @@ export default function MembersManager() {
 
       {/* Perfil de un miembro al hacer clic en su nombre */}
       <ProfileModal userId={viewingId} onClose={() => setViewingId(null)} />
+
+      <DeletionPasswordModal
+        open={deletePwdOpen}
+        onClose={() => { setDeletePwdOpen(false); setDeletePending(null) }}
+        onConfirm={handleDeleteWithPassword}
+      />
     </div>
   )
 }

@@ -7,9 +7,11 @@ import Spinner from '../ui/Spinner'
 import EmptyState from '../ui/EmptyState'
 import ImageInput from '../ui/ImageInput'
 import DocumentsInput from '../ui/DocumentsInput'
+import DeletionPasswordModal from '../ui/DeletionPasswordModal'
 import { publishContentCreated } from '../../lib/notifications'
 import { sendPushNotification } from '../../lib/push'
 import { useAuth } from '../../context/AuthContext'
+import { supabase } from '../../lib/supabase'
 
 const FIELD = {
   text: (f, v, set) => (
@@ -227,6 +229,8 @@ export default function ContentManager({
   const [modal, setModal] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({})
+  const [deletePending, setDeletePending] = useState(null) // item awaiting password
+  const [deletePwdOpen, setDeletePwdOpen] = useState(false)
 
   const openNew = () => {
     setEditing(null)
@@ -303,14 +307,24 @@ export default function ContentManager({
     }
   }
 
-  const confirmDelete = async (item) => {
-    if (!window.confirm(`¿Eliminar "${item[columns[0]]}"? Esta acción no se puede deshacer.`)) return
-    const { error } = await remove(item.id)
-    if (error) {
+  const confirmDelete = (item) => {
+    setDeletePending(item)
+    setDeletePwdOpen(true)
+  }
+
+  const handleDeleteWithPassword = async (password) => {
+    const { data, error } = await supabase.rpc('verify_deletion_password', { p_password: password })
+    if (error) throw new Error('Error al verificar contraseña')
+    if (!data) throw new Error('Contraseña incorrecta')
+
+    const { error: delError } = await remove(deletePending.id)
+    if (delError) {
       toast('Error al eliminar', 'error')
       return
     }
     toast('Eliminado', 'info')
+    setDeletePwdOpen(false)
+    setDeletePending(null)
   }
 
   return (
@@ -382,6 +396,12 @@ export default function ContentManager({
           </div>
         </form>
       </Modal>
+
+      <DeletionPasswordModal
+        open={deletePwdOpen}
+        onClose={() => { setDeletePwdOpen(false); setDeletePending(null) }}
+        onConfirm={handleDeleteWithPassword}
+      />
     </div>
   )
 }

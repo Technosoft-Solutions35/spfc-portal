@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
-import { BookOpen, Box, CalendarDays, Newspaper, Settings, Shield, ShieldCheck, Swords, Users } from 'lucide-react'
+import { BookOpen, Box, CalendarDays, Newspaper, Settings, Shield, Users } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { canAssignRoles, ROLES, PVP_TIERS, PVE_TIERS } from '../lib/utils'
 import PageHeader from '../components/ui/PageHeader'
 import ContentManager from '../components/management/ContentManager'
 import MembersManager from '../components/management/MembersManager'
-import RolesManager from '../components/management/RolesManager'
 import PvpRankingsManager from '../components/management/PvpRankingsManager'
 import { NEWS_CATEGORIES, GUIDE_CATEGORIES, MOD_CATEGORIES } from '../lib/utils'
 import { useCrud } from '../hooks/useCrud'
@@ -17,7 +16,6 @@ const TABS = {
   mods: { label: 'Biblioteca de MODs', icon: Box, permission: 'content' },
   'pvp-ranking': { label: 'Ranking PvP', icon: Shield, permission: 'content' },
   members: { label: 'Miembros y roles', icon: Users, permission: 'members' },
-  permissions: { label: 'Roles y Permisos', icon: ShieldCheck, superAdminOnly: true },
 }
 
 const FIELD_CONFIGS = {
@@ -187,8 +185,6 @@ export default function ContentManagement() {
         ) : (
           <p className="text-sm text-soft">No tienes permisos para gestionar roles.</p>
         )
-      ) : tab === 'permissions' ? (
-        <RolesManager />
       ) : tab === 'pvp-ranking' ? (
         <PvpRankingsManager />
       ) : (
