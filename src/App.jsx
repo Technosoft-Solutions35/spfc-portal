@@ -36,6 +36,7 @@ const ReviewShinies = lazy(() => import('./pages/ReviewShinies'))
 const MemberSearch = lazy(() => import('./pages/MemberSearch'))
 const Mods = lazy(() => import('./pages/Mods'))
 const PokeMMOForum = lazy(() => import('./pages/PokeMMOForum'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 
 /**
  * Raíz de la aplicación: proveedores globales + rutas.
@@ -116,6 +117,16 @@ export default function App() {
                       element={
                         <ProtectedRoute anyPermission={['content', 'members']}>
                           <ContentManagement />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Panel de administración: solo super-admin */}
+                    <Route
+                      path="/admin"
+                      element={
+                        <ProtectedRoute anyPermission={['admin']}>
+                          <AdminDashboard />
                         </ProtectedRoute>
                       }
                     />

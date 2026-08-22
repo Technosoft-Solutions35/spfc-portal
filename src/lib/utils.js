@@ -31,6 +31,7 @@ export const PERMISSIONS = [
   { key: 'builds', label: 'Borrar builds ajenas' },
   { key: 'raffles', label: 'Gestionar sorteos' },
   { key: 'moderate', label: 'Borrar comentarios ajenos' },
+  { key: 'admin', label: 'Panel de administración: estadísticas, auditoría, roles, push, imágenes, exportar, salud, integraciones' },
 ]
 
 // ── DLC 1: Datos personalizables del perfil ──

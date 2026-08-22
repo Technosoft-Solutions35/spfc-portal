@@ -18,6 +18,7 @@ import {
   Network,
   Box,
   Globe,
+  ShieldAlert,
 } from 'lucide-react'
 
 // Definición única de navegación (sidebar y menú móvil comparten esta lista).
@@ -47,6 +48,8 @@ export const NAV_ITEMS = [
   // Secciones reservadas al staff / admin (se filtran según el rol)
   // Sorteos lo ve todo el clan; la gestión de tickets es solo admin.
   { to: '/sorteos', label: 'Sorteos', icon: Trophy, load: () => import('../pages/Raffles') },
+  // Panel de administración (solo super-admin)
+  { to: '/admin', label: 'Admin', icon: ShieldAlert, roles: ['super-admin'], load: () => import('../pages/AdminDashboard') },
   // DLC 1: perfil propio (todos los miembros)
   { to: '/perfil', label: 'Mi perfil', icon: User, load: () => import('../pages/Profile') },
   // DLC 2: reportes de shinies para todos; revisión con permiso
