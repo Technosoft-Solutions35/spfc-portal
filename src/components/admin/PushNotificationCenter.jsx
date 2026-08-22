@@ -47,14 +47,10 @@ export default function PushNotificationCenter() {
 
     setSending(true)
     try {
-      // Build target filter
-      let targetFilter = null
+      // Build target filter — the Edge Function expects `roles` (array of role strings)
+      let rolesFilter = undefined
       if (target !== 'all') {
-        const { data: userIds } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('role', target)
-        targetFilter = (userIds || []).map((u) => u.id)
+        rolesFilter = [target]
       }
 
       const { data, error } = await supabase.functions.invoke('send-push', {
@@ -63,7 +59,7 @@ export default function PushNotificationCenter() {
           title: title.trim(),
           body: body.trim(),
           url: url.trim() || undefined,
-          targetUserIds: targetFilter,
+          roles: rolesFilter,
         },
       })
 
