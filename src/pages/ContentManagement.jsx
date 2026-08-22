@@ -204,11 +204,12 @@ export default function ContentManagement() {
 // las 4 tablas cada vez que se entra a Gestión.
 function ActiveTab({ tab }) {
   const config = FIELD_CONFIGS[tab]
+  if (!config) return null
   const crud = useCrud(config.table, config.orderBy && { orderBy: config.orderBy })
   return (
     <ContentManager
       type={tab}
-      title={TABS[tab].label}
+      title={TABS[tab]?.label}
       fields={config.fields}
       columns={config.columns}
       emptyHint={config.emptyHint}
