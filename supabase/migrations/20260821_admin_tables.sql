@@ -20,7 +20,7 @@ CREATE POLICY "audit_admin_all" ON audit_log
   FOR ALL USING (public.has_permission('admin'));
 
 CREATE POLICY "audit_superadmin_all" ON audit_log
-  FOR ALL USING (role = 'super-admin');
+  FOR ALL USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'super-admin');
 
 -- Function: log_admin_action
 CREATE OR REPLACE FUNCTION public.log_admin_action(
@@ -81,7 +81,7 @@ CREATE POLICY "integrations_select" ON integrations
   FOR SELECT USING (true);
 
 CREATE POLICY "integrations_superadmin" ON integrations
-  FOR ALL USING (role = 'super-admin');
+  FOR ALL USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'super-admin');
 
 -- Insertar integraciones por defecto (upsert para no duplicar)
 INSERT INTO integrations (name, label, icon, active, settings) VALUES

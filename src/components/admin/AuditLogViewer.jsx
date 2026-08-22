@@ -87,13 +87,13 @@ export default function AuditLogViewer() {
             placeholder="Buscar por usuario o entidad..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="input-field w-full pl-9"
+            className="input w-full pl-9"
           />
         </div>
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="input-field"
+          className="input"
         >
           <option value="">Todas las acciones</option>
           {uniqueActions.map((a) => (

@@ -99,7 +99,7 @@ export default function PushNotificationCenter() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-xs font-bold text-text">Tipo de notificación</label>
-            <select value={type} onChange={(e) => setType(e.target.value)} className="input-field w-full">
+            <select value={type} onChange={(e) => setType(e.target.value)} className="input w-full">
               {PUSH_TYPES.map((t) => (
                 <option key={t.value} value={t.value}>{t.label}</option>
               ))}
@@ -107,7 +107,7 @@ export default function PushNotificationCenter() {
           </div>
           <div>
             <label className="mb-1 block text-xs font-bold text-text">Enviar a</label>
-            <select value={target} onChange={(e) => setTarget(e.target.value)} className="input-field w-full">
+            <select value={target} onChange={(e) => setTarget(e.target.value)} className="input w-full">
               {TARGET_ROLES.map((r) => (
                 <option key={r.value} value={r.value}>{r.label}</option>
               ))}
@@ -122,7 +122,7 @@ export default function PushNotificationCenter() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Nuevo torneo disponible"
-            className="input-field w-full"
+            className="input w-full"
             required
           />
         </div>
@@ -133,7 +133,7 @@ export default function PushNotificationCenter() {
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder="Se ha abierto inscripciones para el torneo OU de este viernes..."
-            className="input-field w-full"
+            className="input w-full"
             rows={3}
             required
           />
@@ -146,7 +146,7 @@ export default function PushNotificationCenter() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://technosoft-solutions35.github.io/spfc-portal/eventos-torneos"
-            className="input-field w-full"
+            className="input w-full"
           />
         </div>
 

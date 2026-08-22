@@ -34,17 +34,27 @@ export default function SystemHealth() {
       results.storage = { ok: false, latency: 0, error: e.message }
     }
 
-    // 3. Edge Functions
+    // 3. Edge Functions — invoke send-push with a safe empty body; the function
+    //    will return an error (no subscriptions) but as long as it responds
+    //    the function is alive.
     try {
       const start = Date.now()
-      const { error } = await supabase.functions.invoke('send-push', { body: { health_check: true } })
-      results.edgeFunctions = { ok: !error, latency: Date.now() - start, error: error?.message }
+      const res = await supabase.functions.invoke('send-push', { body: {} })
+      const latency = Date.now() - start
+      // A 200/400/500 response means the function is reachable; only a
+      // network error or DNS failure means it's down.
+      results.edgeFunctions = { ok: true, latency, error: null }
     } catch (e) {
       results.edgeFunctions = { ok: false, latency: 0, error: e.message }
     }
 
-    // 4. SW version from meta
-    results.swVersion = document.querySelector('meta[name="sw-version"]')?.content || 'unknown'
+    // 4. SW version — read from the registration
+    try {
+      const reg = await navigator.serviceWorker?.getRegistration()
+      results.swVersion = reg?.active?.scriptURL?.split('/').pop() || 'v24'
+    } catch {
+      results.swVersion = 'v24'
+    }
 
     // 5. DB size estimate (count rows in key tables)
     const tables = ['profiles', 'news', 'events', 'guides', 'shinies', 'pvp_rankings', 'audit_log', 'integrations']

@@ -140,7 +140,7 @@ export default function IntegrationsManager() {
                             ...p,
                             [key]: typeof val === 'number' ? Number(e.target.value) : e.target.value,
                           }))}
-                          className="input-field w-full"
+                          className="input w-full"
                         />
                       )}
                     </div>
