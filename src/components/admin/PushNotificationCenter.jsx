@@ -65,14 +65,15 @@ export default function PushNotificationCenter() {
 
       if (error) throw error
 
-      // Log to audit
-      await supabase.rpc('log_admin_action', {
-        p_action: 'push_sent',
-        p_entity: 'push',
-        p_details: { type, target, title: title.trim() },
-      })
-
-      toast(`Notificación enviada a ${target === 'all' ? 'todos' : ROLE_LABELS[target] || target}`, 'success')
+      // data = { total, sent, failed, errors }
+      const result = data || {}
+      if (result.errors?.length > 0) {
+        toast(`Enviadas ${result.sent || 0}, fallidas ${result.failed || 0}. Errores: ${result.errors[0]}`, 'error')
+      } else if ((result.sent || 0) === 0 && (result.total || 0) === 0) {
+        toast('No se encontraron suscripciones activas. Los miembros deben activar las notificaciones desde su perfil.', 'info')
+      } else {
+        toast(`Notificación enviada: ${result.sent || 0} entregadas, ${result.failed || 0} fallidas de ${result.total || 0} suscripciones`, 'success')
+      }
       setTitle('')
       setBody('')
       setUrl('')

@@ -127,11 +127,14 @@ Deno.serve(async (req) => {
   if (Array.isArray(payload.roles) && payload.roles.length) {
     query = query.in('profiles.role', payload.roles)
   }
-  const { data: subscriptions, error } = await query
+  const { data: subscriptions, error: subError } = await query
 
-  if (error) {
-    return json({ error: 'Error leyendo suscripciones: ' + error.message }, 500)
+  if (subError) {
+    console.error('[send-push] subscription query error:', subError.message, subError.details, subError.hint)
+    return json({ error: 'Error leyendo suscripciones: ' + subError.message }, 500)
   }
+
+  console.log(`[send-push] found ${(subscriptions || []).length} subscriptions, type=${type}, roles=${JSON.stringify(payload.roles || 'all')}`)
 
   const TYPE_URL = {
     reporte: '/#/revisar-shinies',
