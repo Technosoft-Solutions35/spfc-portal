@@ -33,8 +33,13 @@ export function AuthProvider({ children }) {
 
   const checkBan = useCallback(async (userId) => {
     if (!userId) { setBanInfo(null); return }
-    const { data } = await supabase.rpc('is_user_banned', { p_user_id: userId })
-    setBanInfo(data?.banned ? data : null)
+    try {
+      const { data, error } = await supabase.rpc('is_user_banned', { p_user_id: userId })
+      if (error) { setBanInfo(null); return }
+      setBanInfo(data?.banned ? data : null)
+    } catch {
+      setBanInfo(null)
+    }
   }, [])
 
   const loadProfile = useCallback(
