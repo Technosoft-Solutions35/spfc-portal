@@ -11,8 +11,14 @@ import EmptyState from '../components/ui/EmptyState'
 const FORUM_URL = 'https://forums.pokemmo.com'
 const RSS_PROXY = `${supabase.supabaseUrl}/functions/v1/fetch-rss`
 const ANON_KEY = supabaseAnonKey
-const CACHE_KEY = 'pokemmo-forum-rss'
 const CACHE_TTL = 30 * 60 * 1000 // 30 minutos
+
+const FEEDS = [
+  { key: 'announcements', label: 'Anuncios', icon: Newspaper },
+  { key: 'general', label: 'Discusión General', icon: MessageSquare },
+  { key: 'suggestions', label: 'Sugerencias', icon: Globe },
+  { key: 'bug-reports', label: 'Bug Reports', icon: MessageSquare },
+]
 
 function timeAgo(iso) {
   if (!iso) return ''
@@ -112,49 +118,59 @@ function ForumNewsItem({ item }) {
 }
 
 export default function PokeMMOForum() {
+  const [feed, setFeed] = useState('announcements')
   const [items, setItems] = useState(null)
   const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const cacheKey = `pokemmo-forum-rss-${feed}`
+
     async function load() {
+      setLoading(true)
+      setItems(null)
+      setError(null)
+
       // Intentar cache primero
       try {
-        const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')
+        const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null')
         if (cached && Date.now() - cached.ts < CACHE_TTL) {
           setItems(cached.items)
+          setLoading(false)
           return
         }
       } catch { /* ignorar */ }
 
       try {
-        const res = await fetch(RSS_PROXY, {
+        const res = await fetch(`${RSS_PROXY}?feed=${feed}`, {
           headers: { apikey: ANON_KEY },
         })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = await res.json()
         if (data.error) throw new Error(data.error)
         setItems(data.items || [])
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ items: data.items, ts: Date.now() }))
+        localStorage.setItem(cacheKey, JSON.stringify({ items: data.items, ts: Date.now() }))
       } catch (err) {
-        // Si hay cache viejo, usarlo como fallback
         try {
-          const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')
+          const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null')
           if (cached?.items) {
             setItems(cached.items)
+            setLoading(false)
             return
           }
         } catch { /* ignorar */ }
         setError(err.message)
       }
+      setLoading(false)
     }
     load()
-  }, [])
+  }, [feed])
 
   return (
     <div>
       <PageHeader
         title="Foro PokeMMO"
-        subtitle="Últimas actualizaciones y anuncios del foro oficial de PokeMMO."
+        subtitle="Últimas publicaciones del foro oficial de PokeMMO. Notificaciones automáticas cada 30 minutos."
         icon={Newspaper}
       />
 
@@ -170,23 +186,45 @@ export default function PokeMMOForum() {
         <ExternalLink size={14} className="opacity-60" />
       </a>
 
+      {/* Feed tabs */}
+      <div className="mb-6 flex flex-wrap gap-2">
+        {FEEDS.map((f) => {
+          const Icon = f.icon
+          const active = feed === f.key
+          return (
+            <button
+              key={f.key}
+              onClick={() => setFeed(f.key)}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                active
+                  ? 'bg-primary text-white shadow-glow'
+                  : 'border border-edge bg-elevated text-soft hover:text-text'
+              }`}
+            >
+              <Icon size={15} />
+              {f.label}
+            </button>
+          )
+        })}
+      </div>
+
       {error && (
         <div className="mb-6 rounded-xl border border-red/30 bg-red/10 p-4 text-sm text-red">
           Error al cargar el RSS: {error}
         </div>
       )}
 
-      {!items && !error && <Spinner label="Cargando noticias del foro..." />}
+      {loading && <Spinner label="Cargando publicaciones..." />}
 
-      {items && items.length === 0 && (
+      {!loading && items && items.length === 0 && (
         <EmptyState
-          title="Sin noticias"
-          hint="No se encontraron publicaciones en el feed RSS."
+          title="Sin publicaciones"
+          hint="No se encontraron publicaciones en este feed."
           icon={MessageSquare}
         />
       )}
 
-      {items && items.length > 0 && (
+      {!loading && items && items.length > 0 && (
         <div className="space-y-3">
           {items.map((item, i) => (
             <ForumNewsItem key={item.link || i} item={item} />

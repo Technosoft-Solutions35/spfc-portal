@@ -1,12 +1,20 @@
 // ═══════════════════════════════════════════════════════════════════════════
 // Edge Function: fetch-rss
-// Proxy CORS que obtiene el RSS de Updates & Announcements del foro de
-// PokeMMO, lo parsea y devuelve JSON limpio para el frontend.
+// Proxy CORS que obtiene el RSS del foro de PokeMMO, lo parsea y devuelve
+// JSON limpio para el frontend.
+//
+// Soporta múltiples feeds: pasá ?feed=announcements|general|suggestions|bug-reports
+// o ?url=<url-personalizada>. Sin parámetros usa announcements por defecto.
 //
 // No requiere autenticación — es información pública del foro.
 // ─────────────────────────────────────────────────────────────────────────────
-const RSS_URL =
-  'https://forums.pokemmo.com/index.php?/rss/1-updates-announcements.xml/'
+const FEEDS = {
+  announcements: 'https://forums.pokemmo.com/index.php?/rss/1-updates-announcements.xml/',
+  general: 'https://forums.pokemmo.com/index.php?/rss/2-general-discussion.xml/',
+  suggestions: 'https://forums.pokemmo.com/index.php?/rss/3-suggestions.xml/',
+  'bug-reports': 'https://forums.pokemmo.com/index.php?/rss/4-bug-reports.xml/',
+}
+const DEFAULT_FEED = 'announcements'
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -54,7 +62,18 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const res = await fetch(RSS_URL, {
+    // Soportar ?feed=announcements, ?feed=general, ?url=custom
+    const url = new URL(req.url)
+    let rssUrl = FEEDS[DEFAULT_FEED]
+    const feedParam = url.searchParams.get('feed')
+    const customUrl = url.searchParams.get('url')
+    if (customUrl) {
+      rssUrl = customUrl
+    } else if (feedParam && FEEDS[feedParam]) {
+      rssUrl = FEEDS[feedParam]
+    }
+
+    const res = await fetch(rssUrl, {
       headers: { 'User-Agent': 'SpFcPortal/1.0 (RSS Reader)' },
       redirect: 'follow',
     })

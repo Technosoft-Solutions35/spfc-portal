@@ -2,14 +2,11 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ExternalLink, Globe } from 'lucide-react'
 import { supabase, supabaseAnonKey } from '../lib/supabase'
-import { sendPushNotification } from '../lib/push'
-import { publishContentCreated } from '../lib/notifications'
 
 const RSS_PROXY = `${supabase.supabaseUrl}/functions/v1/fetch-rss`
 const ANON_KEY = supabaseAnonKey
 const CACHE_KEY = 'pokemmo-forum-rss'
 const CACHE_TTL = 30 * 60 * 1000
-const LAST_NOTIFIED_KEY = 'pokemmo-forum-last-notified'
 
 function timeAgo(iso) {
   if (!iso) return ''
@@ -26,7 +23,8 @@ function timeAgo(iso) {
 
 /**
  * Banner del Dashboard que muestra la última noticia del foro PokeMMO.
- * Clon simplificado de NewsBanner para contenido RSS externo.
+ * Solo muestra contenido — las push notifications las maneja la Edge Function
+ * check-forum-rss ejecutada por pg_cron cada 30 minutos.
  */
 export default function ForumNewsBanner() {
   const [item, setItem] = useState(null)
@@ -51,29 +49,6 @@ export default function ForumNewsBanner() {
         const items = data.items || []
         if (items.length) setItem(items[0])
         localStorage.setItem(CACHE_KEY, JSON.stringify({ items, ts: Date.now() }))
-
-        if (items.length > 0) {
-          const lastNotified = localStorage.getItem(LAST_NOTIFIED_KEY)
-          if (items[0].link !== lastNotified) {
-            localStorage.setItem(LAST_NOTIFIED_KEY, items[0].link)
-            if (lastNotified !== null) {
-              const { data: user } = await supabase.auth.getUser()
-              if (user?.user) {
-                sendPushNotification({
-                  type: 'forum-news',
-                  title: 'Nueva noticia del foro PokeMMO',
-                  username: 'Foro',
-                  message: items[0].title
-                }).catch(() => {})
-                publishContentCreated({
-                  type: 'forum-news',
-                  title: items[0].title,
-                  message: `Nueva noticia: ${items[0].title}`
-                }).catch(() => {})
-              }
-            }
-          }
-        }
       } catch {
         try {
           const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')
