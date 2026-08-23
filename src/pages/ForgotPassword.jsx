@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { KeyRound, MailCheck, ShieldAlert } from 'lucide-react'
+import { KeyRound, MailCheck, ShieldAlert, Shield } from 'lucide-react'
 import AuthLayout from '../components/layout/AuthLayout'
 import { useToast } from '../components/ui/Toast'
 import { supabase } from '../lib/supabase'
 
 /**
- * Recuperación de contraseña: envía el enlace de restablecimiento
- * al correo Gmail registrado.
+ * Recuperación de contraseña.
+ * Ofrece dos vías: envío de enlace por correo (puede fallar) o
+ * contactar al super-admin para un reseteo directo.
  */
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
@@ -44,7 +45,7 @@ export default function ForgotPassword() {
         </div>
         <h2 className="font-display text-xl font-extrabold text-text">Recuperar contraseña</h2>
         <p className="mt-1 text-sm text-soft">
-          Te enviaremos un enlace a tu correo para restablecerla.
+          Elige cómo quieres recuperar el acceso a tu cuenta.
         </p>
       </div>
 
@@ -62,31 +63,57 @@ export default function ForgotPassword() {
           </Link>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="label" htmlFor="recover-email">Correo electrónico</label>
-            <input
-              id="recover-email"
-              type="email"
-              required
-              className="input"
-              placeholder="tucorreo@gmail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          {error && (
-            <div className="flex items-center gap-2 rounded-xl bg-primary/10 px-4 py-3 text-sm font-medium text-primary">
-              <ShieldAlert size={17} />
-              {error}
+        <div className="space-y-5">
+          {/* Opción 1: Email */}
+          <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-edge bg-elevated p-4">
+            <h3 className="flex items-center gap-2 font-display font-bold text-text">
+              <MailCheck size={18} className="text-secondary" />
+              Opción 1: Enviar enlace por correo
+            </h3>
+            <p className="text-xs text-soft">
+              Te enviaremos un enlace de recuperación a tu correo registrado.
+            </p>
+            <div>
+              <label className="label" htmlFor="recover-email">Correo electrónico</label>
+              <input
+                id="recover-email"
+                type="email"
+                required
+                className="input"
+                placeholder="tucorreo@gmail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
-          )}
 
-          <button type="submit" disabled={loading} className="btn-primary w-full">
-            <MailCheck size={18} />
-            {loading ? 'Enviando...' : 'Enviar enlace de recuperación'}
-          </button>
+            {error && (
+              <div className="flex items-center gap-2 rounded-xl bg-primary/10 px-4 py-3 text-sm font-medium text-primary">
+                <ShieldAlert size={17} />
+                {error}
+              </div>
+            )}
+
+            <button type="submit" disabled={loading} className="btn-primary w-full">
+              <MailCheck size={18} />
+              {loading ? 'Enviando...' : 'Enviar enlace de recuperación'}
+            </button>
+          </form>
+
+          {/* Opción 2: Contactar admin */}
+          <div className="rounded-xl border border-edge bg-elevated p-4">
+            <h3 className="flex items-center gap-2 font-display font-bold text-text">
+              <Shield size={18} className="text-primary" />
+              Opción 2: Contactar al super-admin
+            </h3>
+            <p className="mt-1 text-xs text-soft">
+              Si el correo no te llega (puede ir a spam), contacta al super-admin del clan
+              para que te resetee la contraseña directamente desde el panel de administración.
+            </p>
+            <p className="mt-2 text-xs text-soft">
+              El super-admin puede encontrar esta opción en{' '}
+              <strong>Gestión → Miembros → Resetear contraseña</strong> (ícono de llave).
+            </p>
+          </div>
 
           <p className="pt-1 text-center text-sm text-soft">
             ¿Recordaste tu contraseña?{' '}
@@ -94,7 +121,7 @@ export default function ForgotPassword() {
               Inicia sesión
             </Link>
           </p>
-        </form>
+        </div>
       )}
     </AuthLayout>
   )

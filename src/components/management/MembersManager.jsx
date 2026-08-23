@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Lock, Pencil, Shield, Trash2, UserCog, UserPlus } from 'lucide-react'
+import { KeyRound, Lock, Pencil, Shield, Trash2, UserCog, UserPlus } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useToast } from '../ui/Toast'
 import Spinner from '../ui/Spinner'
@@ -44,6 +44,9 @@ export default function MembersManager() {
   const [editForm, setEditForm] = useState({})
   const [deletePending, setDeletePending] = useState(null)
   const [deletePwdOpen, setDeletePwdOpen] = useState(false)
+  const [resetPwUser, setResetPwUser] = useState(null)
+  const [resetPwForm, setResetPwForm] = useState({ password: '', confirm: '' })
+  const [resetting, setResetting] = useState(false)
 
   const totalCount = members?.length ?? 0
   const onlineCount = members ? members.filter((m) => isOnline(m.id)).length : 0
@@ -145,6 +148,25 @@ export default function MembersManager() {
     load()
   }
 
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    if (resetPwForm.password.length < 6) return toast('La contraseña debe tener al menos 6 caracteres', 'error')
+    if (resetPwForm.password !== resetPwForm.confirm) return toast('Las contraseñas no coinciden', 'error')
+    setResetting(true)
+    const { error } = await supabase.rpc('admin_reset_user_password', {
+      p_user_id: resetPwUser.id,
+      p_new_password: resetPwForm.password,
+    })
+    setResetting(false)
+    if (error) {
+      toast('No se pudo resetear la contraseña: ' + error.message, 'error')
+      return
+    }
+    toast(`Contraseña de ${resetPwUser.username} actualizada`, 'success')
+    setResetPwUser(null)
+    setResetPwForm({ password: '', confirm: '' })
+  }
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -229,6 +251,13 @@ export default function MembersManager() {
                       className="rounded-lg p-2 text-soft transition hover:bg-secondary/10 hover:text-secondary"
                     >
                       <Pencil size={16} />
+                    </button>
+                    <button
+                      onClick={() => { setResetPwUser(m); setResetPwForm({ password: '', confirm: '' }) }}
+                      title="Resetear contraseña"
+                      className="rounded-lg p-2 text-soft transition hover:bg-warning/10 hover:text-secondary"
+                    >
+                      <KeyRound size={16} />
                     </button>
                     <button
                       onClick={() => confirmDelete(m)}
@@ -384,6 +413,53 @@ export default function MembersManager() {
         onClose={() => { setDeletePwdOpen(false); setDeletePending(null) }}
         onConfirm={handleDeleteWithPassword}
       />
+
+      {/* Modal: resetear contraseña */}
+      <Modal
+        open={!!resetPwUser}
+        onClose={() => { setResetPwUser(null); setResetPwForm({ password: '', confirm: '' }) }}
+        title={`Resetear contraseña de ${resetPwUser?.username || ''}`}
+      >
+        <form onSubmit={handleResetPassword} className="space-y-4">
+          <p className="rounded-xl bg-secondary/10 px-4 py-3 text-xs text-secondary">
+            El usuario podrá iniciar sesión inmediatamente con la nueva contraseña.
+          </p>
+          <div>
+            <label className="label" htmlFor="reset-pw">Nueva contraseña</label>
+            <input
+              id="reset-pw"
+              type="password"
+              required
+              minLength={6}
+              className="input"
+              placeholder="Mínimo 6 caracteres"
+              value={resetPwForm.password}
+              onChange={(e) => setResetPwForm((f) => ({ ...f, password: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="label" htmlFor="reset-pw-confirm">Repetir contraseña</label>
+            <input
+              id="reset-pw-confirm"
+              type="password"
+              required
+              minLength={6}
+              className="input"
+              value={resetPwForm.confirm}
+              onChange={(e) => setResetPwForm((f) => ({ ...f, confirm: e.target.value }))}
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="submit" disabled={resetting} className="btn-primary flex-1">
+              <KeyRound size={16} />
+              {resetting ? 'Actualizando...' : 'Resetear contraseña'}
+            </button>
+            <button type="button" onClick={() => { setResetPwUser(null); setResetPwForm({ password: '', confirm: '' }) }} className="btn-ghost">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   )
 }

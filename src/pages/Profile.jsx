@@ -18,7 +18,7 @@ import { AFFILIATIONS, BIO_MAX, GAME_ROLES, storagePathFromUrl } from '../lib/ut
  * El super-admin también puede cambiar su propia contraseña desde aquí.
  */
 export default function Profile() {
-  const { user, profile: authProfile, role, can, refreshProfile } = useAuth()
+  const { user, profile: authProfile, can, refreshProfile } = useAuth()
   const { toast } = useToast()
 
   const [profile, setProfile] = useState(null)
@@ -300,16 +300,15 @@ export default function Profile() {
             </button>
           </div>
 
-          {/* Seguridad: solo el super-admin puede cambiar su propia contraseña */}
-          {role === 'super-admin' && (
-            <div className="mt-8 rounded-2xl border border-edge bg-elevated p-5">
-              <h3 className="flex items-center gap-2 font-display font-bold text-text">
-                <KeyRound size={18} className="text-primary" />
-                Seguridad · Cambiar contraseña
-              </h3>
-              <p className="mt-1 text-xs text-soft">
-                Tu contraseña nunca se muestra en el código. Cámbiala aquí siempre que quieras.
-              </p>
+          {/* Seguridad: todos los usuarios pueden cambiar su propia contraseña */}
+          <div className="mt-8 rounded-2xl border border-edge bg-elevated p-5">
+            <h3 className="flex items-center gap-2 font-display font-bold text-text">
+              <KeyRound size={18} className="text-primary" />
+              Seguridad · Cambiar contraseña
+            </h3>
+            <p className="mt-1 text-xs text-soft">
+              Tu contraseña nunca se muestra en el código. Cámbiala aquí siempre que quieras.
+            </p>
               <form onSubmit={changePassword} className="mt-4 space-y-4">
                 <div>
                   <label className="label" htmlFor="pw-current">Contraseña actual</label>
@@ -357,8 +356,7 @@ export default function Profile() {
                   {changing ? 'Actualizando…' : 'Cambiar contraseña'}
                 </button>
               </form>
-            </div>
-          )}
+          </div>
         </motion.div>
       ) : (
         <ProfileView
