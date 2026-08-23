@@ -17,7 +17,6 @@ const FEEDS = [
   { key: 'announcements', label: 'Anuncios', icon: Newspaper },
   { key: 'general', label: 'Discusión General', icon: MessageSquare },
   { key: 'suggestions', label: 'Sugerencias', icon: Globe },
-  { key: 'bug-reports', label: 'Bug Reports', icon: MessageSquare },
 ]
 
 function timeAgo(iso) {

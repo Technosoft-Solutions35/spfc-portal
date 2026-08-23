@@ -21,13 +21,12 @@ const CORS_HEADERS = {
 }
 
 // ── Feeds RSS del foro PokeMMO ──
-// Agregá más feeds aquí para cubrir más secciones del foro.
-// Formato: https://forums.pokemmo.com/index.php?/rss/<forum-id>-<slug>.xml/
+// Formato para foros: https://forums.pokemmo.com/index.php?/forum/{id}-{slug}.xml/
+// Formato para anuncios: https://forums.pokemmo.com/index.php?/rss/{id}-{slug}.xml/
 const RSS_FEEDS = [
   { id: 'announcements', url: 'https://forums.pokemmo.com/index.php?/rss/1-updates-announcements.xml/', label: 'Anuncios' },
-  { id: 'general', url: 'https://forums.pokemmo.com/index.php?/rss/2-general-discussion.xml/', label: 'Discusión General' },
-  { id: 'suggestions', url: 'https://forums.pokemmo.com/index.php?/rss/3-suggestions.xml/', label: 'Sugerencias' },
-  { id: 'bug-reports', url: 'https://forums.pokemmo.com/index.php?/rss/4-bug-reports.xml/', label: 'Bug Reports' },
+  { id: 'general', url: 'https://forums.pokemmo.com/index.php?/forum/7-general-discussion.xml/', label: 'Discusión General' },
+  { id: 'suggestions', url: 'https://forums.pokemmo.com/index.php?/forum/18-suggestion-box.xml/', label: 'Sugerencias' },
 ]
 
 function json(body, status = 200) {

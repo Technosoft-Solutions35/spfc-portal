@@ -10,9 +10,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 const FEEDS = {
   announcements: 'https://forums.pokemmo.com/index.php?/rss/1-updates-announcements.xml/',
-  general: 'https://forums.pokemmo.com/index.php?/rss/2-general-discussion.xml/',
-  suggestions: 'https://forums.pokemmo.com/index.php?/rss/3-suggestions.xml/',
-  'bug-reports': 'https://forums.pokemmo.com/index.php?/rss/4-bug-reports.xml/',
+  general: 'https://forums.pokemmo.com/index.php?/forum/7-general-discussion.xml/',
+  suggestions: 'https://forums.pokemmo.com/index.php?/forum/18-suggestion-box.xml/',
 }
 const DEFAULT_FEED = 'announcements'
 
