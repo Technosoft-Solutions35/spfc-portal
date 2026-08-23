@@ -42,6 +42,24 @@ function textOf(xml, tag) {
   return (xml.match(re)?.[1] ?? '').trim()
 }
 
+function stripHtml(str) {
+  if (!str) return ''
+  return str
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<\/?p[^>]*>/gi, ' ')
+    .replace(/<img[^>]*>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#\d+;/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function enclosureUrl(xml) {
   const m = xml.match(/<enclosure\s[^>]*url="([^"]+)"/)
   return m ? m[1] : null
@@ -61,9 +79,9 @@ async function fetchRSS(url) {
     if (!res.ok) return []
     const xml = await res.text()
     return xml.split(/<item>/g).slice(1).map((chunk) => ({
-      title: textOf(chunk, 'title'),
+      title: stripHtml(textOf(chunk, 'title')),
       link: textOf(chunk, 'link'),
-      description: textOf(chunk, 'description') || null,
+      description: stripHtml(textOf(chunk, 'description')) || null,
       image: enclosureUrl(chunk),
       pubDate: parseRFC822(textOf(chunk, 'pubDate')),
     })).filter((item) => item.title && item.link)

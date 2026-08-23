@@ -35,6 +35,31 @@ function textOf(xml, tag) {
   return m ? m[1].trim() : ''
 }
 
+/** Decodifica entidades HTML y elimina etiquetas HTML, devolviendo texto plano limpio. */
+function stripHtml(str) {
+  if (!str) return ''
+  return str
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<\/?p[^>]*>/gi, ' ')
+    .replace(/<img[^>]*>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#\d+;/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/** Trunca texto a un máximo de caracteres. */
+function truncate(str, max) {
+  if (!str || str.length <= max) return str
+  return str.slice(0, max).replace(/\s+\S*$/, '') + '...'
+}
+
 /** Extrae el atributo url de un tag <enclosure .../>. */
 function enclosureUrl(xml) {
   const m = xml.match(/<enclosure\s[^>]*url="([^"]+)"/)
@@ -87,9 +112,9 @@ Deno.serve(async (req) => {
     const itemChunks = xml.split(/<item>/g).slice(1) // salta lo anterior al primer <item>
 
     const items = itemChunks.map((chunk) => {
-      const title = textOf(chunk, 'title')
+      const title = stripHtml(textOf(chunk, 'title'))
       const link = textOf(chunk, 'link')
-      const description = textOf(chunk, 'description')
+      const description = truncate(stripHtml(textOf(chunk, 'description')), 200)
       const pubDate = textOf(chunk, 'pubDate')
       const image = enclosureUrl(chunk)
 
