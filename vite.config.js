@@ -1,8 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// Configuración de Vite para la SPA del portal SpFc/Gd.
+// base: './' para que los assets usen rutas relativas y el build funcione
+// en subcarpetas (GitHub Pages sirve desde /spfc-portal/).
 export default defineConfig({
   plugins: [react()],
+  base: './',
   server: {
     port: 5173,
     open: true,
