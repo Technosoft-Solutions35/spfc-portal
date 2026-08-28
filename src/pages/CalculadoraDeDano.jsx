@@ -6,6 +6,11 @@ import { Generations, Pokemon, Move, Field, Side, calculate } from '../lib/pokec
 import { T, toID, normalize, natureEs, statEsFull } from '../lib/pokecalc/es.js'
 import SETDEX_BW from '../lib/pokecalc/data/gen5-presets.js'
 import GEN5_TIERS from '../lib/pokecalc/data/gen5-tiers.js'
+import ABIL_SET from '../lib/pokecalc/data/gen5-abilities.js'
+
+// Habilidades por especie con claves normalizadas al id del motor (toID).
+const ABIL_BY_TOID = {}
+for (const k in ABIL_SET) ABIL_BY_TOID[toID(k)] = ABIL_SET[k]
 
 /**
  * Calculadora de Daño PokeMMO (Gen 5).
@@ -71,9 +76,11 @@ function listTypes(speciesName) {
 }
 
 function listAbilities(speciesName) {
-  const spec = GEN.species.get(toID(speciesName))
-  if (!spec) return []
-  return Object.values(spec.abilities || {}).filter(Boolean)
+  const id = toID(speciesName)
+  const fromData = ABIL_BY_TOID[id] || []
+  const spec = GEN.species.get(id)
+  const engineAb = spec ? Object.values(spec.abilities || {}).filter(Boolean) : []
+  return [...new Set([...engineAb, ...fromData])]
 }
 
 function defaultSide() {
@@ -208,11 +215,11 @@ function PokemonPanel({
             onPick={(name) => {
               const base = toID(name)
               const spec = GEN.species.get(base)
-              const abilities = spec ? Object.values(spec.abilities || {}).filter(Boolean) : []
+              const abilities = listAbilities(name)
               const presetNames = (presets && presets[name]) ? Object.keys(presets[name]) : []
               set({
                 species: name,
-                ability: abilities[0] || '',
+                ability: '',
                 moves: ['', '', '', ''],
               })
               if (presetNames.length) {
