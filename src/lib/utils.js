@@ -74,7 +74,7 @@ export const EVENT_STATUS = {
 // ¿Este evento puede tener brackets?
 export function canHaveBrackets(event) {
   if (!event) return false
-  return event.bracket_ready || (event.event_type === 'PvE/Mixtos' && event.tier === 'Fulminantes')
+  return event.bracket_ready || event.event_type === 'PvP' || (event.event_type === 'PvE/Mixtos' && event.tier === 'Fulminantes')
 }
 
 // Categorías de guías (selección múltiple)
