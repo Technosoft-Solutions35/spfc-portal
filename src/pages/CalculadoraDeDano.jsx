@@ -58,18 +58,22 @@ function buildOptions() {
       /* especie no construible en Gen 5: se omite */
     }
   }
-  const abilities = []
-  for (const a of GEN.abilities) abilities.push(a.name)
   const items = []
   for (const i of GEN.items) items.push(i.name)
   const moves = []
   for (const m of GEN.moves) moves.push(m.name)
-  return { species, abilities, items, moves }
+  return { species, items, moves }
 }
 
 function listTypes(speciesName) {
   const spec = GEN.species.get(toID(speciesName))
   return spec ? spec.types : []
+}
+
+function listAbilities(speciesName) {
+  const spec = GEN.species.get(toID(speciesName))
+  if (!spec) return []
+  return Object.values(spec.abilities || {}).filter(Boolean)
 }
 
 function defaultSide() {
@@ -173,7 +177,7 @@ function comboKind(label) {
 
 // ── Panel de un Pokémon (atacante o defensor) ───────────────────────────
 function PokemonPanel({
-  title, accent, side, speciesList, abilityList, itemList, moveList, onChange,
+  title, accent, side, speciesList, itemList, moveList, onChange,
   presets = null, onPreset,
 }) {
   const [group, setGroup] = useState('')
@@ -306,7 +310,8 @@ function PokemonPanel({
           key={`ab-${side.species}`}
           label="Habilidad"
           value={side.ability}
-          options={abilityList}
+          options={listAbilities(side.species)}
+          placeholder="Elegí primero una especie…"
           onPick={(name) => set({ ability: name })}
         />
       </div>
@@ -570,14 +575,14 @@ export default function CalculadoraDeDano() {
         <PokemonPanel
           title="Atacante" accent="border-l-4 border-l-primary"
           side={attacker} onChange={setAttacker}
-          speciesList={opts.species} abilityList={opts.abilities}
+          speciesList={opts.species}
           itemList={opts.items} moveList={opts.moves}
           presets={SETDEX_BW} onPreset={(s, n) => applyPreset('attacker', s, n)}
         />
         <PokemonPanel
           title="Defensor" accent="border-l-4 border-l-secondary"
           side={defender} onChange={setDefender}
-          speciesList={opts.species} abilityList={opts.abilities}
+          speciesList={opts.species}
           itemList={opts.items} moveList={opts.moves}
           presets={SETDEX_BW} onPreset={(s, n) => applyPreset('defender', s, n)}
         />
