@@ -19,6 +19,7 @@ import {
   Box,
   Globe,
   ShieldAlert,
+  Calculator,
 } from 'lucide-react'
 
 // Definición única de navegación (sidebar y menú móvil comparten esta lista).
@@ -35,6 +36,8 @@ export const NAV_ITEMS = [
   { to: '/guias', label: 'Guías y Buildeos', icon: BookOpen, section: 'guides', load: () => import('../pages/Guides') },
   // DLC 9: almacén de builds por tier (todos)
   { to: '/builds', label: 'Almacén de Builds', icon: Layers, load: () => import('../pages/Builds') },
+  // Calculadora de daño Gen 5 (todos)
+  { to: '/calculadora-de-dano', label: 'Calculadora de Daño', icon: Calculator, load: () => import('../pages/CalculadoraDeDano') },
   // DLC 10: comercio del clan (todos)
   { to: '/comercio', label: 'Comercio', icon: Handshake, load: () => import('../pages/Commerce') },
   // DLC 15: directorio de miembros con búsqueda en vivo (todos)
