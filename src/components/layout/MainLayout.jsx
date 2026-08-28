@@ -20,7 +20,7 @@ export default function MainLayout() {
   const { maintenance } = useMaintenance()
   const { role } = useAuth()
 
-  const showBanner = maintenance && (role === 'admin' || role === 'super-admin')
+  const showBanner = maintenance && role === 'super-admin'
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })

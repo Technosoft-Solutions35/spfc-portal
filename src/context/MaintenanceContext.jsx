@@ -39,7 +39,7 @@ export function MaintenanceProvider({ children }) {
     if (!error) {
       setMaintenance(next)
       // Enviar notificación push a todos los suscritos
-      const msgOn = 'El portal está en mantenimiento. Solo el staff puede acceder. Al concluir, serás notificado por esta misma vía.'
+      const msgOn = 'El portal está en mantenimiento. Solo el superadmin puede acceder. Al concluir, serás notificado por esta misma vía.'
       const msgOff = '¡El mantenimiento ha concluido! Ya puedes utilizar el Portal Web SpFc/Gd normalmente.'
       const pushResult = await sendPushNotification({
         type: 'maintenance',

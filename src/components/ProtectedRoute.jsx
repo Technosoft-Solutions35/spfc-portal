@@ -6,7 +6,7 @@ import Spinner from './ui/Spinner'
 /**
  * Guarda de rutas: exige sesión iniciada y, opcionalmente, un rol o uno de
  * varios permisos de la matriz (DLC 14).
- * Cuando el modo mantenimiento está activo, solo admin/super-admin pasan.
+ * Cuando el modo mantenimiento está activo, solo super-admin pasa.
  * Usuarios baneados son bloqueados completamente (DLC Security).
  */
 export default function ProtectedRoute({ roles, anyPermission, children }) {
@@ -48,8 +48,8 @@ export default function ProtectedRoute({ roles, anyPermission, children }) {
     )
   }
 
-  // Modo mantenimiento: solo admin y super-admin pasan
-  if (maintenance && (!session || (role !== 'admin' && role !== 'super-admin'))) {
+  // Modo mantenimiento: solo super-admin pasa
+  if (maintenance && role !== 'super-admin') {
     return <Navigate to="/mantenimiento" replace />
   }
 

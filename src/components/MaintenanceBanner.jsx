@@ -26,7 +26,7 @@ export default function MaintenanceBanner() {
       <div className="relative flex items-center justify-center gap-3 px-4 py-3 text-sm font-bold text-black">
         <Wrench size={18} className="shrink-0 animate-spin" style={{ animationDuration: '3s' }} />
         <span>
-          🔧 El portal está en <strong>modo mantenimiento</strong>. Solo los administradores pueden acceder.
+          🔧 El portal está en <strong>modo mantenimiento</strong>. Solo el superadmin puede acceder.
         </span>
         <Wrench size={18} className="shrink-0 animate-spin" style={{ animationDuration: '3s' }} />
       </div>

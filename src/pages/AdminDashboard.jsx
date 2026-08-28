@@ -104,7 +104,7 @@ function ActionsPanel() {
       toast(
         maintenance
           ? 'Modo mantenimiento desactivado. Todos los miembros pueden acceder.'
-          : 'Modo mantenimiento activado. Solo admin/super-admin pueden acceder.',
+          : 'Modo mantenimiento activado. Solo el superadmin puede acceder.',
         maintenance ? 'success' : 'info',
       )
     } else {
@@ -137,14 +137,14 @@ function ActionsPanel() {
               <div>
                 <h4 className="font-display font-bold text-text">Modo Mantenimiento</h4>
                 <p className="text-xs text-soft">
-                  Bloquea el acceso a todos los miembros excepto admin y super-admin.
+                  Bloquea el acceso a todos los miembros excepto el superadmin.
                 </p>
               </div>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-soft">
               Cuando está activo, los miembros con sesión iniciada son redirigidos
               a la página de mantenimiento. Los usuarios no autenticados no pueden
-              iniciar sesión. Tú y los demás administradores pueden seguir navegando normalmente.
+              iniciar sesión. Tú, como superadmin, puedes seguir navegando normalmente.
             </p>
           </div>
           <button
@@ -170,7 +170,7 @@ function ActionsPanel() {
             }`}
           >
             <span className={`h-1.5 w-1.5 rounded-full ${maintenance ? 'bg-yellow-500' : 'bg-success'}`} />
-            {maintenance ? 'Activo — Solo administradores' : 'Inactivo — Acceso abierto'}
+            {maintenance ? 'Activo — Solo superadmin' : 'Inactivo — Acceso abierto'}
           </span>
         </div>
       </div>

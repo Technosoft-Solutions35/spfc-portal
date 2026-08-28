@@ -35,7 +35,7 @@ export default function MaintenancePage() {
       </h1>
       <p className="mb-6 max-w-md text-soft">
         Estamos realizando mejoras en el portal. El acceso está temporalmente
-        restringido a los administradores del clan.
+        restringido al superadmin del clan.
       </p>
       <p className="mb-8 text-sm text-soft">
         Vuelve a intentarlo más tarde. ⏳
