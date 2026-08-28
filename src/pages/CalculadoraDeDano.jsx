@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Calculator, RotateCcw, Swords } from 'lucide-react'
 import PageHeader from '../components/ui/PageHeader'
 import { Generations, Pokemon, Move, Field, Side, calculate } from '../lib/pokecalc'
-import { T, toID, natureEs, statEsFull } from '../lib/pokecalc/es.js'
+import { T, toID, normalize, natureEs, statEsFull } from '../lib/pokecalc/es.js'
 import SETDEX_BW from '../lib/pokecalc/data/gen5-presets.js'
 import GEN5_TIERS from '../lib/pokecalc/data/gen5-tiers.js'
 
@@ -99,11 +99,14 @@ function Combo({ label, value, options, onPick, placeholder = 'Escribir o elegir
   }, [open])
 
   const display = open ? q : T(value || '', comboKind(label))
-  const ql = open ? q.trim().toLowerCase() : ''
+  const ql = normalize(q)
+  const kind = comboKind(label)
   const filtered = useMemo(() => {
     if (!ql) return options.slice(0, 50)
-    return options.filter((o) => o.toLowerCase().includes(ql)).slice(0, 60)
-  }, [ql, options])
+    return options
+      .filter((o) => normalize(T(o, kind)).includes(ql) || normalize(o).includes(ql))
+      .slice(0, 60)
+  }, [ql, kind, options])
 
   const pick = (name) => {
     setOpen(false)

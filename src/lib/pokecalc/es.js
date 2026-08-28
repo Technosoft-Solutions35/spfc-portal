@@ -14,6 +14,17 @@ export function toID(name) {
   return ('' + (name ?? '')).toLowerCase().replace(/[^a-z0-9]+/g, '')
 }
 
+// Normaliza para buscar: minúsculas, sin tildes y sin separadores.
+// Permite encontrar "Terremoto" tecleando "terremoto", "tormenta arena",
+// "TormentaArena", etc., comparando con el nombre español.
+export function normalize(s) {
+  return ('' + (s ?? ''))
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '')
+}
+
 // Nombres del motor (Showdown/PokeMMO) que no coinciden con los identificadores
 // de PokeAPI; se mapean a la entrada equivalente del diccionario.
 const MOVE_ALIASES = {
