@@ -423,11 +423,12 @@ export default function Brackets() {
       .eq('id', target.id)
     setBusy(false)
     if (error) {
-      toast('No se pudo finalizar el torneo', 'error')
+      toast('No se pudo finalizar el torneo: ' + error.message, 'error')
       return
     }
     toast('Torneo finalizado: ¡campeón ' + champion.champion + '!', 'success')
-    setTarget((t) => ({ ...t, status: 'finished' }))
+    setTarget(null)
+    targetRef.current = null
     loadTournaments()
   }
 
