@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Calculator, RotateCcw, Swords } from 'lucide-react'
 import PageHeader from '../components/ui/PageHeader'
+import { useToast } from '../components/ui/Toast'
 import { Generations, Pokemon, Move, Field, Side, calculate } from '../lib/pokecalc'
 import { T, toID, normalize, natureEs, statEsFull, englishName, natureEngine, statEngine } from '../lib/pokecalc/es.js'
 import SETDEX_BW from '../lib/pokecalc/data/gen5-presets.js'
@@ -38,9 +39,16 @@ const TERRAINS = [
   ['Misty', 'Brumoso'],
 ]
 
-// Sprites de Showdown (animados) indexados por el id del motor (toID).
+// Sprites de Showdown (animados) indexados por el id real del spritesheet.
+// El id del motor con guiones se mantiene tal cual (Arceus-Bug -> arceus-bug),
+// salvo en los pocos casos donde el archivo usa otro nombre.
+const SPRITE_IDS = {
+  'ho-oh': 'hooh',
+  'nidoran-m': 'nidoranm',
+  'basculin-blue-striped': 'basculin-bluestriped',
+}
 const spriteUrl = (species) =>
-  `https://play.pokemonshowdown.com/sprites/xyani/${toID(species)}.gif`
+  `https://play.pokemonshowdown.com/sprites/xyani/${SPRITE_IDS[species.toLowerCase()] || species.toLowerCase()}.gif`
 
 const TIER_LABELS = {
   LC: 'Little Cup', NFE: 'NFE', PU: 'PU', PUBL: 'PU BL', NU: 'NU', NUBL: 'NU BL',
@@ -223,7 +231,7 @@ function PokemonPanel({
 
       {/* Especie + sprite */}
       <div className="mb-4 flex gap-3">
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <Combo
             label="Especie"
             value={side.species}
@@ -248,14 +256,14 @@ function PokemonPanel({
           />
         </div>
         {side.species && (
-          <div className="flex flex-col items-center justify-end">
+          <div className="flex w-16 flex-shrink-0 flex-col items-center justify-end">
             <img
               src={spriteUrl(side.species)}
               alt={side.species}
               onError={(e) => (e.currentTarget.style.display = 'none')}
               className="h-16 w-16 object-contain"
             />
-            <span className="text-[10px] text-soft">{T(side.species, 'species')}</span>
+            <span className="break-words text-center text-[10px] leading-tight text-soft">{T(side.species, 'species')}</span>
           </div>
         )}
       </div>
@@ -466,6 +474,7 @@ function FieldPanel({ field, onChange, side }) {
 // ── Página ──────────────────────────────────────────────────────────────
 export default function CalculadoraDeDano() {
   const opts = useMemo(() => buildOptions(), [])
+  const { toast } = useToast()
   const [attacker, setAttacker] = useState(defaultSide)
   const [defender, setDefender] = useState(defaultSide)
   const [field, setField] = useState(emptyField)
@@ -663,6 +672,18 @@ export default function CalculadoraDeDano() {
     return [at, '', df].join('\n')
   }
 
+  const copyExport = () => {
+    const text = exportShowdown()
+    if (!text.trim()) {
+      toast('No hay un equipo para copiar todavía', 'error')
+      return
+    }
+    navigator.clipboard
+      ?.writeText(text)
+      .then(() => toast('Equipo copiado al portapapeles', 'success'))
+      .catch(() => toast('No se pudo copiar el código', 'error'))
+  }
+
   return (
     <div>
       <PageHeader
@@ -797,7 +818,10 @@ export default function CalculadoraDeDano() {
               className="input h-64 font-mono text-xs"
               value={exportShowdown()}
             />
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 flex justify-end gap-2">
+              <button onClick={copyExport} className="btn-primary">
+                Copiar
+              </button>
               <button onClick={() => setShowExport(false)} className="btn-ghost">Cerrar</button>
             </div>
           </div>
