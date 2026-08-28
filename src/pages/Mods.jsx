@@ -230,7 +230,7 @@ export default function Mods() {
             )}
 
             <div className="text-text">
-              {active.content.split('\n').map((line, i) => (
+              {(active.content || '').split('\n').map((line, i) => (
                 <p key={i} className={line.trim() === '' ? 'mb-2' : 'mb-3 leading-relaxed'}>
                   {line}
                 </p>

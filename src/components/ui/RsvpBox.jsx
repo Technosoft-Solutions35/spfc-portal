@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext'
 import ProfileAvatar from './ProfileAvatar'
 import { RoleBadge } from './Avatar'
 import ProfileModal from '../profile/ProfileModal'
+import { useToast } from './Toast'
 
 // Tabla y columna según el tipo de contenido (evento o torneo)
 const TARGETS = {
@@ -19,6 +20,7 @@ const TARGETS = {
  */
 export default function RsvpBox({ parentType = 'event', parentId }) {
   const { user } = useAuth()
+  const { toast } = useToast()
   const [rows, setRows] = useState(null)
   const [viewProfileId, setViewProfileId] = useState(null)
 
@@ -54,11 +56,11 @@ export default function RsvpBox({ parentType = 'event', parentId }) {
     if (!user) return
     if (going) {
       const { error } = await supabase.from(table).delete().match({ [column]: parentId, user_id: user.id })
-      if (error) return
+      if (error) { toast('No se pudo cancelar la asistencia', 'error'); return }
       setRows((prev) => prev?.filter((r) => r.user_id !== user.id))
     } else {
       const { error } = await supabase.from(table).insert({ [column]: parentId, user_id: user.id })
-      if (error) return
+      if (error) { toast('No se pudo confirmar la asistencia', 'error'); return }
       load()
     }
   }
