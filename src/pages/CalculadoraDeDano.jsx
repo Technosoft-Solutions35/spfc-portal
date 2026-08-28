@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Calculator, RotateCcw, Swords } from 'lucide-react'
 import PageHeader from '../components/ui/PageHeader'
 import { Generations, Pokemon, Move, Field, Side, calculate } from '../lib/pokecalc'
-import { T, toID, normalize, natureEs, statEsFull } from '../lib/pokecalc/es.js'
+import { T, toID, normalize, natureEs, statEsFull, englishName, natureEngine, statEngine } from '../lib/pokecalc/es.js'
 import SETDEX_BW from '../lib/pokecalc/data/gen5-presets.js'
 import GEN5_TIERS from '../lib/pokecalc/data/gen5-tiers.js'
 import ABIL_SET from '../lib/pokecalc/data/gen5-abilities.js'
@@ -185,7 +185,7 @@ function comboKind(label) {
 // ── Panel de un Pokémon (atacante o defensor) ───────────────────────────
 function PokemonPanel({
   title, accent, side, speciesList, itemList, moveList, onChange,
-  presets = null, onPreset,
+  presets = null, onPreset, onImport,
 }) {
   const [group, setGroup] = useState('')
   const types = listTypes(side.species)
@@ -199,10 +199,19 @@ function PokemonPanel({
         <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <Swords size={20} />
         </span>
-        <div>
+        <div className="flex-1">
           <h3 className="font-display text-lg font-extrabold text-text">{title}</h3>
           <p className="text-xs text-soft">{tier ? `Tier: ${tierLabel(tier)}` : 'Elegí una especie'}</p>
         </div>
+        {onImport && (
+          <button
+            type="button"
+            onClick={onImport}
+            className="rounded-lg border border-edge px-3 py-1.5 text-xs font-bold text-soft transition hover:border-secondary hover:text-secondary"
+          >
+            Importar
+          </button>
+        )}
       </div>
 
       {/* Especie + sprite */}
@@ -456,6 +465,9 @@ export default function CalculadoraDeDano() {
   const [results, setResults] = useState(null)
   const [showExport, setShowExport] = useState(false)
   const [error, setError] = useState(null)
+  const [importTarget, setImportTarget] = useState(null) // 'attacker' | 'defender' | null
+  const [importText, setImportText] = useState('')
+  const [importMsg, setImportMsg] = useState(null)
 
   const applyPreset = (sideKey, species, setName) => {
     const preset = SETDEX_BW[species]?.[setName]
@@ -554,6 +566,76 @@ export default function CalculadoraDeDano() {
     setError(null)
   }
 
+  // Interpreta el texto de un set (formato del export / Showdown) y lo devuelve
+  // como objeto `side`, o lanza un error con un mensaje amigable.
+  const parseSet = (text) => {
+    const lines = text.split('\n').map((l) => l.trim()).filter(Boolean)
+    if (!lines.length) throw new Error('No se pegó ningún texto.')
+    const side = defaultSide()
+
+    const first = lines[0]
+    const atIdx = first.indexOf(' @ ')
+    side.species = englishName(atIdx >= 0 ? first.slice(0, atIdx).trim() : first, 'species')
+    if (atIdx >= 0) side.item = englishName(first.slice(atIdx + 3).trim(), 'item')
+
+    for (let i = 1; i < lines.length; i++) {
+      const l = lines[i]
+      if (l.startsWith('Ability:')) {
+        const v = l.slice('Ability:'.length).trim().replace(/[—\-]+$/, '').trim()
+        side.ability = v && v !== '—' ? englishName(v, 'ability') : ''
+      } else if (/^Level:/i.test(l)) {
+        const n = +l.slice('Level:'.length).trim()
+        if (!Number.isNaN(n)) side.level = Math.max(1, Math.min(100, n))
+      } else if (/^IVs:/i.test(l)) {
+        const ivs = { ...side.ivs }
+        for (const part of l.slice('IVs:'.length).split('/')) {
+          const p = part.trim()
+          const mm = p.match(/^(\d+)\s+(.+)$/)
+          if (mm) {
+            const stat = statEngine(mm[2])
+            if (stat) ivs[stat] = Math.max(0, Math.min(31, +mm[1]))
+          }
+        }
+        side.ivs = ivs
+      } else if (/ Nature/i.test(l)) {
+        const m = l.match(/^(.+?)\s+Nature(?:\s{2,}(.*))?$/i)
+        if (m) {
+          side.nature = natureEngine(m[1])
+          const evStr = m[2] || ''
+          if (evStr) {
+            for (const part of evStr.split('/')) {
+              const p = part.trim()
+              const mm = p.match(/^(\d+)\s+(.+)$/)
+              if (mm) {
+                const stat = statEngine(mm[2])
+                if (stat) side.evs[stat] = Math.max(0, Math.min(252, +mm[1]))
+              }
+            }
+          }
+        }
+      } else if (l.startsWith('-')) {
+        const mn = englishName(l.slice(1).trim(), 'move')
+        const idx = side.moves.findIndex((m) => !m)
+        if (idx >= 0) side.moves[idx] = mn
+      }
+    }
+    if (!side.species) throw new Error('No se encontró el nombre de la especie en la primera línea.')
+    return side
+  }
+
+  const importSet = (target) => {
+    setImportMsg(null)
+    try {
+      const side = parseSet(importText)
+      const updater = target === 'attacker' ? setAttacker : setDefender
+      updater(side)
+      setImportTarget(null)
+      setImportText('')
+    } catch (e) {
+      setImportMsg(e.message || 'No se pudo interpretar el set.')
+    }
+  }
+
   const exportShowdown = () => {
     const line = (side) => {
       if (!side.species) return ''
@@ -585,6 +667,7 @@ export default function CalculadoraDeDano() {
           speciesList={opts.species}
           itemList={opts.items} moveList={opts.moves}
           presets={SETDEX_BW} onPreset={(s, n) => applyPreset('attacker', s, n)}
+          onImport={() => { setImportText(attacker.species ? exportShowdown().split('\n\n')[0] : ''); setImportTarget('attacker'); setImportMsg(null) }}
         />
         <PokemonPanel
           title="Defensor" accent="border-l-4 border-l-secondary"
@@ -592,6 +675,7 @@ export default function CalculadoraDeDano() {
           speciesList={opts.species}
           itemList={opts.items} moveList={opts.moves}
           presets={SETDEX_BW} onPreset={(s, n) => applyPreset('defender', s, n)}
+          onImport={() => { setImportText(defender.species ? exportShowdown().split('\n\n')[1] || '' : ''); setImportTarget('defender'); setImportMsg(null) }}
         />
       </div>
 
@@ -704,6 +788,37 @@ export default function CalculadoraDeDano() {
             />
             <div className="mt-4 flex justify-end">
               <button onClick={() => setShowExport(false)} className="btn-ghost">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import modal */}
+      {importTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => { setImportTarget(null); setImportMsg(null) }}>
+          <div className="app-card w-full max-w-xl p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="mb-1 font-display text-lg font-extrabold text-text">
+              Importar {importTarget === 'attacker' ? 'Atacante' : 'Defensor'}
+            </h3>
+            <p className="mb-3 text-xs text-soft">
+              Pegá un set en formato Showdown (el mismo que genera «Exportar», o el de cualquier teambuilder). Se rellenará el Pokémon completo.
+            </p>
+            <textarea
+              className="input h-56 font-mono text-xs"
+              value={importText}
+              onChange={(e) => setImportText(e.target.value)}
+              placeholder={"Garchomp @ Vidasfera\nAbility: Velo Arena\nLevel: 50\nFirme Nature  252 Ataque / 4 Defensa\n- Terremoto\n- Filo del Abismo\n- Pica Piedra\n- Dragoncolmillo"}
+              autoFocus
+            />
+            <p className="mt-1 text-[11px] text-soft">
+              Formato: <code className="text-text">Especie @ Objeto</code> · <code className="text-text">Ability</code> · <code className="text-text">Level</code> · <code className="text-text">Naturaleza Nature  EVs</code> · <code className="text-text">IVs</code> · movimientos con <code className="text-text">-</code>.
+            </p>
+            {importMsg && (
+              <p className="mt-2 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">{importMsg}</p>
+            )}
+            <div className="mt-4 flex justify-end gap-2">
+              <button onClick={() => { setImportTarget(null); setImportMsg(null) }} className="btn-ghost">Cancelar</button>
+              <button onClick={() => importSet(importTarget)} className="btn-primary">Importar</button>
             </div>
           </div>
         </div>

@@ -159,6 +159,56 @@ export function terrainEs(name) {
   return TERRAIN_ES[name] || (name ? T(name) : '')
 }
 
+// Deduce el id interno (inglés) del motor a partir de un nombre que puede estar
+// en español. Se usa para el importador de sets (inverso de `T`). Si no coincide
+// con ninguna traducción, asume que ya es el id del motor y lo devuelve.
+const dictFor = (kind) =>
+  kind === 'species' ? SPECIES
+  : kind === 'move' ? MOVES
+  : kind === 'ability' ? ABILITIES
+  : kind === 'item' ? ITEMS
+  : null
+
+const scanReverse = (map, want) => {
+  for (const k in map) {
+    const v = typeof map[k] === 'object' ? map[k].es : map[k]
+    if (v && normalize(v) === want) return k
+  }
+  return ''
+}
+
+export function englishName(name, kind) {
+  if (!name) return ''
+  const want = normalize(name)
+  if (!want) return ''
+  const hit = scanReverse(dictFor(kind), want)
+  if (hit) return hit
+  if (kind === 'move') {
+    const r = scanReverse(RETRO_MOVES, want)
+    if (r) return r
+    const a = scanReverse(MOVE_ALIASES, want)
+    if (a) return a
+  }
+  return name
+}
+
+// Invierte una naturaleza en español a su id del motor (Firme -> Adamant).
+export function natureEngine(es) {
+  const want = normalize(es)
+  if (!want) return es
+  for (const k in NATURES_ES) if (normalize(NATURES_ES[k]) === want) return k
+  return es
+}
+
+// Invierte un nombre de estadística en español a su id (Ataque -> atk).
+export function statEngine(es) {
+  const want = normalize(es)
+  if (!want) return ''
+  for (const k in STAT_ES_FULL) if (normalize(STAT_ES_FULL[k]) === want) return k
+  for (const k in STAT_ES) if (normalize(STAT_ES[k]) === want) return k
+  return es
+}
+
 // Estadísticas (PS, Ataque, Defensa, At. Esp., Def. Esp., Velocidad)
 export const STAT_ES = {
   hp: 'PS', atk: 'Atq', def: 'Def', spa: 'At. Esp', spd: 'Def. Esp', spe: 'Vel',
