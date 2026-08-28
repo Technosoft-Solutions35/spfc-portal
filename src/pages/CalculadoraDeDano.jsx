@@ -550,7 +550,7 @@ export default function CalculadoraDeDano() {
         rows.push({ move: moveName, desc: 'No se pudo calcular este movimiento.', range: null, ko: '', percent: 0 })
       }
     }
-    setResults({ attacker: at, defender: df, field: f, rows })
+    setResults({ attacker: at, defender: df, field: f, rows, itemAt: attacker.item || '', itemDf: defender.item || '' })
     setError(null)
   }
 
@@ -668,6 +668,23 @@ export default function CalculadoraDeDano() {
                   </span>
                   {row.ko && <span className="text-sm font-semibold text-secondary">· {row.ko}</span>}
                 </div>
+                {(results.itemAt || results.itemDf) && (
+                  <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold">
+                    {results.itemAt && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-elevated px-2 py-0.5 text-soft">
+                        <span className="uppercase text-[10px]">Objeto atacante</span>
+                        <span className="text-text">· {T(results.itemAt, 'item')}</span>
+                      </span>
+                    )}
+                    {results.itemDf && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-elevated px-2 py-0.5 text-soft">
+                        <span className="uppercase text-[10px]">Objeto defensor</span>
+                        <span className="text-text">· {T(results.itemDf, 'item')}</span>
+                      </span>
+                    )}
+                    <span className="text-[11px] italic text-soft">La descripción del motor indica su efecto (p. ej. Gema Lucha, Vidasfera).</span>
+                  </div>
+                )}
                 <p className="text-sm text-soft">{row.desc}</p>
               </div>
             ))
