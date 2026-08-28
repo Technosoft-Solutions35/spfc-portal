@@ -83,6 +83,13 @@ function listAbilities(speciesName) {
   return [...new Set([...engineAb, ...fromData])]
 }
 
+// Devuelve el ítem solo si existe en el motor Gen 5; si no (import inválido,
+// "Ninguno", etc.) devuelve '' para no romper el cálculo.
+function validItem(name) {
+  if (!name) return ''
+  return GEN.items.get(toID(name)) ? name : ''
+}
+
 function defaultSide() {
   return {
     species: '',
@@ -491,7 +498,7 @@ export default function CalculadoraDeDano() {
       level: side.level,
       nature: side.nature,
       ability: side.ability || undefined,
-      item: side.item || undefined,
+      item: validItem(side.item) || undefined,
       ivs: side.ivs,
       evs: side.evs,
       boosts: Object.fromEntries(
@@ -546,7 +553,7 @@ export default function CalculadoraDeDano() {
     for (const moveName of attacker.moves) {
       if (!moveName) continue
       try {
-        const mv = new Move(GEN, moveName, { ability: at.ability, item: at.item })
+        const mv = new Move(GEN, moveName, { ability: at.ability, item: validItem(at.item) })
         const r = calculate(GEN, at, df, mv, f)
         const [min, max] = r.range()
         const pct = Math.max(1, Math.round((min / df.maxHP()) * 100))
@@ -562,7 +569,7 @@ export default function CalculadoraDeDano() {
         rows.push({ move: moveName, desc: 'No se pudo calcular este movimiento.', range: null, ko: '', percent: 0 })
       }
     }
-    setResults({ attacker: at, defender: df, field: f, rows, itemAt: attacker.item || '', itemDf: defender.item || '' })
+    setResults({ attacker: at, defender: df, field: f, rows, itemAt: validItem(attacker.item), itemDf: validItem(defender.item) })
     setError(null)
   }
 
@@ -576,7 +583,11 @@ export default function CalculadoraDeDano() {
     const first = lines[0]
     const atIdx = first.indexOf(' @ ')
     side.species = englishName(atIdx >= 0 ? first.slice(0, atIdx).trim() : first, 'species')
-    if (atIdx >= 0) side.item = englishName(first.slice(atIdx + 3).trim(), 'item')
+    if (atIdx >= 0) {
+      const itemRaw = first.slice(atIdx + 3).trim()
+      // "Ninguno", "None" o "—" = sin objeto (el export usa "Ninguno")
+      side.item = /^(ninguno|none|—|-|sin\s+objeto)$/i.test(itemRaw) ? '' : englishName(itemRaw, 'item')
+    }
 
     for (let i = 1; i < lines.length; i++) {
       const l = lines[i]
