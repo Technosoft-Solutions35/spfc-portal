@@ -27,6 +27,7 @@ const Guides = lazy(() => import('./pages/Guides'))
 const Birthdays = lazy(() => import('./pages/Birthdays'))
 const Builds = lazy(() => import('./pages/Builds'))
 const CalculadoraDeDano = lazy(() => import('./pages/CalculadoraDeDano'))
+const TeamBuilder = lazy(() => import('./pages/TeamBuilder'))
 const Commerce = lazy(() => import('./pages/Commerce'))
 const Brackets = lazy(() => import('./pages/Brackets'))
 const Raffles = lazy(() => import('./pages/Raffles'))
@@ -84,6 +85,7 @@ export default function App() {
                     <Route path="/cumpleanos" element={<Birthdays />} />
                     <Route path="/builds" element={<Builds />} />
                     <Route path="/calculadora-de-dano" element={<CalculadoraDeDano />} />
+                    <Route path="/team-builder" element={<TeamBuilder />} />
                     <Route path="/comercio" element={<Commerce />} />
                     <Route path="/brackets" element={<Brackets />} />
 

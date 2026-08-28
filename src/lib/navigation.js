@@ -38,6 +38,8 @@ export const NAV_ITEMS = [
   { to: '/builds', label: 'Almacén de Builds', icon: Layers, load: () => import('../pages/Builds') },
   // Calculadora de daño Gen 5 (todos)
   { to: '/calculadora-de-dano', label: 'Calculadora de Daño', icon: Calculator, load: () => import('../pages/CalculadoraDeDano') },
+  // DLC 11: Team Builder / creador de equipos (todos)
+  { to: '/team-builder', label: 'Creador de Equipos', icon: Layers, load: () => import('../pages/TeamBuilder') },
   // DLC 10: comercio del clan (todos)
   { to: '/comercio', label: 'Comercio', icon: Handshake, load: () => import('../pages/Commerce') },
   // DLC 15: directorio de miembros con búsqueda en vivo (todos)
