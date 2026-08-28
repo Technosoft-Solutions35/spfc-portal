@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Pencil, Plus, Trash2, X } from 'lucide-react'
-import { formatShortDate } from '../../lib/utils'
+import { EVENT_STATUS, formatShortDate } from '../../lib/utils'
 import { useToast } from '../ui/Toast'
 import Modal from '../ui/Modal'
 import Spinner from '../ui/Spinner'
@@ -222,6 +222,7 @@ export default function ContentManager({
   columns = ['title'],
   emptyHint,
   useCrudResult,
+  statusFilter,
 }) {
   const { items, loading, create, update, remove } = useCrudResult
   const { toast } = useToast()
@@ -231,6 +232,11 @@ export default function ContentManager({
   const [form, setForm] = useState({})
   const [deletePending, setDeletePending] = useState(null) // item awaiting password
   const [deletePwdOpen, setDeletePwdOpen] = useState(false)
+  const [statusFilterVal, setStatusFilterVal] = useState('all')
+
+  const visibleItems = statusFilter && statusFilterVal !== 'all'
+    ? (items || []).filter((item) => item.status === statusFilterVal)
+    : items
 
   const openNew = () => {
     setEditing(null)
@@ -340,13 +346,41 @@ export default function ContentManager({
         </button>
       </div>
 
+      {statusFilter && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setStatusFilterVal('all')}
+            className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+              statusFilterVal === 'all'
+                ? 'bg-primary text-white'
+                : 'border border-edge bg-elevated text-soft hover:text-text'
+            }`}
+          >
+            Todos
+          </button>
+          {Object.entries(EVENT_STATUS).map(([key, meta]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setStatusFilterVal(key)}
+              className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+                statusFilterVal === key ? meta.class : 'border border-edge bg-elevated text-soft hover:text-text'
+              }`}
+            >
+              {meta.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {loading ? (
         <Spinner label="Cargando..." />
-      ) : !items || items.length === 0 ? (
+      ) : !visibleItems || visibleItems.length === 0 ? (
         <EmptyState title="Sin registros" hint={emptyHint} />
       ) : (
         <ul className="divide-y divide-edge overflow-hidden rounded-2xl border border-edge">
-          {items.map((item) => (
+          {visibleItems.map((item) => (
             <li key={item.id} className="flex items-center gap-3 px-4 py-3 transition hover:bg-background">
               {item.image_url && (
                 <img src={item.image_url} alt="" className="h-10 w-10 rounded-lg object-cover" />

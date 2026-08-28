@@ -78,6 +78,7 @@ const FIELD_CONFIGS = {
     ],
     columns: ['title'],
     emptyHint: 'Crea el primer evento o torneo del clan.',
+    statusFilter: true,
   },
   guides: {
     table: 'guides',
@@ -213,6 +214,7 @@ function ActiveTab({ tab }) {
       fields={config.fields}
       columns={config.columns}
       emptyHint={config.emptyHint}
+      statusFilter={config.statusFilter}
       useCrudResult={crud}
     />
   )
