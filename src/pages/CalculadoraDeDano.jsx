@@ -114,7 +114,7 @@ function Combo({ label, value, options, onPick, placeholder = 'Escribir o elegir
 
   // Al abrir, cargamos el valor actual como texto de edición.
   useEffect(() => {
-    if (open) setQ(value || '')
+    if (open) setQ(T(value || '', comboKind(label)))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
