@@ -42,7 +42,8 @@ export default function DeletionPasswordModal({ open, onClose, onConfirm }) {
         <div className="flex items-center gap-3 rounded-xl bg-primary/10 px-4 py-3">
           <Lock size={18} className="shrink-0 text-primary" />
           <p className="text-sm text-text">
-            Se requiere la <strong>contraseña de eliminación</strong> para realizar esta acción.
+            Ingresa tu <strong>contraseña de cuenta</strong> (o la contraseña de eliminación
+            configurada en Panel Admin, si existe) para confirmar esta acción.
           </p>
         </div>
 

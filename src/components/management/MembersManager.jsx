@@ -30,7 +30,7 @@ const EMPTY_ADD = { username: '', password: '' }
  */
 export default function MembersManager() {
   const { toast } = useToast()
-  const { role: myRole } = useAuth()
+  const { role: myRole, profile: currentUser } = useAuth()
   const { isOnline } = usePresence()
   const canAssign = canAssignRoles(myRole)
 
@@ -126,26 +126,44 @@ export default function MembersManager() {
   }
 
   const confirmDelete = (m) => {
+    // El super-admin puede borrar sin contraseña de confirmación
+    if (myRole === ROLES.SUPER_ADMIN) {
+      deleteMember(m)
+      return
+    }
     setDeletePending(m)
     setDeletePwdOpen(true)
   }
 
-  const handleDeleteWithPassword = async (password) => {
-    const { data, error } = await supabase.rpc('verify_deletion_password', { p_password: password })
-    if (error) throw new Error('Error al verificar contraseña')
-    if (!data) throw new Error('Contraseña incorrecta')
-
-    setDeleting(deletePending.id)
-    const { error: delError } = await supabase.rpc('admin_delete_user', { p_user_id: deletePending.id })
+  const deleteMember = async (m) => {
+    setDeleting(m.id)
+    const { error: delError } = await supabase.rpc('admin_delete_user', { p_user_id: m.id })
     setDeleting(null)
     if (delError) {
       toast('No se pudo eliminar: ' + delError.message, 'error')
       return
     }
     toast('Miembro eliminado', 'info')
+    load()
+  }
+
+  const handleDeleteWithPassword = async (password) => {
+    const { data, error } = await supabase.rpc('verify_deletion_password', { p_password: password })
+    let valid = !error && data
+    // Si la contraseña de eliminación no está configurada o no coincide,
+    // se valida la contraseña real de la cuenta del usuario.
+    if (!valid && currentUser?.email) {
+      const { error: signErr } = await supabase.auth.signInWithPassword({
+        email: currentUser.email,
+        password,
+      })
+      valid = !signErr
+    }
+    if (!valid) throw new Error('Contraseña incorrecta')
+
     setDeletePwdOpen(false)
     setDeletePending(null)
-    load()
+    deleteMember(deletePending)
   }
 
   const handleResetPassword = async (e) => {

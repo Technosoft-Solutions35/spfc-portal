@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Pencil, Plus, Trash2, X } from 'lucide-react'
-import { EVENT_STATUS, formatShortDate } from '../../lib/utils'
+import { EVENT_STATUS, formatShortDate, ROLES } from '../../lib/utils'
 import { useToast } from '../ui/Toast'
 import Modal from '../ui/Modal'
 import Spinner from '../ui/Spinner'
@@ -226,13 +226,15 @@ export default function ContentManager({
 }) {
   const { items, loading, create, update, remove } = useCrudResult
   const { toast } = useToast()
-  const { profile: currentUser } = useAuth()
+  const { profile: currentUser, role: myRole } = useAuth()
   const [modal, setModal] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({})
   const [deletePending, setDeletePending] = useState(null) // item awaiting password
   const [deletePwdOpen, setDeletePwdOpen] = useState(false)
   const [statusFilterVal, setStatusFilterVal] = useState('all')
+
+  const isSuperAdmin = myRole === ROLES.SUPER_ADMIN
 
   const visibleItems = statusFilter && statusFilterVal !== 'all'
     ? (items || []).filter((item) => item.status === statusFilterVal)
@@ -314,23 +316,41 @@ export default function ContentManager({
   }
 
   const confirmDelete = (item) => {
+    // El super-admin puede borrar sin contraseña de confirmación
+    if (isSuperAdmin) {
+      removeContent(item)
+      return
+    }
     setDeletePending(item)
     setDeletePwdOpen(true)
   }
 
-  const handleDeleteWithPassword = async (password) => {
-    const { data, error } = await supabase.rpc('verify_deletion_password', { p_password: password })
-    if (error) throw new Error('Error al verificar contraseña')
-    if (!data) throw new Error('Contraseña incorrecta')
-
-    const { error: delError } = await remove(deletePending.id)
+  const removeContent = async (item) => {
+    const { error: delError } = await remove(item.id)
     if (delError) {
       toast('Error al eliminar', 'error')
       return
     }
     toast('Eliminado', 'info')
+  }
+
+  const handleDeleteWithPassword = async (password) => {
+    const { data, error } = await supabase.rpc('verify_deletion_password', { p_password: password })
+    let valid = !error && data
+    // Si la contraseña de eliminación no está configurada o no coincide,
+    // se valida la contraseña real de la cuenta del usuario.
+    if (!valid && currentUser?.email) {
+      const { error: signErr } = await supabase.auth.signInWithPassword({
+        email: currentUser.email,
+        password,
+      })
+      valid = !signErr
+    }
+    if (!valid) throw new Error('Contraseña incorrecta')
+
     setDeletePwdOpen(false)
     setDeletePending(null)
+    removeContent(deletePending)
   }
 
   return (
