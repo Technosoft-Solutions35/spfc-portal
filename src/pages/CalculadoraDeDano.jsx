@@ -45,10 +45,19 @@ const TIER_LABELS = {
 
 const tierLabel = (t) => TIER_LABELS[t] || t
 
-// Listas de especies / habilidades / objetos / movimientos disponibles en Gen 5
+// Listas de especies / habilidades / objetos / movimientos disponibles en Gen 5.
+// Solo se ofrecen especies que el motor puede construir en esta gen (descarta
+// entradas rotas / post-Gen5 cuya tabla de stats no está definida aquí).
 function buildOptions() {
   const species = []
-  for (const s of GEN.species) species.push(s.name)
+  for (const s of GEN.species) {
+    try {
+      new Pokemon(GEN, s.name, { level: 50, nature: 'Serious' })
+      species.push(s.name)
+    } catch {
+      /* especie no construible en Gen 5: se omite */
+    }
+  }
   const abilities = []
   for (const a of GEN.abilities) abilities.push(a.name)
   const items = []
@@ -434,6 +443,7 @@ export default function CalculadoraDeDano() {
   const [field, setField] = useState(emptyField)
   const [results, setResults] = useState(null)
   const [showExport, setShowExport] = useState(false)
+  const [error, setError] = useState(null)
 
   const applyPreset = (sideKey, species, setName) => {
     const preset = SETDEX_BW[species]?.[setName]
@@ -495,10 +505,19 @@ export default function CalculadoraDeDano() {
   }
 
   const calcular = () => {
-    const at = buildPokemon(attacker)
-    const df = buildPokemon(defender)
-    if (!at || !df) return setResults(null)
-    const f = getField()
+    setError(null)
+    let at, df, f
+    try {
+      at = buildPokemon(attacker)
+      df = buildPokemon(defender)
+      if (!at || !df) return setResults(null)
+      f = getField()
+    } catch (e) {
+      console.error('[Calculadora] Error al preparar el cálculo:', e)
+      setResults(null)
+      setError('No se pudo preparar el cálculo con esa combinación Pokémon/forma. Intenta otra especie o quita el objeto/habilidad que la cambia de forma.')
+      return
+    }
     const rows = []
     for (const moveName of attacker.moves) {
       if (!moveName) continue
@@ -515,10 +534,12 @@ export default function CalculadoraDeDano() {
           percent: pct,
         })
       } catch (e) {
-        rows.push({ move: moveName, desc: 'Error: ' + e.message, range: null, ko: '', percent: 0 })
+        console.error('[Calculadora] Error al calcular', moveName, e)
+        rows.push({ move: moveName, desc: 'No se pudo calcular este movimiento.', range: null, ko: '', percent: 0 })
       }
     }
     setResults({ attacker: at, defender: df, field: f, rows })
+    setError(null)
   }
 
   const exportShowdown = () => {
@@ -573,7 +594,7 @@ export default function CalculadoraDeDano() {
           Calcular daño
         </button>
         <button
-          onClick={() => { setResults(null); setAttacker(defaultSide()); setDefender(defaultSide()); setField(emptyField()) }}
+          onClick={() => { setResults(null); setError(null); setAttacker(defaultSide()); setDefender(defaultSide()); setField(emptyField()) }}
           className="btn-ghost"
         >
           <RotateCcw size={18} />
@@ -583,6 +604,13 @@ export default function CalculadoraDeDano() {
           Exportar (Showdown)
         </button>
       </div>
+
+      {/* Error al calcular */}
+      {error && (
+        <div className="mt-6 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-700 dark:text-red-300">
+          <strong>No se pudo calcular:</strong> {error}
+        </div>
+      )}
 
       {/* Resultados */}
       {results && (
