@@ -213,6 +213,21 @@ export default function TeamBuilder() {
   const [dragIndex, setDragIndex] = useState(null)
   const [confirmDel, setConfirmDel] = useState(null)
 
+  // Normaliza un slot a la forma canónica para que computeStats siempre pueda
+  // calcular stats: species capitalizada, evs/ivs con las 6 claves numéricas.
+  const sanitizeSlot = (s) => {
+    const spec = s && GEN.species.get(toID(s.species))
+    if (!spec) return null
+    const base = emptyPokemon(spec.name)
+    const evs = {}
+    const ivs = {}
+    for (const st of STATS) {
+      evs[st] = Math.max(0, Math.min(252, +s.evs?.[st] || 0))
+      ivs[st] = Math.max(0, Math.min(31, +s.ivs?.[st] ?? 31))
+    }
+    return { ...base, ...s, species: spec.name, evs, ivs }
+  }
+
   // localStorage: el equipo vivo sobrevive a la recarga
   useEffect(() => {
     try {
@@ -220,13 +235,10 @@ export default function TeamBuilder() {
       if (raw) {
         const arr = JSON.parse(raw)
         if (Array.isArray(arr) && arr.length === 6) {
-          // Sanea slots corruptos (species inválida / draft vacío guardado por bugs previos):
-          // los slots con especie inexistente se limpian para que el cálculo de stats no falle.
-          setSlots(arr.map((s) =>
-            (s && GEN.species.get(toID(s.species)))
-              ? { ...emptyPokemon(), ...s }
-              : null
-          ))
+          // Sanea slots corruptos (formato viejo / draft vacío guardado por bugs
+          // previos): species resuelta y evs/ivs normalizados para que el
+          // cálculo de stats nunca falle en PC.
+          setSlots(arr.map(sanitizeSlot))
         }
       }
       const nm = localStorage.getItem(LOCAL_NAME)
@@ -242,6 +254,17 @@ export default function TeamBuilder() {
   }, [slots, teamName])
 
   const editing = draft
+
+  // Al montar, si hay Pokémon en el equipo, cargar el primero en el panel para
+  // que sus stats (con EVs/IVs) se vean de una, sin tener que clickear el slot.
+  const didAutoLoad = useRef(false)
+  useEffect(() => {
+    if (didAutoLoad.current) return
+    if (!slots.some(Boolean)) return
+    const i = slots.findIndex(Boolean)
+    if (!draft.species) loadSlot(i)
+    didAutoLoad.current = true
+  }, [slots])
 
   const setField = (patch) => setDraft((d) => ({ ...d, ...patch }))
 
