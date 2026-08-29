@@ -524,15 +524,7 @@ export default function TeamBuilder() {
               : 'Usa "Añadir Pokémon" para empezar.'}
           </p>
 
-          <Combo
-            label="Especie"
-            kind="species"
-            value={editing.species}
-            options={opts.species}
-            onPick={(name) => setField({ species: name, ability: '', moves: ['', '', '', ''] })}
-          />
-
-          <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className="mt-1 grid grid-cols-2 gap-3">
             <div>
               <label className="label">Nivel</label>
               <input
@@ -613,9 +605,12 @@ export default function TeamBuilder() {
                 <div key={s} className="mb-2 flex items-center gap-3">
                   <span className="w-24 shrink-0 text-sm font-medium text-soft">{statEsFull(s)}</span>
                   <input
-                    type="number" min={0} max={252} className="input w-20 px-3 py-1.5 text-center"
-                    value={v}
-                    onChange={(e) => setField({ evs: { ...editing.evs, [s]: Math.max(0, Math.min(252, +e.target.value || 0)) } })}
+                    type="number" inputMode="numeric" min={0} max={252} className="input w-20 px-3 py-1.5 text-center"
+                    value={v || ''}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/^0+(?=\d)/, '')
+                      setField({ evs: { ...editing.evs, [s]: Math.max(0, Math.min(252, +raw || 0)) } })
+                    }}
                   />
                   <div className="h-2 flex-1 overflow-hidden rounded-full bg-elevated">
                     <div
@@ -641,9 +636,12 @@ export default function TeamBuilder() {
                 <div key={s}>
                   <label className="label">{statEsFull(s)}{ivsLabel(s)}</label>
                   <input
-                    type="number" min={0} max={31} className="input px-3 py-1.5 text-center"
-                    value={editing.ivs[s]}
-                    onChange={(e) => setField({ ivs: { ...editing.ivs, [s]: Math.max(0, Math.min(31, +e.target.value || 0)) } })}
+                    type="number" inputMode="numeric" min={0} max={31} className="input px-3 py-1.5 text-center"
+                    value={editing.ivs[s] ?? 31}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/^0+(?=\d)/, '')
+                      setField({ ivs: { ...editing.ivs, [s]: Math.max(0, Math.min(31, +raw || 0)) } })
+                    }}
                   />
                 </div>
               ))}
