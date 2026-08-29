@@ -111,7 +111,7 @@ function computeStats(p) {
 // --- Estado inicial de un Pokémon ----------------------------------------
 // (emptyPokemon viene de teamFormat)
 
-const NATURE_NAMES = [...GEN.natures]
+const NATURE_NAMES = [...GEN.natures].map((n) => n.name)
 
 // Decorar para el PNG (todos los campos legibles).
 function decorate(p) {
@@ -201,6 +201,7 @@ export default function TeamBuilder() {
   const [slots, setSlots] = useState(Array(6).fill(null))
   const [teamName, setTeamName] = useState('Mi equipo')
   const [selected, setSelected] = useState(0) // índice del Pokémon en edición
+  const [draft, setDraft] = useState(() => emptyPokemon()) // borrador: lo que se está configurando
   const [showPick, setShowPick] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [importText, setImportText] = useState('')
@@ -232,19 +233,17 @@ export default function TeamBuilder() {
     } catch { /* ignore */ }
   }, [slots, teamName])
 
-  const editing = slots[selected] || emptyPokemon()
+  const editing = draft
 
-  const setField = (patch) => {
-    setSlots((prev) => {
-      const next = [...prev]
-      const cur = next[selected] || emptyPokemon(prev[selected]?.species || '')
-      next[selected] = { ...cur, ...patch }
-      return next
-    })
-  }
+  const setField = (patch) => setDraft((d) => ({ ...d, ...patch }))
 
   const setMove = (i, name) => {
-    setField({ moves: editing.moves.map((m, idx) => (idx === i ? name : m)) })
+    setDraft((d) => ({ ...d, moves: d.moves.map((m, idx) => (idx === i ? name : m)) }))
+  }
+
+  const loadSlot = (idx) => {
+    setSelected(idx)
+    setDraft(slots[idx] ? { ...slots[idx] } : emptyPokemon())
   }
 
   const addToTeam = () => {
@@ -252,6 +251,7 @@ export default function TeamBuilder() {
     const idx = slots.findIndex((s) => !s)
     if (idx === -1) { toast('El equipo ya está lleno (máximo 6)', 'error'); return }
     setSlots((prev) => { const n = [...prev]; n[idx] = { ...editing }; return n })
+    setDraft(emptyPokemon())
     setSelected(idx)
     setShowPick(false)
     toast(`${T(editing.species, 'species') || editing.species} añadido al equipo`, 'success')
@@ -446,7 +446,7 @@ export default function TeamBuilder() {
               setDragIndex(null)
             }}
             onDragEnd={() => setDragIndex(null)}
-            onClick={() => setSelected(idx)}
+            onClick={() => loadSlot(idx)}
             className={`group relative flex min-h-[150px] cursor-pointer flex-col items-center justify-center rounded-2xl border p-3 text-center transition ${
               selected === idx ? 'border-primary bg-primary/10' : 'border-edge bg-elevated hover:border-primary/40'
             }`}
@@ -461,7 +461,7 @@ export default function TeamBuilder() {
                 {/* Acciones de slot */}
                 <div className="mt-1.5 flex items-center gap-1 opacity-60 transition group-hover:opacity-100">
                   <button
-                    onClick={(e) => { e.stopPropagation(); setShowPick(true); setSelected(idx) }}
+                    onClick={(e) => { e.stopPropagation(); loadSlot(idx); setShowPick(true) }}
                     className="rounded-md p-1 text-soft transition hover:bg-primary/15 hover:text-primary"
                     title="Editar"
                   ><Pencil size={14} /></button>
@@ -496,7 +496,7 @@ export default function TeamBuilder() {
 
       {/* Barra de acciones */}
       <div className="mb-6 flex flex-wrap items-center gap-2">
-        <button onClick={() => setShowPick(true)} className="btn-primary"><Plus size={16} /> Añadir Pokémon</button>
+        <button onClick={() => { setDraft(emptyPokemon()); setShowPick(true) }} className="btn-primary"><Plus size={16} /> Añadir Pokémon</button>
         <button onClick={() => setShowImport(true)} className="btn-secondary"><Upload size={16} /> Importar equipo</button>
         <button onClick={doExport} className="btn-ghost"><Copy size={16} /> Exportar</button>
         <button onClick={openPaste} className="btn-ghost"><ImagePlus size={16} /> Crear Paste del equipo</button>
@@ -582,7 +582,7 @@ export default function TeamBuilder() {
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
-            <button onClick={() => setShowPick(true)} className="btn-secondary"><Plus size={16} /> Añadir al equipo</button>
+            <button onClick={() => { setDraft(emptyPokemon()); setShowPick(true) }} className="btn-secondary"><Plus size={16} /> Añadir al equipo</button>
             <button onClick={saveEdits} className="btn-ghost"><Save size={16} /> Guardar cambios</button>
           </div>
         </div>
