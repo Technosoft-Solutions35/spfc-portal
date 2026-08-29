@@ -219,7 +219,15 @@ export default function TeamBuilder() {
       const raw = localStorage.getItem(LOCAL_KEY)
       if (raw) {
         const arr = JSON.parse(raw)
-        if (Array.isArray(arr) && arr.length === 6) setSlots(arr)
+        if (Array.isArray(arr) && arr.length === 6) {
+          // Sanea slots corruptos (species inválida / draft vacío guardado por bugs previos):
+          // los slots con especie inexistente se limpian para que el cálculo de stats no falle.
+          setSlots(arr.map((s) =>
+            (s && GEN.species.get(toID(s.species)))
+              ? { ...emptyPokemon(), ...s }
+              : null
+          ))
+        }
       }
       const nm = localStorage.getItem(LOCAL_NAME)
       if (nm) setTeamName(nm)
