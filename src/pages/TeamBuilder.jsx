@@ -250,15 +250,16 @@ export default function TeamBuilder() {
     if (!editing.species) { toast('Elige un Pokémon primero', 'error'); return }
     const idx = slots.findIndex((s) => !s)
     if (idx === -1) { toast('El equipo ya está lleno (máximo 6)', 'error'); return }
-    setSlots((prev) => { const n = [...prev]; n[idx] = { ...editing }; return n })
-    setDraft(emptyPokemon())
+    const added = { ...editing }
+    setSlots((prev) => { const n = [...prev]; n[idx] = added; return n })
+    setDraft(added)
     setSelected(idx)
     setShowPick(false)
     toast(`${T(editing.species, 'species') || editing.species} añadido al equipo`, 'success')
   }
 
   const saveEdits = () => {
-    if (!editing.species) return
+    if (!editing.species) { toast('Configura un Pokémon primero', 'info'); return }
     setSlots((prev) => { const n = [...prev]; n[selected] = { ...editing }; return n })
     toast('Cambios guardados', 'success')
   }
@@ -582,7 +583,7 @@ export default function TeamBuilder() {
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
-            <button onClick={() => { setDraft(emptyPokemon()); setShowPick(true) }} className="btn-secondary"><Plus size={16} /> Añadir al equipo</button>
+            <button onClick={addToTeam} className="btn-secondary"><Plus size={16} /> Guardar en slot vacío</button>
             <button onClick={saveEdits} className="btn-ghost"><Save size={16} /> Guardar cambios</button>
           </div>
         </div>
