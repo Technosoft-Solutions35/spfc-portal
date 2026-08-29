@@ -53,7 +53,7 @@ function buildOptions() {
       species.push(s.name)
     } catch { /* no construible en Gen 5 */ }
   }
-  const items = ['Carta']
+  const items = ['(Ninguno)', 'Carta']
   for (const i of GEN.items) items.push(i.name)
   const moves = []
   for (const m of GEN.moves) moves.push(m.name)
@@ -598,7 +598,7 @@ export default function TeamBuilder() {
               kind="item"
               value={editing.item}
               options={opts.items}
-              onPick={(name) => setField({ item: name })}
+              onPick={(name) => setField({ item: name === '(Ninguno)' ? '' : name })}
               placeholder="Sin objeto…"
             />
           </div>
