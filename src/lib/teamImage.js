@@ -47,7 +47,7 @@ export function loadPokeSprite(id) {
   })
 }
 
-const wrap = (ctx, text, maxWidth, initialY, fontSize, lineHeight, maxLines) => {
+const wrap = (ctx, text, x, maxWidth, initialY, lineHeight, maxLines) => {
   const words = String(text).split(' ')
   const lines = []
   let line = ''
@@ -65,7 +65,7 @@ const wrap = (ctx, text, maxWidth, initialY, fontSize, lineHeight, maxLines) => 
   let y = initialY
   const out = []
   for (const l of lines.slice(0, maxLines)) {
-    ctx.fillText(l, PAD, y)
+    ctx.fillText(l, x, y)
     out.push(y)
     y += lineHeight
   }
@@ -109,7 +109,7 @@ export function drawTeamImage({ name = '', account = '', when = '', team = [] })
     ctx.fillStyle = PAL.title
     ctx.font = '700 30px Poppins, sans-serif'
     const nameText = name ? name : 'Equipo del clan'
-    const nameY = wrap(ctx, nameText, W - PAD * 2, 60, 30, 34, 1)[0] ?? 60
+    const nameY = wrap(ctx, nameText, PAD, W - PAD * 2, 60, 34, 1)[0] ?? 60
 
     ctx.font = '400 16px Inter, sans-serif'
     ctx.fillStyle = PAL.sub
@@ -205,7 +205,7 @@ function drawBlock(ctx, p, y0, numLabel) {
   const nameEs = p._esName || p.species || 'Pokémon'
   ctx.fillStyle = PAL.title
   ctx.font = '700 25px Poppins, sans-serif'
-  const nameRows = wrap(ctx, nameEs, maxW, y0 + 46, 25, 30, 1)
+  const nameRows = wrap(ctx, nameEs, tx, maxW, y0 + 46, 30, 1)
   const nY = nameRows[0] ?? y0 + 46
   const nYb = nameRows[1] ?? nY
 
@@ -233,7 +233,7 @@ function drawBlock(ctx, p, y0, numLabel) {
   if (evParts.length) {
     ctx.fillStyle = PAL.green
     ctx.font = '600 15px Inter, sans-serif'
-    wrap(ctx, evParts.join('   ·   '), maxW - 40, nYb + 136, 15, 20, 1)
+    wrap(ctx, evParts.join('   ·   '), tx, maxW - 40, nYb + 136, 20, 1)
   } else {
     ctx.fillStyle = PAL.soft
     ctx.fillText('Ninguno', tx + 42, nYb + 136)
