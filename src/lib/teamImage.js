@@ -4,6 +4,7 @@
 // Los sprites vienen de GitHub raw de PokeAPI (envían Access-Control-Allow-Origin: *)
 // para poder pintarlos en el canvas y exportar el PNG sin manchado CORS.
 import DEXNUM from './pokecalc/data/gen5-dexnum.js'
+import { statEsFull } from './pokecalc/es.js'
 
 const SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/'
 
@@ -150,7 +151,7 @@ export function drawTeamImage({ name = '', account = '', when = '', team = [] })
 
 // Dibuja un bloque (un Pokémon). Retorna su altura.
 function drawBlock(ctx, p, y0, numLabel) {
-  const h = 216
+  const h = 252
   roundRect(ctx, PAD, y0, W - PAD * 2, h, 18)
   ctx.fillStyle = PAL.card
   ctx.fill()
@@ -166,8 +167,8 @@ function drawBlock(ctx, p, y0, numLabel) {
   // Sprite (izquierda)
   const sp = p._sprite
   const sx = PAD + 22
-  const sy = y0 + 44
-  const ssize = 150
+  const sy = y0 + 30
+  const ssize = 168
   // marco
   ctx.fillStyle = PAL.bg
   roundRect(ctx, sx - 6, sy - 6, ssize + 12, ssize + 12, 12)
@@ -186,7 +187,7 @@ function drawBlock(ctx, p, y0, numLabel) {
     // placeholder (CAP / sin sprite)
     ctx.fillStyle = PAL.line
     ctx.beginPath()
-    ctx.arc(sx + ssize / 2, sy + ssize / 2, 44, 0, Math.PI * 2)
+    ctx.arc(sx + ssize / 2, sy + ssize / 2, 48, 0, Math.PI * 2)
     ctx.fill()
     ctx.fillStyle = PAL.soft
     ctx.font = '700 34px Poppins, sans-serif'
@@ -196,52 +197,47 @@ function drawBlock(ctx, p, y0, numLabel) {
     ctx.textAlign = 'left'
   }
 
-  // Texto (derecha)
-  const tx = sx + ssize + 30
+  // ---- Texto a la derecha de la foto ----
+  const tx = sx + ssize + 34
   const maxW = W - PAD - tx - 24
-  ctx.fillStyle = PAL.title
-  ctx.font = '700 24px Poppins, sans-serif'
+
+  // Nombre (Especie)
   const nameEs = p._esName || p.species || 'Pokémon'
-  const lineRows = wrap(ctx, nameEs, maxW, y0 + 42, 24, 28, 1)
-  const nY = lineRows[0] ?? y0 + 42
+  ctx.fillStyle = PAL.title
+  ctx.font = '700 25px Poppins, sans-serif'
+  const nameRows = wrap(ctx, nameEs, maxW, y0 + 46, 25, 30, 1)
+  const nY = nameRows[0] ?? y0 + 46
+  const nYb = nameRows[1] ?? nY
 
-  // Línea: nivel / naturaleza
-  ctx.font = '400 15px Inter, sans-serif'
+  // Nivel · Naturaleza
+  ctx.font = '400 17px Inter, sans-serif'
   ctx.fillStyle = PAL.gold
-  ctx.fillText(`Nivel ${p.level || 50}  ·  ${p._esNature || '—'}`, tx, nY + 40)
-
-  // Línea: objeto
-  ctx.fillStyle = PAL.sub
-  ctx.fillText(`Objeto: ${p._esItem || '—'}`, tx, nY + 66)
-
-  // Línea: habilidad
-  ctx.fillText(`Habilidad: ${p._esAbility || '—'}`, tx, nY + 92)
-
-  // Movimientos (2 líneas)
+  ctx.fillText(`Nivel ${p.level || 50}`, tx, nYb + 38)
   ctx.fillStyle = PAL.text
-  ctx.font = '500 15px Inter, sans-serif'
-  const mv = p.moves.filter(Boolean)
-  const mvLine = mv.length ? mv.map((m) => p._esMovesMap[m] || m).join('  ·  ') : 'Sin movimientos'
-  wrap(ctx, mvLine, maxW, nY + 122, 15, 20, 2)
+  ctx.fillText(`Naturaleza: ${p._esNature || '—'}`, tx, nYb + 62)
 
-  // Estadísticas (abajo, dentro del bloque)
-  const statsLineY = y0 + h - 26
+  // Item equipado
+  ctx.fillStyle = PAL.sub
+  ctx.fillText(`Objeto: ${p._esItem || '—'}`, tx, nYb + 86)
+
+  // Habilidad
+  ctx.fillText(`Habilidad: ${p._esAbility || '—'}`, tx, nYb + 110)
+
+  // EVs (solo stats con puntos)
+  const evParts = ['hp', 'atk', 'def', 'spa', 'spd', 'spe']
+    .filter((s) => (p.evs?.[s] || 0) > 0)
+    .map((s) => `${statEsFull(s)} ${p.evs[s]}`)
   ctx.fillStyle = PAL.label
-  ctx.font = '600 13px Inter, sans-serif'
-  ctx.fillText('PS', tx, statsLineY)
-  ctx.fillText('Atq', tx + 46, statsLineY)
-  ctx.fillText('Def', tx + 96, statsLineY)
-  ctx.fillText('At.Esp', tx + 146, statsLineY)
-  ctx.fillText('Def.Esp', tx + 206, statsLineY)
-  ctx.fillText('Vel', tx + 278, statsLineY)
-  ctx.fillStyle = PAL.green
-  ctx.font = '700 14px Inter, sans-serif'
-  ctx.fillText(String(p._stats?.hp ?? ''), tx + 24, statsLineY)
-  ctx.fillText(String(p._stats?.atk ?? ''), tx + 74, statsLineY)
-  ctx.fillText(String(p._stats?.def ?? ''), tx + 124, statsLineY)
-  ctx.fillText(String(p._stats?.spa ?? ''), tx + 184, statsLineY)
-  ctx.fillText(String(p._stats?.spd ?? ''), tx + 244, statsLineY)
-  ctx.fillText(String(p._stats?.spe ?? ''), tx + 316, statsLineY)
+  ctx.font = '600 15px Inter, sans-serif'
+  ctx.fillText('EVs:', tx, nYb + 136)
+  if (evParts.length) {
+    ctx.fillStyle = PAL.green
+    ctx.font = '600 15px Inter, sans-serif'
+    wrap(ctx, evParts.join('   ·   '), maxW - 40, nYb + 136, 15, 20, 1)
+  } else {
+    ctx.fillStyle = PAL.soft
+    ctx.fillText('Ninguno', tx + 42, nYb + 136)
+  }
 
   return h
 }
