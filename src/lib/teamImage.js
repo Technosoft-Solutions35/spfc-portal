@@ -33,18 +33,40 @@ export function dexIdFor(species) {
   return r && r.id ? r.id : 0
 }
 
-// Carga un sprite de PokeAPI como Image (resuelve dataURL para evitar CORS en
-// futuros re-uso). Devuelve null si no existe.
-export function loadPokeSprite(id) {
-  return new Promise((resolve) => {
-    if (!id) return resolve(null)
+// Carga un sprite de PokeAPI como Image. Descarga el PNG con fetch y lo
+// convierte a dataURL para (a) no contaminar el canvas y que toDataURL siempre
+// funcione, y (b) evitar fallos de carga por crossOrigin. Devuelve null si no
+// se pudo cargar.
+export async function loadPokeSprite(id) {
+  if (!id) return null
+  const url = `${SPRITE_BASE}${id}.png`
+  try {
+    const res = await fetch(url)
+    if (!res.ok) return null
+    const blob = await res.blob()
+    const dataUrl = await new Promise((resolve) => {
+      const fr = new FileReader()
+      fr.onload = () => resolve(fr.result)
+      fr.onerror = () => resolve(null)
+      fr.readAsDataURL(blob)
+    })
+    if (!dataUrl) return null
     const img = new Image()
-    const url = `${SPRITE_BASE}${id}.png`
-    img.onload = () => resolve(img)
-    img.onerror = () => resolve(null)
-    img.crossOrigin = 'anonymous'
-    img.src = url
-  })
+    img.src = dataUrl
+    await img.decode()
+    return img
+  } catch {
+    // Fallback: intentar cargarlo directo con crossOrigin (CORS del servidor).
+    try {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.src = url
+      await img.decode()
+      return img
+    } catch {
+      return null
+    }
+  }
 }
 
 const wrap = (ctx, text, x, maxWidth, initialY, lineHeight, maxLines) => {
