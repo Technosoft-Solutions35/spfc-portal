@@ -53,7 +53,7 @@ function buildOptions() {
       species.push(s.name)
     } catch { /* no construible en Gen 5 */ }
   }
-  const items = []
+  const items = ['Carta']
   for (const i of GEN.items) items.push(i.name)
   const moves = []
   for (const m of GEN.moves) moves.push(m.name)
@@ -210,6 +210,7 @@ export default function TeamBuilder() {
   const [pasteAt, setPasteAt] = useState(null) // moment en el que se generó
   const [savedTeams, setSavedTeams] = useState(null)
   const [showLibrary, setShowLibrary] = useState(false)
+  const [currentTeamId, setCurrentTeamId] = useState(null)
   const [dragIndex, setDragIndex] = useState(null)
   const [confirmDel, setConfirmDel] = useState(null)
 
@@ -291,8 +292,14 @@ export default function TeamBuilder() {
 
   const saveEdits = () => {
     if (!editing.species) { toast('Configura un Pokémon primero', 'info'); return }
-    setSlots((prev) => { const n = [...prev]; n[selected] = { ...editing }; return n })
+    const n = [...slots]; n[selected] = { ...editing }; setSlots(n)
     toast('Cambios guardados', 'success')
+    // Si estamos editando un equipo cargado desde tu perfil, persistí también a Supabase.
+    if (user && currentTeamId) {
+      supabase.from('teams').update({ pokemon: n, name: teamName }).eq('id', currentTeamId).then(({ error }) => {
+        if (error) toast('Cambios en memoria, pero no se pudo actualizar tu build guardada', 'error')
+      })
+    }
   }
 
   const removeSlot = (idx) => {
@@ -408,19 +415,24 @@ export default function TeamBuilder() {
 
   const saveTeam = async () => {
     if (!slots.some(Boolean)) { toast('El equipo está vacío', 'error'); return }
-    const { error } = await supabase.from('teams').insert({
-      author_id: user.id,
-      name: teamName || 'Equipo sin nombre',
-      pokemon: slots,
-    })
-    if (error) { toast('No se pudo guardar el equipo', 'error'); return }
-    toast('Equipo guardado en tu perfil', 'success')
+    const payload = { name: teamName || 'Equipo sin nombre', pokemon: slots }
+    if (currentTeamId) {
+      const { error } = await supabase.from('teams').update(payload).eq('id', currentTeamId)
+      if (error) { toast('No se pudo actualizar el equipo', 'error'); return }
+      toast('Equipo actualizado en tu perfil', 'success')
+    } else {
+      const { data, error } = await supabase.from('teams').insert({ author_id: user.id, ...payload })
+      if (error) { toast('No se pudo guardar el equipo', 'error'); return }
+      if (data && data[0]) setCurrentTeamId(data[0].id)
+      toast('Equipo guardado en tu perfil', 'success')
+    }
   }
 
   const openSaved = (t) => {
     const arr = Array.isArray(t.pokemon) && t.pokemon.length === 6 ? t.pokemon : Array(6).fill(null)
     setSlots(arr.map((p) => (p ? { ...emptyPokemon(), ...p } : null)))
     setTeamName(t.name)
+    setCurrentTeamId(t.id)
     setShowLibrary(false)
     toast('Equipo cargado', 'success')
   }
