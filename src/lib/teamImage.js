@@ -4,7 +4,7 @@
 // Los sprites vienen de GitHub raw de PokeAPI (envían Access-Control-Allow-Origin: *)
 // para poder pintarlos en el canvas y exportar el PNG sin manchado CORS.
 import DEXNUM from './pokecalc/data/gen5-dexnum.js'
-import { statEsFull } from './pokecalc/es.js'
+import { statEsFull, T } from './pokecalc/es.js'
 
 const SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/'
 
@@ -151,7 +151,7 @@ export function drawTeamImage({ name = '', account = '', when = '', team = [] })
 
 // Dibuja un bloque (un Pokémon). Retorna su altura.
 function drawBlock(ctx, p, y0, numLabel) {
-  const h = 252
+  const h = 300
   roundRect(ctx, PAD, y0, W - PAD * 2, h, 18)
   ctx.fillStyle = PAL.card
   ctx.fill()
@@ -238,6 +238,16 @@ function drawBlock(ctx, p, y0, numLabel) {
     ctx.fillStyle = PAL.soft
     ctx.fillText('Ninguno', tx + 42, nYb + 136)
   }
+
+  // Movimientos (ataques) — 2 líneas
+  const mv = (p.moves || []).filter(Boolean)
+  const mvLine = mv.length ? mv.map((m) => p._esMovesMap?.[m] || T(m, 'move') || m).join('   ·   ') : 'Sin movimientos'
+  ctx.fillStyle = PAL.label
+  ctx.font = '600 15px Inter, sans-serif'
+  ctx.fillText('Ataques:', tx, nYb + 162)
+  ctx.fillStyle = PAL.text
+  ctx.font = '500 15px Inter, sans-serif'
+  wrap(ctx, mvLine, tx, maxW - 40, nYb + 162, 20, 2)
 
   return h
 }
