@@ -351,6 +351,19 @@ export default function TeamBuilder() {
     })
   }
 
+  // Reordena por arrastrado: mueve el slot "from" a la posición "to"
+  // desplazando a los intermedios (comportamiento de lista).
+  const reorderDrag = (from, to) => {
+    if (from === to) return
+    setSlots((prev) => {
+      const n = [...prev]
+      const item = n[from]
+      n.splice(from, 1)
+      n.splice(to, 0, item)
+      return n
+    })
+  }
+
   const clearTeam = () => {
     if (!window.confirm('¿Vaciar el equipo completo?')) return
     setSlots(Array(6).fill(null))
@@ -468,6 +481,15 @@ export default function TeamBuilder() {
   const evTotal = STATS.reduce((a, s) => a + (editing.evs[s] || 0), 0)
   const ivsLabel = (s) => (editing.ivs[s] ?? 31) !== 31 ? ` (${editing.ivs[s]})` : ''
 
+  // Stats calculadas UNA vez por render (antes se recalculaban 6 veces en el map).
+  const stats = useMemo(() => computeStats(editing), [editing])
+
+  // Paste en vivo memoizado (solo se recalcula cuando cambian slots o el nombre).
+  const livePaste = useMemo(
+    () => (slots.some(Boolean) ? exportTeamPaste(slots, teamName) : ''),
+    [slots, teamName],
+  )
+
   return (
     <div>
       <PageHeader
@@ -506,7 +528,7 @@ export default function TeamBuilder() {
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => {
               if (dragIndex === null || dragIndex === idx) return
-              moveSlot(dragIndex, idx > dragIndex ? Math.min(5, idx) : idx)
+              reorderDrag(dragIndex, idx)
               setDragIndex(null)
             }}
             onDragEnd={() => setDragIndex(null)}
@@ -655,7 +677,7 @@ export default function TeamBuilder() {
             {STATS.map((s) => {
               const v = editing.evs[s] || 0
               const over = v > 252
-              const stats = computeStats(editing)
+              const st = stats ? stats[s] : null
               return (
                 <div key={s} className="mb-2 flex items-center gap-3">
                   <span className="w-24 shrink-0 text-sm font-medium text-soft">{statEsFull(s)}</span>
@@ -674,7 +696,7 @@ export default function TeamBuilder() {
                     />
                   </div>
                   <span className="w-14 text-right text-sm font-bold text-success">
-                    {stats ? stats[s] : '—'}
+                    {st === null ? '—' : st}
                   </span>
                 </div>
               )
@@ -707,7 +729,7 @@ export default function TeamBuilder() {
             <h3 className="mb-2 font-display text-lg font-extrabold text-text">Paste en vivo</h3>
             {editing.species ? (
               <pre className="max-h-48 overflow-auto rounded-xl bg-background p-3 font-mono text-xs text-text">
-                {exportPaste().split('\n\n').filter(Boolean)[0]}
+                {livePaste.split('\n\n').filter(Boolean)[0]}
               </pre>
             ) : (
               <p className="text-sm text-soft">Selecciona o añade un Pokémon para ver su set en formato Showdown.</p>

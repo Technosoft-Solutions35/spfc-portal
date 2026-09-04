@@ -44,6 +44,16 @@ export function parseOneSet(lines) {
     } else if (/^Level:/i.test(l)) {
       const n = +l.slice('Level:'.length).trim()
       if (!Number.isNaN(n)) side.level = Math.max(1, Math.min(100, n))
+    } else if (/^EVs:/i.test(l)) {
+      const evs = { ...side.evs }
+      for (const part of l.slice('EVs:'.length).split('/')) {
+        const mm = part.trim().match(/^(\d+)\s+(.+)$/)
+        if (mm) {
+          const s = statEngine(mm[2])
+          if (s) evs[s] = Math.max(0, Math.min(252, +mm[1]))
+        }
+      }
+      side.evs = evs
     } else if (/^IVs:/i.test(l)) {
       const ivs = { ...side.ivs }
       for (const part of l.slice('IVs:'.length).split('/')) {

@@ -106,10 +106,7 @@ const roundRect = (ctx, x, y, w, h, r) => {
 
 // Dibuja el equipo completo y devuelve el canvas montado.
 export function drawTeamImage({ name = '', account = '', when = '', team = [] }) {
-  // Altura: cabecera + N bloques.
-  const blockH = team.map(() => 0)
-  // Estimamos N bloques a una altura aproximada (más padding). Cada bloque
-  // ocupa: sprite 150 + texto ~ 7 líneas * 24 = ~180 + padding.
+  // Altura: cabecera + N bloques de 300px cada uno + pie + padding.
   let estH = HEAD_H + team.length * (232) + PAD * 2 + 100
   adjustHeight: for (;;) {
     const canvas = document.createElement('canvas')
@@ -249,27 +246,31 @@ function drawBlock(ctx, p, y0, numLabel) {
   const evParts = ['hp', 'atk', 'def', 'spa', 'spd', 'spe']
     .filter((s) => (p.evs?.[s] || 0) > 0)
     .map((s) => `${statEsFull(s)} ${p.evs[s]}`)
+  const evLabelW = ctx.measureText('EVs:').width
   ctx.fillStyle = PAL.label
   ctx.font = '600 15px Inter, sans-serif'
   ctx.fillText('EVs:', tx, nYb + 136)
+  const evValueX = tx + evLabelW + 10
+  const evMaxW = W - PAD - evValueX - 24
   if (evParts.length) {
     ctx.fillStyle = PAL.green
     ctx.font = '600 15px Inter, sans-serif'
-    wrap(ctx, evParts.join('   ·   '), tx, maxW - 40, nYb + 136, 20, 1)
+    wrap(ctx, evParts.join('   ·   '), evValueX, evMaxW, nYb + 136, 20, 1)
   } else {
     ctx.fillStyle = PAL.soft
-    ctx.fillText('Ninguno', tx + 42, nYb + 136)
+    ctx.fillText('Ninguno', evValueX, nYb + 136)
   }
 
   // Movimientos (ataques) — 2 líneas
   const mv = (p.moves || []).filter(Boolean)
   const mvLine = mv.length ? mv.map((m) => p._esMovesMap?.[m] || T(m, 'move') || m).join('   ·   ') : 'Sin movimientos'
+  const mvLabelW = ctx.measureText('Ataques:').width
   ctx.fillStyle = PAL.label
   ctx.font = '600 15px Inter, sans-serif'
   ctx.fillText('Ataques:', tx, nYb + 162)
   ctx.fillStyle = PAL.text
   ctx.font = '500 15px Inter, sans-serif'
-  wrap(ctx, mvLine, tx, maxW - 40, nYb + 162, 20, 2)
+  wrap(ctx, mvLine, tx + mvLabelW + 10, W - PAD - (tx + mvLabelW + 10) - 24, nYb + 162, 20, 2)
 
   return h
 }
