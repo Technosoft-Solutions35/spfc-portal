@@ -24,6 +24,7 @@ const ShinyHunt = lazy(() => import('./pages/ShinyHunt'))
 const PvpRanking = lazy(() => import('./pages/PvpRanking'))
 const EventosTorneos = lazy(() => import('./pages/EventosTorneos'))
 const Guides = lazy(() => import('./pages/Guides'))
+const Raids = lazy(() => import('./pages/Raids'))
 const Birthdays = lazy(() => import('./pages/Birthdays'))
 const Builds = lazy(() => import('./pages/Builds'))
 const CalculadoraDeDano = lazy(() => import('./pages/CalculadoraDeDano'))
@@ -82,6 +83,7 @@ export default function App() {
                     <Route path="/pvp-ranking" element={<PvpRanking />} />
                     <Route path="/eventos-torneos" element={<EventosTorneos />} />
                     <Route path="/guias" element={<Guides />} />
+                    <Route path="/raids" element={<Raids />} />
                     <Route path="/cumpleanos" element={<Birthdays />} />
                     <Route path="/builds" element={<Builds />} />
                     <Route path="/calculadora-de-dano" element={<CalculadoraDeDano />} />

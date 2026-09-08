@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BookOpen, Box, CalendarDays, Newspaper, Settings, Shield, Users } from 'lucide-react'
+import { BookOpen, Box, CalendarDays, Newspaper, Settings, Shield, Swords, Users } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { canAssignRoles, ROLES, PVP_TIERS, PVE_TIERS } from '../lib/utils'
 import PageHeader from '../components/ui/PageHeader'
@@ -13,6 +13,7 @@ const TABS = {
   news: { label: 'Noticias', icon: Newspaper, permission: 'content' },
   'eventos-torneos': { label: 'Eventos / Torneos', icon: CalendarDays, permission: 'content' },
   guides: { label: 'Guías y Buildeos', icon: BookOpen, permission: 'content' },
+  raids: { label: 'Raids', icon: Swords, permission: 'content' },
   mods: { label: 'Biblioteca de MODs', icon: Box, permission: 'content' },
   'pvp-ranking': { label: 'Ranking PvP', icon: Shield, permission: 'content' },
   members: { label: 'Miembros y roles', icon: Users, permission: 'members' },
@@ -115,6 +116,27 @@ const FIELD_CONFIGS = {
     ],
     columns: ['title'],
     emptyHint: 'Sube el primer MOD a la biblioteca del clan.',
+  },
+  raids: {
+    table: 'raids',
+    orderBy: { column: 'created_at', ascending: false },
+    fields: [
+      { key: 'title', label: 'Título de la raid', type: 'text' },
+      { key: 'excerpt', label: 'Extracto corto', type: 'textarea' },
+      { key: 'categories', label: 'Categorías (selección múltiple)', type: 'categories', options: GUIDE_CATEGORIES },
+      { key: 'tags', label: 'Etiquetas', type: 'tags' },
+      { key: 'content', label: 'Contenido completo', type: 'textarea' },
+      { key: 'documents', label: 'Documentos adjuntos (cualquier tipo)', type: 'documents' },
+      { key: 'image_url', label: 'Imagen', type: 'image', allowUrl: false },
+      {
+        key: 'video_url',
+        label: 'Video de referencia (YouTube)',
+        type: 'url',
+        placeholder: 'https://www.youtube.com/watch?v=...',
+      },
+    ],
+    columns: ['title'],
+    emptyHint: 'Comparte la primera guía de raid con el clan.',
   },
 }
 

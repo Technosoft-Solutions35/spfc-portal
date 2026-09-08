@@ -34,6 +34,8 @@ export const NAV_ITEMS = [
   // DLC 8: llaves de torneo e historial de campeones (todos)
   { to: '/brackets', label: 'Brackets', icon: Network, load: () => import('../pages/Brackets') },
   { to: '/guias', label: 'Guías y Buildeos', icon: BookOpen, section: 'guides', load: () => import('../pages/Guides') },
+  // DLC 17: guías de raids legendarias (todos)
+  { to: '/raids', label: 'Raids', icon: Swords, section: 'raids', load: () => import('../pages/Raids') },
   // DLC 9: almacén de builds por tier (todos)
   { to: '/builds', label: 'Almacén de Builds', icon: Layers, load: () => import('../pages/Builds') },
   // Calculadora de daño Gen 5 (todos)
