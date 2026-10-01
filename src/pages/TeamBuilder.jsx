@@ -146,10 +146,8 @@ function Combo({ label, value, options, onPick, placeholder = 'Escribir o elegir
   const display = open ? q : value ? T(value, kind) : ''
   const ql = normalize(q)
   const filtered = useMemo(() => {
-    if (!ql) return options.slice(0, 40)
-    return options
-      .filter((o) => normalize(T(o, kind)).includes(ql) || normalize(o).includes(ql))
-      .slice(0, 60)
+    if (!ql) return options
+    return options.filter((o) => normalize(T(o, kind)).includes(ql) || normalize(o).includes(ql))
   }, [ql, kind, options])
 
   const pick = (name) => { setOpen(false); onPick(name) }

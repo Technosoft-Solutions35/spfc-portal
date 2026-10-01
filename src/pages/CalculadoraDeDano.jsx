@@ -137,10 +137,8 @@ function Combo({ label, value, options, onPick, placeholder = 'Escribir o elegir
   const ql = normalize(q)
   const kind = comboKind(label)
   const filtered = useMemo(() => {
-    if (!ql) return options.slice(0, 50)
-    return options
-      .filter((o) => normalize(T(o, kind)).includes(ql) || normalize(o).includes(ql))
-      .slice(0, 60)
+    if (!ql) return options
+    return options.filter((o) => normalize(T(o, kind)).includes(ql) || normalize(o).includes(ql))
   }, [ql, kind, options])
 
   const pick = (name) => {

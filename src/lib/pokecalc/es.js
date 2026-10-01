@@ -38,6 +38,7 @@ const MOVE_ALIASES = {
 const RETRO_MOVES = {
   barrage: 'Presa',
   counter: 'Contador',
+  facade: 'Imagen',
   guardswap: 'Cambia Def.',
   heartswap: 'Cambia Almas',
   iceshard: 'Canto Helado',
