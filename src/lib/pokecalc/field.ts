@@ -73,6 +73,7 @@ export class Field implements State.Field {
 
 export class Side implements State.Side {
   spikes: number;
+  toxicSpikes: number;
   steelsurge: boolean;
   vinelash: boolean;
   wildfire: boolean;
@@ -98,6 +99,7 @@ export class Side implements State.Side {
 
   constructor(side: State.Side = {}) {
     this.spikes = side.spikes || 0;
+    this.toxicSpikes = side.toxicSpikes || 0;
     this.steelsurge = !!side.steelsurge;
     this.vinelash = !!side.vinelash;
     this.wildfire = !!side.wildfire;

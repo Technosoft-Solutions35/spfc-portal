@@ -1,0 +1,18 @@
+# Configuración de despliegue en Netlify para el Portal SpFc/Gd.
+# El sitio es una SPA de React (Vite): publish = dist generado por `npm run build`.
+# Las credenciales de Supabase NO van acá: configúralas como variables de
+# entorno en Netlify (Site settings -> Environment variables):
+#   VITE_SUPABASE_URL
+#   VITE_SUPABASE_ANON_KEY
+#   VITE_VAPID_PUBLIC_KEY
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Redirect de SPA: cualquier ruta que no sea un archivo real cae a index.html,
+# para que react-router funcione al recargar subpáginas (evita el 404).
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

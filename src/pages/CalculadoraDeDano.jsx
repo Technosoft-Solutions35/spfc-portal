@@ -4,7 +4,7 @@ import { Calculator, RotateCcw, Swords } from 'lucide-react'
 import PageHeader from '../components/ui/PageHeader'
 import { useToast } from '../components/ui/Toast'
 import { Generations, Pokemon, Move, Field, Side, calculate } from '../lib/pokecalc'
-import { T, toID, normalize, natureEs, statEsFull, englishName, natureEngine, statEngine } from '../lib/pokecalc/es.js'
+import { T, toID, normalize, natureEs, statEsFull, englishName, natureEngine, statEngine, moveEs } from '../lib/pokecalc/es.js'
 import SETDEX_BW from '../lib/pokecalc/data/gen5-presets.js'
 import GEN5_TIERS from '../lib/pokecalc/data/gen5-tiers.js'
 import ABIL_SET from '../lib/pokecalc/data/gen5-abilities.js'
@@ -117,8 +117,8 @@ function defaultSide() {
 const emptyField = () => ({
   weather: '',
   terrain: '',
-  attacker: { sr: false, spikes: 0, reflect: false, lightScreen: false, isProtected: false, isSeeded: false },
-  defender: { sr: false, spikes: 0, reflect: false, lightScreen: false, isProtected: false, isSeeded: false },
+  attacker: { sr: false, toxicSpikes: 0, spikes: 0, reflect: false, lightScreen: false, isProtected: false, isSeeded: false },
+  defender: { sr: false, toxicSpikes: 0, spikes: 0, reflect: false, lightScreen: false, isProtected: false, isSeeded: false },
 })
 
 // ── Combobox reutilizable (búsqueda + lista) ────────────────────────────
@@ -129,16 +129,19 @@ function Combo({ label, value, options, onPick, placeholder = 'Escribir o elegir
 
   // Al abrir, cargamos el valor actual como texto de edición.
   useEffect(() => {
-    if (open) setQ(T(value || '', comboKind(label)))
+    if (open) setQ(kind === 'move' ? moveEs(value || '') : T(value || '', kind))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  const display = open ? q : T(value || '', comboKind(label))
-  const ql = normalize(q)
   const kind = comboKind(label)
+  const display = open ? q : kind === 'move' ? moveEs(value || '') : T(value || '', kind)
+  const ql = normalize(q)
   const filtered = useMemo(() => {
     if (!ql) return options
-    return options.filter((o) => normalize(T(o, kind)).includes(ql) || normalize(o).includes(ql))
+    return options.filter((o) => {
+      const labelText = kind === 'move' ? moveEs(o) : T(o, kind)
+      return normalize(labelText).includes(ql) || normalize(o).includes(ql)
+    })
   }, [ql, kind, options])
 
   const pick = (name) => {
@@ -179,7 +182,7 @@ function Combo({ label, value, options, onPick, placeholder = 'Escribir o elegir
               onClick={() => pick(name)}
               className="block w-full truncate px-3 py-1.5 text-left text-sm text-text transition hover:bg-primary/10"
             >
-              {T(name, comboKind(label))}
+              {kind === 'move' ? moveEs(name) : T(name, kind)}
             </button>
           ))}
         </div>
@@ -422,7 +425,7 @@ function HazardRow({ label, value, onToggle, max = false }) {
       }`}
     >
       <span>{label}</span>
-      <span>{max ? (value ? 'Sí' : 'No') : (value ? `×${value}` : 'No')}</span>
+      <span>{max ? (value ? 'Sí' : 'No') : (value >= 1 ? `×${value}` : 'No')}</span>
     </button>
   )
 }
@@ -459,6 +462,10 @@ function FieldPanel({ field, onChange, side }) {
         <HazardRow
           label="Púas" value={data.spikes} max
           onToggle={() => setSide({ spikes: data.spikes >= 3 ? 0 : data.spikes + 1 })}
+        />
+        <HazardRow
+          label="Púas Tóxicas" value={data.toxicSpikes} max
+          onToggle={() => setSide({ toxicSpikes: data.toxicSpikes >= 2 ? 0 : data.toxicSpikes + 1 })}
         />
         <HazardRow label="Reflejo" value={data.reflect} onToggle={() => setSide({ reflect: !data.reflect })} />
         <HazardRow label="Pantalla Luminosa" value={data.lightScreen} onToggle={() => setSide({ lightScreen: !data.lightScreen })} />
@@ -525,6 +532,7 @@ export default function CalculadoraDeDano() {
     })
     f.attackerSide = new Side({
       isSR: field.attacker.sr,
+      toxicSpikes: field.attacker.toxicSpikes || 0,
       spikes: field.attacker.spikes,
       isReflect: field.attacker.reflect,
       isLightScreen: field.attacker.lightScreen,
@@ -533,6 +541,7 @@ export default function CalculadoraDeDano() {
     })
     f.defenderSide = new Side({
       isSR: field.defender.sr,
+      toxicSpikes: field.defender.toxicSpikes || 0,
       spikes: field.defender.spikes,
       isReflect: field.defender.reflect,
       isLightScreen: field.defender.lightScreen,
@@ -774,9 +783,9 @@ export default function CalculadoraDeDano() {
             results.rows.map((row, i) => (
               <div key={i} className="app-card p-5">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex rounded-full bg-primary/15 px-3 py-0.5 text-sm font-bold text-primary">
-                    {T(row.move, 'move')}
-                  </span>
+<span className="inline-flex rounded-full bg-primary/15 px-3 py-0.5 text-sm font-bold text-primary">
+                     {moveEs(row.move)}
+                   </span>
                   <span className="text-sm font-semibold text-text">
                     {row.range ? `${row.range[0]} - ${row.range[1]} PS` : ''}
                   </span>

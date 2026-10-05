@@ -5,7 +5,7 @@ import {
   X, Save, FolderOpen, ChevronDown, ImagePlus,
 } from 'lucide-react'
 import { Generations, Pokemon } from '../lib/pokecalc'
-import { T, toID, normalize, natureEs, statEsFull } from '../lib/pokecalc/es.js'
+import { T, toID, normalize, natureEs, statEsFull, englishName, moveEs } from '../lib/pokecalc/es.js'
 import {
   STATS, emptyPokemon, lineSetSplit, parseOneSet, exportTeamPaste,
 } from '../lib/teamFormat.js'
@@ -117,7 +117,7 @@ const NATURE_NAMES = [...GEN.natures].map((n) => n.name)
 function decorate(p) {
   const stats = computeStats(p)
   const movesMap = {}
-  for (const m of p.moves) if (m) movesMap[m] = T(m, 'move')
+  for (const m of p.moves) if (m) movesMap[m] = moveEs(m)
   return {
     ...p,
     _spriteId: dexIdFor(p.species),
@@ -139,15 +139,18 @@ function Combo({ label, value, options, onPick, placeholder = 'Escribir o elegir
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    if (open) setQ(value ? T(value, kind) : '')
+    if (open) setQ(value ? kind === 'move' ? moveEs(value) : T(value, kind) : '')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  const display = open ? q : value ? T(value, kind) : ''
+  const display = open ? q : value ? (kind === 'move' ? moveEs(value) : T(value, kind)) : ''
   const ql = normalize(q)
   const filtered = useMemo(() => {
     if (!ql) return options
-    return options.filter((o) => normalize(T(o, kind)).includes(ql) || normalize(o).includes(ql))
+    return options.filter((o) => {
+      const lt = kind === 'move' ? moveEs(o) : T(o, kind)
+      return normalize(lt).includes(ql) || normalize(o).includes(ql)
+    })
   }, [ql, kind, options])
 
   const pick = (name) => { setOpen(false); onPick(name) }
@@ -178,7 +181,7 @@ function Combo({ label, value, options, onPick, placeholder = 'Escribir o elegir
               onClick={() => pick(name)}
               className="block w-full truncate px-3 py-1.5 text-left text-sm text-text transition hover:bg-primary/10"
             >
-              {T(name, kind)}
+              {kind === 'move' ? moveEs(name) : T(name, kind)}
             </button>
           ))}
         </div>
@@ -796,7 +799,7 @@ export default function TeamBuilder() {
                 <div className="mt-2 space-y-0.5 text-[11px] text-soft">
                   <p>Objeto: {T(p.item, 'item') || '—'} · Habilidad: {T(p.ability, 'ability') || '—'}</p>
                   {p.moves.filter(Boolean).length > 0 && (
-                    <p className="text-text">{p.moves.filter(Boolean).map((m) => T(m, 'move')).join(' · ')}</p>
+                    <p className="text-text">{p.moves.filter(Boolean).map((m) => moveEs(m)).join(' · ')}</p>
                   )}
                 </div>
               </div>

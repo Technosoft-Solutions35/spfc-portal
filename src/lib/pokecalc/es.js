@@ -75,6 +75,19 @@ function pick(map, name, fallback) {
   return hit && typeof hit === 'object' ? hit.es : (hit || fallback)
 }
 
+// Nombre visible de un movimiento. Los "Poder Oculto" del motor vienen con su
+// tipo ("Hidden Power Fire"); se muestran como "Poder Oculto (Fuego)" para que
+// el jugador distinga de qué tipo elemental es cada variante.
+export function moveEs(name) {
+  if (!name) return name
+  const id = toID(name)
+  if (id !== 'hiddenpower' && id.startsWith('hiddenpower')) {
+    const typeName = name.replace(/^Hidden Power\s+/i, '')
+    return `Poder Oculto (${T(typeName, 'type') || typeName})`
+  }
+  return T(name, 'move')
+}
+
 // Traduce cualquier nombre (especie, movimiento, habilidad, objeto, tipo,
 // clima, terreno...) usando el diccionario apropiado.
 export function T(name, kind) {
